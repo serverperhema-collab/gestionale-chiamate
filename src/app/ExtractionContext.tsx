@@ -41,7 +41,8 @@ export function ExtractionProvider({ children }: { children: React.ReactNode }) 
 
     try {
       const customApiKey = localStorage.getItem('custom_google_api_key') || '';
-      const eventSource = new EventSource(`/api/scrape?cap=${encodeURIComponent(cap)}&source=${source}&apikey=${customApiKey}`);
+      const categoriesParam = enabledCategories.join(',');
+      const eventSource = new EventSource(`/api/scrape?cap=${encodeURIComponent(cap)}&source=${source}&apikey=${customApiKey}&categories=${categoriesParam}`);
       eventSourceRef.current = eventSource;
 
       eventSource.onmessage = (event) => {

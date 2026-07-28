@@ -135,14 +135,40 @@ export async function GET(req: NextRequest) {
 
     await log(`Interrogo OpenStreetMap all'interno dell'area trovata...`);
     
-    // Usiamo ampie categorie OSM per prendere tutto ciò che è business/servizio
-    const nwrQueries = `
-      nwr(${bbox})["shop"];
-      nwr(${bbox})["office"];
-      nwr(${bbox})["craft"];
-      nwr(${bbox})["amenity"];
-      nwr(${bbox})["leisure"];
-    `;
+    const categoriesParam = searchParams.get('categories');
+    const enabledIds = categoriesParam ? categoriesParam.split(',') : [];
+    
+    const selectedCats = enabledIds.length > 0 
+        ? CATEGORIES.filter(c => enabledIds.includes(c.id)) 
+        : CATEGORIES;
+
+    let osmTags: string[] = [];
+    selectedCats.forEach(c => {
+        osmTags.push(...c.osmTags);
+    });
+    osmTags = [...new Set(osmTags)];
+
+    // Se non ci sono categorie specifiche, prendiamo macro-gruppi
+    let nwrQueries = "";
+    if (enabledIds.length === 0 || enabledIds.includes('generico')) {
+        nwrQueries = `
+          nwr(${bbox})["shop"];
+          nwr(${bbox})["office"];
+          nwr(${bbox})["craft"];
+          nwr(${bbox})["amenity"];
+          nwr(${bbox})["leisure"];
+        `;
+    } else {
+        // Costruiamo le query specifiche
+        osmTags.forEach(tag => {
+            const [k, v] = tag.split('=');
+            if (k && v) {
+                nwrQueries += `nwr(${bbox})["${k}"="${v}"];\n`;
+            } else if (k && !v) {
+                nwrQueries += `nwr(${bbox})["${k}"];\n`;
+            }
+        });
+    }
 
     const query = `[out:json][timeout:60];(${nwrQueries});out center tags;`;
     
@@ -169,11 +195,23 @@ export async function GET(req: NextRequest) {
       if (source === 'google') {
           // Prendi tutti i googleTypes possibili da tutte le categorie per fare un crawling totale
           let googleTypes: string[] = [];
-          CATEGORIES.forEach(c => {
+          
+          const categoriesParam = searchParams.get('categories');
+          const enabledIds = categoriesParam ? categoriesParam.split(',') : [];
+          
+          const selectedCats = enabledIds.length > 0 
+              ? CATEGORIES.filter(c => enabledIds.includes(c.id)) 
+              : CATEGORIES;
+
+          selectedCats.forEach(c => {
               googleTypes.push(...c.googleTypes);
           });
-          // Aggiungiamo anche query generiche per coprire i "buchi"
-          googleTypes.push("establishment", "point_of_interest", "business", "store", "office", "services");
+          
+          // Aggiungiamo anche query generiche per coprire i "buchi" solo se stiamo estraendo tutto
+          if (enabledIds.length === 0 || enabledIds.includes('generico')) {
+              googleTypes.push("establishment", "point_of_interest", "business", "store", "office", "services");
+          }
+          
           googleTypes = [...new Set(googleTypes)];
 
           const aziendeTrovate = new Map<string, any>(); 
