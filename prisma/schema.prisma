@@ -1,0 +1,404 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  TEAM_LEADER
+  OPERATORE
+  COMMERCIALE
+}
+
+enum Campaign {
+  PULIZIE
+  PERSONALE_HEMA
+  ENTRAMBI
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String?   @unique
+  username       String    @unique
+  password       String // Hashed password
+  role           Role      @default(OPERATORE)
+  name           String
+  isActive       Boolean   @default(true)
+  isSuspended    Boolean   @default(false)
+  suspendedUntil DateTime?
+
+  // Settings/Thresholds
+  maxNoAnswer         Int @default(20)
+  maxNoAnswerMins     Int @default(30)
+  maxSkip             Int @default(15)
+  maxSkipMins         Int @default(30)
+  maxNotAvailable     Int @default(15)
+  maxNotAvailableMins Int @default(30)
+
+  noAnswerLockTime     Int @default(10)
+  skipLockTime         Int @default(10)
+  notAvailableLockTime Int @default(10)
+
+  maxDeroghe      Int @default(3)
+  maxDerogheHours Int @default(24)
+
+  maxIdleTimeMins Int       @default(15)
+  lastActivityAt  DateTime? @default(now())
+
+  maxNegotiations Int     @default(10)
+  canViewOutcomes Boolean @default(false)
+
+  // Security/Anti-Fraud
+  skipCount               Int       @default(0) // Legacy
+  skipLockedUntil         DateTime?
+  noAnswerLockedUntil     DateTime?
+  notAvailableLockedUntil DateTime?
+  dailyModifications      Int       @default(0)
+  lastModificationDate    DateTime?
+  modLockedUntil          DateTime?
+
+  // TL Alert Preferences
+  alertNoAnswerLock     Boolean @default(true)
+  alertNotAvailableLock Boolean @default(true)
+  alertSkipLock         Boolean @default(true)
+  alertIdleLock         Boolean @default(true)
+  alertDeroghe          Boolean @default(true)
+  alertModLock          Boolean @default(true)
+
+  // Modifications Configuration
+  maxDailyModifications Int @default(5)
+  modLockTimeMins       Int @default(10)
+
+  // Relations
+  dailyAssignments DailyAssignment[]
+  callLogs         CallLog[]
+  activityLogs     ActivityLog[]
+  negotiations     Negotiation[]
+  asCommerciale    Appointment[]     @relation("CommercialeAppointments")
+  asOperator       Appointment[]     @relation("OperatorAppointments")
+  assignedContacts Contact[]         @relation("AssignedContacts")
+  zoneAgendas      ZoneAgenda[]
+  quoteRequests    QuoteRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  TlTask    TlTask[]
+}
+
+model DailyAssignment {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id])
+  date     DateTime @db.Date
+  cap      String
+  campaign Campaign
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, date])
+}
+
+model Contact {
+  id             String  @id @default(cuid())
+  placeId        String  @unique
+  name           String
+  originalPhone  String?
+  hours          String?
+  cap            String
+  sector         String
+  address        String?
+  website        String?
+  businessStatus String?
+  url            String?
+
+  // Enrichment
+  referentName String?
+  referentRole String?
+  email        String?
+  notes        String?
+
+  // State
+  noAnswerCount      Int       @default(0)
+  hiddenUntil        DateTime?
+  assignedToId       String?
+  assignedTo         User?     @relation("AssignedContacts", fields: [assignedToId], references: [id])
+  isKo               Boolean   @default(false)
+  isPersonalCallback Boolean   @default(false)
+
+  // Relations
+  phones       ContactPhone[]
+  callLogs     CallLog[]
+  activityLogs ActivityLog[]
+  negotiations Negotiation[]
+  appointments Appointment[]
+  koRecords    KoRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  TlTask    TlTask[]
+
+  @@index([name])
+  @@index([cap])
+  @@index([sector])
+  @@index([hiddenUntil])
+  @@index([assignedToId])
+  @@index([isKo])
+}
+
+model ContactPhone {
+  id        String  @id @default(cuid())
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id])
+  phone     String
+  label     String? // e.g. "Cellulare Titolare", "Fisso"
+
+  createdAt DateTime @default(now())
+}
+
+enum CallOutcome {
+  NO_ANSWER
+  NOT_AVAILABLE
+  NO_INFO
+  NEGOTIATION
+  APPOINTMENT
+  TRASH_REQUEST
+  SKIP
+}
+
+model CallLog {
+  id        String      @id @default(cuid())
+  contactId String
+  contact   Contact     @relation(fields: [contactId], references: [id])
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  outcome   CallOutcome
+  notes     String?
+
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  contactId String?
+  contact   Contact? @relation(fields: [contactId], references: [id])
+  action    String // e.g. "ADDED_PHONE", "LOGIN", "SUSPENDED"
+  details   String?
+
+  createdAt DateTime @default(now())
+}
+
+model TlTask {
+  id          String    @id @default(cuid())
+  tlId        String
+  tl          User      @relation(fields: [tlId], references: [id])
+  contactId   String?
+  contact     Contact?  @relation(fields: [contactId], references: [id])
+  title       String
+  description String?
+  recallDate  DateTime?
+  isCompleted Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+}
+
+model Negotiation {
+  id                 String  @id @default(cuid())
+  contactId          String
+  contact            Contact @relation(fields: [contactId], references: [id])
+  operatorId         String
+  operator           User    @relation(fields: [operatorId], references: [id])
+  originalOperatorId String? // Per tracciare chi era il proprietario prima della delega
+
+  recallDate  DateTime
+  reason      String
+  isApproved  Boolean   @default(false)
+  expiresAt   DateTime?
+  isExpired   Boolean   @default(false)
+  isAbandoned Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ApptStatus {
+  PENDING
+  CONFIRMED
+  NOT_CONFIRMED
+  DONE
+  CANCELLED
+  DA_GESTIRE_COMMERCIALE
+}
+
+model Appointment {
+  id            String  @id @default(cuid())
+  contactId     String
+  contact       Contact @relation(fields: [contactId], references: [id])
+  operatorId    String
+  operator      User    @relation("OperatorAppointments", fields: [operatorId], references: [id])
+  commercialeId String?
+  commerciale   User?   @relation("CommercialeAppointments", fields: [commercialeId], references: [id])
+
+  date        DateTime
+  isPhoneAppt Boolean  @default(false)
+  isDeroga    Boolean  @default(false)
+  isApproved  Boolean  @default(true) // True unless isDeroga is true
+
+  // Link all'Agenda
+  zoneAgendaId String?
+  zoneAgenda   ZoneAgenda? @relation(fields: [zoneAgendaId], references: [id], onDelete: SetNull)
+
+  // Scheda
+  referentName String
+  referentRole String
+  phone        String
+  email        String?
+  clientNeeds  String
+  tlNotes      String?
+
+  status ApptStatus @default(PENDING)
+  commercialStatus CommercialStatus?
+  isSecondAppt     Boolean @default(false)
+
+  outcomes AppointmentOutcome[]
+  quoteRequest QuoteRequest?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum CommercialStatus {
+  ASSEGNATO
+  VISITATO
+  FOLLOW_UP
+  PREVENTIVO_IN_CORSO
+  VENDUTO
+  KO
+  SALTATO_CLIENTE_DA_RIFISSARE
+  SALTATO_CLIENTE_KO_RICHIESTO
+  SALTATO_COMMERCIALE_DA_RIFISSARE
+  SALTATO_COMMERCIALE_KO_RICHIESTO
+}
+
+enum SkipReason {
+  SALTATO_CLIENTE
+  SALTATO_COMMERCIALE
+}
+
+enum NextActionTarget {
+  COMMERCIALE
+  OPERATORE
+}
+
+enum NextActionType {
+  RICHIAMO
+  FISSA_NUOVO_APP
+}
+
+enum OutcomeFinal {
+  VENDUTO
+  NON_VENDUTO
+  RIPENSARCI
+  FOLLOWUP
+  KO
+}
+
+enum QuoteStatus {
+  PENDING
+  IN_LAVORAZIONE
+  REVISIONE
+  COMPLETATO
+  ANNULLATO
+}
+
+model AppointmentOutcome {
+  id            String            @id @default(cuid())
+  appointmentId String            @unique
+  appointment   Appointment       @relation(fields: [appointmentId], references: [id])
+  
+  outcomeFinal     OutcomeFinal
+  skipReason       SkipReason?
+  notes            String
+
+  nextActionType   NextActionType?
+  nextActionTarget NextActionTarget?
+  nextActionDate   DateTime?
+
+  koRequested      Boolean  @default(false)
+  quoteAttached    Boolean  @default(false)
+  quoteUrl         String?
+  quoteRequested   Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+}
+
+model QuoteRequest {
+  id            String      @id @default(cuid())
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  commercialeId String
+  commerciale   User        @relation(fields: [commercialeId], references: [id])
+  
+  notes         String
+  status        QuoteStatus  @default(PENDING)
+  
+  tlNotes       String?
+  quoteUrl      String?
+  resolvedAt    DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DeletionRequest {
+  id         String   @id @default(cuid())
+  contactId  String   @unique
+  operatorId String
+  reason     String
+  isResolved Boolean  @default(false)
+  isApproved Boolean?
+
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+}
+
+model KoRecord {
+  id          String   @id @default(cuid())
+  contactId   String
+  contact     Contact  @relation(fields: [contactId], references: [id])
+  frozenUntil DateTime
+  isResolved  Boolean  @default(false)
+
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+}
+
+model ZoneAgenda {
+  id   String   @id @default(cuid())
+  date DateTime // Solo la data (es. mezzanotte locale)
+  name String   @default("Agenda")
+  caps String[] // Array di CAP abilitati
+
+  commercialeId String?
+  commerciale   User?   @relation(fields: [commercialeId], references: [id])
+
+  isClosed      Boolean @default(false)
+  tlNotes       String?
+
+  appointments Appointment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CapZoneMapping {
+  cap      String @id
+  zoneName String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
