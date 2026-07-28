@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "CAP e keyword sono obbligatori" }, { status: 400 });
     }
 
-    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY || 'AIzaSyDzqL969UwwFFPV4x_vJJCJY4WCMgnJzkA';
     if (!apiKey) {
       return NextResponse.json({ error: "API Key di Google Maps mancante nel file .env" }, { status: 500 });
     }
