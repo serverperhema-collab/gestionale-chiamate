@@ -66,7 +66,7 @@ export default function CreateUserModal() {
             <div class="card">
               <h1>Credenziali Gestionale CRM</h1>
               <p><strong>Ruolo:</strong> ${createdUser.role}</p>
-              <p><strong>Link:</strong> http://localhost:3000/login</p>
+              <p><strong>Link:</strong> ${typeof window !== 'undefined' ? window.location.origin : ''}/login</p>
               <p><strong>Username:</strong> ${createdUser.username}</p>
               <p><strong>Password:</strong> ${createdUser.password}</p>
               <div class="footer">Conserva questo foglio in un luogo sicuro.</div>
@@ -107,7 +107,7 @@ export default function CreateUserModal() {
                     <p className="text-emerald-400 font-medium mb-2">✅ Account creato con successo!</p>
                     <p className="text-gray-300 text-sm mb-1">Copia queste credenziali e inviale al dipendente:</p>
                     <div className="bg-black/50 p-3 rounded text-sm font-mono text-gray-200 select-all">
-                      Link: http://localhost:3000/login<br/>
+                      Link: {typeof window !== 'undefined' ? window.location.origin : ''}/login<br/>
                       Username: {createdUser.username}<br/>
                       Password: {createdUser.password}
                     </div>
