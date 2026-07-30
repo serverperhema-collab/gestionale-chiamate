@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
+import { eventEmitter } from "@/lib/eventEmitter";
 
 export async function POST(req: Request) {
   try {
@@ -11,6 +12,7 @@ export async function POST(req: Request) {
     }
 
     const operatorId = (session.user as any).id;
+    const userName = (session.user as any).name || "Operatore";
     const body = await req.json();
     const { 
       contactId, 
@@ -108,6 +110,12 @@ export async function POST(req: Request) {
       });
 
       return appt;
+    });
+
+    eventEmitter.emit("tl-alert", { 
+      type: "APPOINTMENT", 
+      operatorName: userName, 
+      reason: isDeroga ? "Nuovo appuntamento (Deroga) fissato. Richiede approvazione!" : "Nuovo appuntamento fissato!" 
     });
 
     return NextResponse.json({ success: true, appointment });
