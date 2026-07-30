@@ -4,6 +4,9 @@ import { CATEGORIES } from '@/data/categories';
 import fs from 'fs';
 import path from 'path';
 
+export const maxDuration = 60; // Consente l'esecuzione fino a 60s (limite massimo Vercel Hobby) per evitare il blocco a metà
+export const dynamic = 'force-dynamic';
+
 const DEFAULT_API_KEY = 'AIzaSyDzqL969UwwFFPV4x_vJJCJY4WCMgnJzkA';
 
 const BLACKLIST = [
