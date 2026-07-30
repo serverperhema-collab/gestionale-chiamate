@@ -15,22 +15,47 @@ export async function GET(req: Request) {
 
     const userId = (session.user as any).id;
 
-    // Fetch negotiations assigned to this operator
-    // Exclude abandoned or completely expired ones if needed, but we should show them so they can act on them.
+    // Fetch negotiations assigned to this operator OR delegated by this operator
     const negotiations = await prisma.negotiation.findMany({
       where: { 
-        operatorId: userId,
+        OR: [
+          { operatorId: userId },
+          { originalOperatorId: userId }
+        ],
         isAbandoned: false
       },
       include: {
         contact: {
-          select: { id: true, name: true, cap: true, originalPhone: true, address: true }
-        }
+          select: { id: true, name: true, cap: true, originalPhone: true, address: true, delegatedUntil: true }
+        },
+        operator: { select: { id: true, name: true } }
       },
       orderBy: { recallDate: "asc" }
     });
 
-    return NextResponse.json({ negotiations });
+    const userIdsToFetch = new Set<string>();
+    negotiations.forEach(n => {
+      if (n.originalOperatorId) userIdsToFetch.add(n.originalOperatorId);
+    });
+
+    let originalUsers: Record<string, string> = {};
+    if (userIdsToFetch.size > 0) {
+      const users = await prisma.user.findMany({
+        where: { id: { in: Array.from(userIdsToFetch) } },
+        select: { id: true, name: true }
+      });
+      users.forEach(u => originalUsers[u.id] = u.name);
+    }
+
+    const mappedNegotiations = negotiations.map(n => ({
+      ...n,
+      originalOperator: n.originalOperatorId ? { id: n.originalOperatorId, name: originalUsers[n.originalOperatorId] || "Sconosciuto" } : null
+    }));
+
+    return NextResponse.json({ 
+      negotiations: mappedNegotiations,
+      currentUserId: userId 
+    });
   } catch (error) {
     console.error("GET operator negotiations error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

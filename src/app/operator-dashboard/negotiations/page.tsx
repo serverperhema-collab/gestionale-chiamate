@@ -9,6 +9,7 @@ import AppointmentModal from "@/components/AppointmentModal";
 
 export default function OperatorNegotiationsPage() {
   const [negotiations, setNegotiations] = useState<any[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -27,6 +28,7 @@ export default function OperatorNegotiationsPage() {
       const res = await fetch("/api/operator/negotiations");
       if (res.ok) {
         const data = await res.json();
+        setCurrentUserId(data.currentUserId);
         // Nascondi le richieste della TL da questa schermata (verranno mostrate nella schermata apposita)
         setNegotiations(data.negotiations.filter((n: any) => !n.reason.startsWith("[TL_REQUEST]")));
       } else {
@@ -77,6 +79,24 @@ export default function OperatorNegotiationsPage() {
         toast.error(data.error || "Errore");
       }
     } catch (e) {
+      toast.error("Errore di rete");
+    }
+  };
+
+  const handleRevokeDelegation = async (id: string) => {
+    if (!confirm("Sei sicuro di voler annullare questa delega e riprendere possesso della trattativa?")) return;
+    try {
+      const res = await fetch(`/api/operator/negotiations/${id}/revoke`, {
+        method: "POST"
+      });
+      if (res.ok) {
+        toast.success("Delega annullata, trattativa recuperata.");
+        fetchNegotiations();
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Errore durante l'annullamento della delega");
+      }
+    } catch (error) {
       toast.error("Errore di rete");
     }
   };
@@ -218,16 +238,45 @@ export default function OperatorNegotiationsPage() {
             const isPending = !neg.isApproved;
             const isExpired = neg.expiresAt && new Date(neg.expiresAt) < new Date();
             
+            // Logica Delega
+            const isDelegatedByMe = neg.originalOperatorId === currentUserId && neg.operatorId !== currentUserId;
+            const isDelegatedToMe = neg.originalOperatorId !== null && neg.operatorId === currentUserId;
+            
+            // Calcolo del timer se c'è una delega
+            let delegationCountdown = "";
+            if (neg.contact?.delegatedUntil) {
+              const diffMs = new Date(neg.contact.delegatedUntil).getTime() - new Date().getTime();
+              if (diffMs > 0) {
+                const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
+                delegationCountdown = `${days}g ${hours}h rimanenti`;
+              } else {
+                delegationCountdown = "Scaduta";
+              }
+            }
+
             return (
-              <div key={neg.id} className={`bg-gray-800 rounded-xl border p-6 shadow-lg relative flex flex-col ${isPending ? 'border-yellow-500/50' : isExpired ? 'border-red-500/50' : 'border-purple-500/50'}`}>
+              <div key={neg.id} className={`bg-gray-800 rounded-xl border p-6 shadow-lg relative flex flex-col ${isPending ? 'border-yellow-500/50' : isExpired ? 'border-red-500/50' : isDelegatedByMe ? 'border-indigo-500/50' : 'border-purple-500/50'}`}>
                 {isPending && (
-                  <div className="absolute top-0 right-0 p-1.5 px-3 bg-yellow-600 rounded-bl-lg rounded-tr-lg">
+                  <div className="absolute top-0 right-0 p-1.5 px-3 bg-yellow-600 rounded-bl-lg rounded-tr-lg z-10">
                     <span className="text-[10px] font-bold text-white uppercase tracking-wider">In Attesa TL</span>
                   </div>
                 )}
                 {isExpired && !isPending && (
-                  <div className="absolute top-0 right-0 p-1.5 px-3 bg-red-600 rounded-bl-lg rounded-tr-lg">
+                  <div className="absolute top-0 right-0 p-1.5 px-3 bg-red-600 rounded-bl-lg rounded-tr-lg z-10">
                     <span className="text-[10px] font-bold text-white uppercase tracking-wider">Scaduta</span>
+                  </div>
+                )}
+                
+                {/* Badge Delega al centro-alto */}
+                {isDelegatedByMe && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-900 border border-indigo-500 px-3 py-1 rounded-full shadow-lg z-10 text-center whitespace-nowrap">
+                    <span className="text-xs font-bold text-indigo-200">DELEGATO A: {neg.operator?.name}</span>
+                  </div>
+                )}
+                {isDelegatedToMe && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-900 border border-purple-500 px-3 py-1 rounded-full shadow-lg z-10 text-center whitespace-nowrap">
+                    <span className="text-xs font-bold text-purple-200">IN DELEGA DA: {neg.originalOperator?.name}</span>
                   </div>
                 )}
 
@@ -255,40 +304,61 @@ export default function OperatorNegotiationsPage() {
                       Scadenza TL: <span className="ml-2 font-normal">{new Date(neg.expiresAt).toLocaleDateString()}</span>
                     </div>
                   )}
+
+                  {/* Timer Delega */}
+                  {(isDelegatedByMe || isDelegatedToMe) && delegationCountdown && (
+                    <div className="flex items-center text-sm font-semibold mt-3 text-indigo-300 bg-indigo-900/30 p-2 rounded-lg border border-indigo-800/50">
+                      <Clock className="w-4 h-4 mr-2" />
+                      Timer Delega: <span className="ml-2 text-white font-mono">{delegationCountdown}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 mt-auto">
-                  <button
-                    disabled={isPending}
-                    onClick={() => router.push(`/operator-terminal?contactId=${neg.contact.id}`)}
-                    className="col-span-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition font-medium text-sm flex items-center justify-center disabled:opacity-50"
-                  >
-                    <Phone className="w-4 h-4 mr-2" /> Chiama Ora
-                  </button>
-                  <button
-                    onClick={() => {
-                      setAppointmentContactId(neg.contact.id);
-                      setAppointmentContactCap(neg.contact.cap);
-                      setAppointmentModalOpen(true);
-                    }}
-                    disabled={isPending}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition font-medium text-sm flex items-center justify-center disabled:opacity-50"
-                  >
-                    <Calendar className="w-4 h-4 mr-2" /> Appuntamento
-                  </button>
-                  <button
-                    onClick={() => handleDelegateClick(neg.id)}
-                    disabled={isPending}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition font-medium text-sm flex items-center justify-center disabled:opacity-50"
-                  >
-                    <Send className="w-4 h-4 mr-2" /> Delega
-                  </button>
-                  <button
-                    onClick={() => handleAbandon(neg.id)}
-                    className="col-span-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-red-400 rounded-lg transition font-medium text-sm flex items-center justify-center"
-                  >
-                    <XCircle className="w-4 h-4 mr-2" /> Abbandona Richiamo
-                  </button>
+                  {isDelegatedByMe ? (
+                    // AZIONI PER CHI HA DELEGATO
+                    <button
+                      onClick={() => handleRevokeDelegation(neg.id)}
+                      className="col-span-2 px-4 py-3 bg-red-600 hover:bg-red-500 text-white rounded-lg transition font-bold text-sm flex items-center justify-center shadow-lg"
+                    >
+                      <XCircle className="w-5 h-5 mr-2" /> Annulla Delega (Riprendi)
+                    </button>
+                  ) : (
+                    // AZIONI NORMALI (per trattative proprie o in delega a me)
+                    <>
+                      <button
+                        disabled={isPending}
+                        onClick={() => router.push(`/operator-terminal?contactId=${neg.contact.id}`)}
+                        className="col-span-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition font-medium text-sm flex items-center justify-center disabled:opacity-50"
+                      >
+                        <Phone className="w-4 h-4 mr-2" /> Chiama Ora
+                      </button>
+                      <button
+                        onClick={() => {
+                          setAppointmentContactId(neg.contact.id);
+                          setAppointmentContactCap(neg.contact.cap);
+                          setAppointmentModalOpen(true);
+                        }}
+                        disabled={isPending}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition font-medium text-sm flex items-center justify-center disabled:opacity-50"
+                      >
+                        <Calendar className="w-4 h-4 mr-2" /> Appuntamento
+                      </button>
+                      <button
+                        onClick={() => handleDelegateClick(neg.id)}
+                        disabled={isPending}
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition font-medium text-sm flex items-center justify-center disabled:opacity-50"
+                      >
+                        <Send className="w-4 h-4 mr-2" /> Delega
+                      </button>
+                      <button
+                        onClick={() => handleAbandon(neg.id)}
+                        className="col-span-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-red-400 rounded-lg transition font-medium text-sm flex items-center justify-center"
+                      >
+                        <XCircle className="w-4 h-4 mr-2" /> Abbandona Richiamo
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             );
