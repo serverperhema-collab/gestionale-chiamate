@@ -67,7 +67,12 @@ export async function PATCH(req: Request) {
       await prisma.$transaction([
         prisma.contact.update({
           where: { id: deletion.contactId },
-          data: { isKo: true, hiddenUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) } // Nascosto per sicurezza, ma isKo = true è il check principale
+          data: { 
+            isKo: true, 
+            hiddenUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+            blacklisted: true,
+            blacklistReason: deletion.reason || "Eliminato dal Team Leader"
+          }
         }),
         prisma.deletionRequest.update({
           where: { id },

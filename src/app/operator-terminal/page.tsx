@@ -41,6 +41,7 @@ export default function OperatorTerminal() {
   const [outcomeType, setOutcomeType] = useState("");
   const [outcomeNotes, setOutcomeNotes] = useState("");
   const [notAvailableDelay, setNotAvailableDelay] = useState("2");
+  const [targetCompany, setTargetCompany] = useState("PERSONALE_HEMA");
   
   const [negoModalOpen, setNegoModalOpen] = useState(false);
   const [negoNotes, setNegoNotes] = useState("");
@@ -48,14 +49,20 @@ export default function OperatorTerminal() {
   const [negoTime, setNegoTime] = useState("");
 
   const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
+  const [activeRecall, setActiveRecall] = useState<any>(null);
+  const [showRecallAlert, setShowRecallAlert] = useState(false);
+  
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [reviewNotes, setReviewNotes] = useState("");
 
-  const fetchNextContact = useCallback(async () => {
+  const fetchNextContact = useCallback(async (forcedContactId?: string) => {
     setLoading(true);
     setModLocked(false);
     setSkipLocked(false);
     setIsSuspended(false);
     try {
-      const res = await fetch("/api/contacts/next");
+      const url = forcedContactId ? `/api/contacts/next?contactId=${forcedContactId}` : "/api/contacts/next";
+      const res = await fetch(url);
       const data = await res.json();
       if (res.ok) {
         setContact(data.contact);
@@ -93,8 +100,46 @@ export default function OperatorTerminal() {
   }, []);
 
   useEffect(() => {
-    fetchNextContact();
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlContactId = urlParams.get("contactId");
+      if (urlContactId) {
+        fetchNextContact(urlContactId);
+        // Rimuove il query param per pulizia dell'interfaccia
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else {
+        fetchNextContact();
+      }
+    }
   }, [fetchNextContact]);
+
+  useEffect(() => {
+    const playNotificationSound = () => {
+      const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-200.wav");
+      audio.play().catch(e => console.error("Sound play blocked:", e));
+    };
+
+    const checkRecalls = async () => {
+      try {
+        const res = await fetch("/api/operator/recalls/pending");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.recalls && data.recalls.length > 0) {
+            setActiveRecall(data.recalls[0]);
+            setShowRecallAlert(true);
+            playNotificationSound();
+          }
+        }
+      } catch (err) {
+        console.error("Poller recall error:", err);
+      }
+    };
+
+    // Poll every 30 seconds
+    checkRecalls();
+    const interval = setInterval(checkRecalls, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (!lockedUntil) return;
@@ -162,9 +207,30 @@ export default function OperatorTerminal() {
     
     setLoading(true);
     try {
+      if (outcome === "REVIEW_REQUEST") {
+        const res = await fetch(`/api/contacts/${contact.id}/review-request`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ notes })
+        });
+        if (res.ok) {
+          toast.success("Richiesta di revisione inviata");
+          setReviewModalOpen(false);
+          setReviewNotes("");
+          fetchNextContact();
+        } else {
+          const data = await res.json();
+          toast.error(data.error || "Errore");
+        }
+        return;
+      }
+
       const payload: any = { outcome, notes };
       if (recallDateStr) payload.recallDate = recallDateStr;
       
+      if (outcome === "NOT_AVAILABLE" || outcome === "NON_INTERESSATO") {
+        payload.targetCompany = targetCompany;
+      }
       if (outcome === "NOT_AVAILABLE") {
         payload.delayHours = notAvailableDelay;
       }
@@ -444,6 +510,10 @@ export default function OperatorTerminal() {
                     <span className="font-bold">RICHIAMO GENERICO</span>
                     <span className="text-xs italic opacity-80 font-normal">il titolare non era disponibile</span>
                   </button>
+                  <button disabled={noAnswerLocked} onClick={() => requestOutcomeModal("NON_INTERESSATO")} className="px-6 py-3 bg-red-900/40 text-red-400 hover:bg-red-800 hover:text-white border border-red-700/50 rounded-lg transition shadow-sm disabled:opacity-50 flex flex-col items-center justify-center gap-1">
+                    <span className="font-bold">NON INTERESSATO</span>
+                    <span className="text-xs italic opacity-80 font-normal">non interessato, blocca per 3 mesi</span>
+                  </button>
                   <button disabled={noAnswerLocked} onClick={() => setNegoModalOpen(true)} className="px-6 py-3 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white border border-purple-500/30 rounded-lg transition shadow-sm disabled:opacity-50 flex flex-col items-center justify-center gap-1">
                     <span className="font-bold">RICHIAMO PERSONALE</span>
                     <span className="text-xs italic opacity-80 font-normal">ho avuto una trattativa, fisso un ricontatto personale</span>
@@ -453,6 +523,10 @@ export default function OperatorTerminal() {
                   </button>
                   <button disabled={noAnswerLocked} onClick={() => setTrashModalOpen(true)} className="px-6 py-3 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/30 font-medium rounded-lg transition shadow-sm disabled:opacity-50">
                     Chiedi Eliminazione
+                  </button>
+                  <button disabled={noAnswerLocked} onClick={() => { setReviewNotes(""); setReviewModalOpen(true); }} className="px-6 py-3 bg-indigo-900/30 text-indigo-400 hover:bg-indigo-800 hover:text-white border border-indigo-700/50 rounded-lg transition shadow-sm disabled:opacity-50 flex flex-col items-center justify-center gap-1">
+                    <span className="font-bold">RICHIEDI REVISIONE TL</span>
+                    <span className="text-xs italic opacity-85 font-normal">contatto già gestito o anomalo</span>
                   </button>
                 </div>
                 <div className="mt-6 flex flex-col items-end gap-2">
@@ -544,35 +618,115 @@ export default function OperatorTerminal() {
         </div>
       )}
 
+      {/* Review Modal */}
+      {reviewModalOpen && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl border border-gray-700 w-full max-w-md p-6 shadow-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-indigo-400">Richiedi Revisione Contatto (TL)</h3>
+              <button onClick={() => setReviewModalOpen(false)} className="text-gray-400 hover:text-white">
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-sm text-gray-400 mb-4">
+              Pensi che questo contatto sia già stato gestito o presenti anomalie da segnalare al Team Leader? La richiesta verrà valutata ed eventualmente sbloccata o archiviata.
+            </p>
+            <textarea
+              autoFocus
+              className="w-full h-32 bg-gray-900 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-indigo-500 resize-none mb-4"
+              placeholder="Specifica perché richiedi la revisione (es: 'già gestito da Hema', 'telefono privato', 'ragione sociale errata')..."
+              value={reviewNotes}
+              onChange={e => setReviewNotes(e.target.value)}
+            />
+            <div className="flex justify-end space-x-3">
+              <button onClick={() => setReviewModalOpen(false)} className="px-4 py-2 text-gray-400 hover:text-white transition">
+                Annulla
+              </button>
+              <button 
+                onClick={() => handleOutcome("REVIEW_REQUEST", reviewNotes)} 
+                disabled={!reviewNotes.trim()}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-medium transition disabled:opacity-50"
+              >
+                Invia Richiesta Revisione
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Outcome Note Modal */}
       {outcomeModalOpen && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-800 rounded-xl border border-gray-700 w-full max-w-md p-6 shadow-2xl">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-white">
-                Imposta Non Reperibile
+                {outcomeType === "NON_INTERESSATO" ? "Cliente Non Interessato" : "Imposta Richiamo Generico"}
               </h3>
               <button onClick={() => setOutcomeModalOpen(false)} className="text-gray-400 hover:text-white">
                 <XCircle className="w-5 h-5" />
               </button>
             </div>
             
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-400 mb-2">Nascondi e richiama non prima di:</label>
-              <select
-                value={notAvailableDelay}
-                onChange={e => setNotAvailableDelay(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-orange-500"
-              >
-                <option value="1">Tra 1 Ora</option>
-                <option value="2">Tra 2 Ore (Default)</option>
-                <option value="4">Tra 4 Ore</option>
-                <option value="8">Tra 8 Ore</option>
-                <option value="24">Domani (24 Ore)</option>
-                <option value="48">Tra 2 Giorni (48 Ore)</option>
-                <option value="72">Tra 3 Giorni (72 Ore)</option>
-              </select>
+            {/* Selezione Azienda Target */}
+            <div className="mb-4 bg-gray-900/40 p-3 rounded-lg border border-gray-700">
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Proposta per:</label>
+              <div className="flex gap-4">
+                <label className="flex items-center text-xs text-white cursor-pointer select-none">
+                  <input
+                    type="radio"
+                    name="targetCompany"
+                    value="PERSONALE_HEMA"
+                    checked={targetCompany === "PERSONALE_HEMA"}
+                    onChange={() => setTargetCompany("PERSONALE_HEMA")}
+                    className="mr-2"
+                  />
+                  Hema (Vostra Azienda)
+                </label>
+                <label className="flex items-center text-xs text-white cursor-pointer select-none">
+                  <input
+                    type="radio"
+                    name="targetCompany"
+                    value="PULIZIE"
+                    checked={targetCompany === "PULIZIE"}
+                    onChange={() => setTargetCompany("PULIZIE")}
+                    className="mr-2"
+                  />
+                  Ditta di Pulizie
+                </label>
+              </div>
             </div>
+
+            {outcomeType === "NOT_AVAILABLE" && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-400 mb-2">Nascondi e richiama non prima di:</label>
+                <select
+                  value={notAvailableDelay}
+                  onChange={e => setNotAvailableDelay(e.target.value)}
+                  className="w-full bg-gray-900 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-orange-500"
+                >
+                  <option value="1">Tra 1 Ora</option>
+                  <option value="2">Tra 2 Ore (Default)</option>
+                  <option value="4">Tra 4 Ore</option>
+                  <option value="8">Tra 8 Ore</option>
+                  <option value="24">Domani (24 Ore)</option>
+                  <option value="48">Tra 2 Giorni (48 Ore)</option>
+                  <option value="72">Tra 3 Giorni (72 Ore)</option>
+                  <option value="96">Tra 4 Giorni</option>
+                  <option value="120">Tra 5 Giorni</option>
+                  <option value="144">Tra 6 Giorni</option>
+                  <option value="168">Tra 7 Giorni (1 Settimana)</option>
+                  <option value="240">Tra 10 Giorni</option>
+                  <option value="360">Tra 15 Giorni</option>
+                  <option value="480">Tra 20 Giorni</option>
+                </select>
+              </div>
+            )}
+
+            {outcomeType === "NON_INTERESSATO" && (
+              <div className="mb-4 bg-red-950/20 border border-red-900/50 p-3 rounded-lg text-xs text-red-300">
+                Il contatto verrà nascosto dal calderone e non potrà essere chiamato da nessuno per 3 mesi (90 giorni).
+              </div>
+            )}
 
             <p className="text-sm text-gray-400 mb-2">
               Inserisci una nota obbligatoria:
@@ -580,7 +734,7 @@ export default function OperatorTerminal() {
             <textarea
               autoFocus
               className="w-full h-24 bg-gray-900 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-orange-500 resize-none mb-4"
-              placeholder="es. segreteria, occupato, mi ha detto di riprovare..."
+              placeholder={outcomeType === "NON_INTERESSATO" ? "Specifica il motivo del disinteresse (es: prezzi alti, lavorano già con altri)..." : "es. segreteria, occupato, mi ha detto di riprovare..."}
               value={outcomeNotes}
               onChange={e => setOutcomeNotes(e.target.value)}
             />
@@ -588,7 +742,7 @@ export default function OperatorTerminal() {
             <div className="flex justify-between items-center">
               <button 
                 onClick={() => handleOutcome("NO_INFO", "Nessuna Info")} 
-                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded font-medium transition"
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded font-medium transition"
               >
                 Nessuna Info
               </button>
@@ -600,9 +754,9 @@ export default function OperatorTerminal() {
                 <button 
                   onClick={() => handleOutcome(outcomeType, outcomeNotes)} 
                   disabled={!outcomeNotes.trim()}
-                  className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded font-medium transition disabled:opacity-50"
                 >
-                  Conferma Non Reperibile
+                  Salva
                 </button>
               </div>
             </div>
@@ -675,11 +829,103 @@ export default function OperatorTerminal() {
         <AppointmentModal
           contactId={contact.id}
           cap={contact.cap}
+          initialReferentName={contact.referentName}
+          initialPhone={contact.originalPhone === "N/D" ? (contact.phones?.[0]?.phone === "N/D" ? "" : contact.phones?.[0]?.phone) : contact.originalPhone}
+          initialEmail={contact.email === "N/D" ? "" : contact.email}
           onClose={() => setAppointmentModalOpen(false)}
           onSuccess={() => {
             fetchNextContact();
           }}
         />
+      )}
+
+      {/* Modal Alert Ricontatto */}
+      {showRecallAlert && activeRecall && (
+        <div className="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4 transition-all">
+          <div className="bg-gray-800 rounded-2xl border-2 border-orange-500 w-full max-w-md p-6 shadow-2xl relative">
+            <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-orange-500 rounded-full p-4 shadow-lg border-4 border-gray-800">
+              <PhoneCall className="w-8 h-8 text-white" />
+            </div>
+            
+            <div className="text-center mt-6">
+              <h3 className="text-xl font-black text-white tracking-wider uppercase mb-2">
+                ATTENZIONE: RICHIAMO SCADUTO!
+              </h3>
+              <p className="text-sm text-gray-400 mb-6">
+                È arrivato il momento di richiamare questo cliente come programmato.
+              </p>
+              
+              <div className="bg-gray-900/60 rounded-xl p-4 border border-gray-700/50 mb-6 text-left">
+                <span className="text-xs font-bold uppercase tracking-wider text-orange-400 block mb-1">Azienda da contattare</span>
+                <h4 className="text-lg font-bold text-white mb-2">{activeRecall.contact.name}</h4>
+                <p className="text-sm font-mono text-gray-300 flex items-center">
+                  <PhoneCall className="w-4 h-4 mr-2 text-gray-400" />
+                  {activeRecall.contact.originalPhone || "Nessun numero"}
+                </p>
+                <div className="mt-3 pt-3 border-t border-gray-800 text-xs text-gray-400">
+                  <span className="font-semibold">Nota Trattativa:</span> "{activeRecall.reason}"
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => {
+                    fetchNextContact(activeRecall.contact.id);
+                    setShowRecallAlert(false);
+                  }}
+                  className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white rounded-xl transition font-black tracking-wide shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2"
+                >
+                  <PhoneCall className="w-5 h-5" /> CHIAMA ORA!
+                </button>
+                
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch("/api/operator/recalls/pending", {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ id: activeRecall.id, minutes: 10 })
+                        });
+                        if (res.ok) {
+                          toast.success("Ricontatto posticipato di 10 minuti");
+                          setShowRecallAlert(false);
+                          setActiveRecall(null);
+                        }
+                      } catch (err) {
+                        toast.error("Errore di rete");
+                      }
+                    }}
+                    className="flex-1 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-xs font-bold transition"
+                  >
+                    Posticipa 10 Min
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch("/api/operator/recalls/pending", {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ id: activeRecall.id, minutes: 60 })
+                        });
+                        if (res.ok) {
+                          toast.success("Ricontatto posticipato di 1 ora");
+                          setShowRecallAlert(false);
+                          setActiveRecall(null);
+                        }
+                      } catch (err) {
+                        toast.error("Errore di rete");
+                      }
+                    }}
+                    className="flex-1 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-xs font-bold transition"
+                  >
+                    Posticipa 1 Ora
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

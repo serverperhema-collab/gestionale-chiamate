@@ -16,6 +16,7 @@ export default function OperatorNegotiationsPage() {
   const [colleagues, setColleagues] = useState<any[]>([]);
   const [selectedColleague, setSelectedColleague] = useState<string>("");
   const [negotiationToDelegate, setNegotiationToDelegate] = useState<string | null>(null);
+  const [delegationDuration, setDelegationDuration] = useState<string>("1");
 
   const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
   const [appointmentContactId, setAppointmentContactId] = useState("");
@@ -60,7 +61,7 @@ export default function OperatorNegotiationsPage() {
   }, []);
 
   const handleAbandon = async (id: string) => {
-    if (!confirm("Sei sicuro di voler abbandonare questa trattativa? Il contatto tornerà nel calderone per tutti.")) return;
+    if (!confirm("Sei sicuro di voler abbandonare questo richiamo? Il contatto tornerà nel calderone per tutti.")) return;
     
     try {
       const res = await fetch(`/api/operator/negotiations/${id}/action`, {
@@ -96,10 +97,13 @@ export default function OperatorNegotiationsPage() {
       const res = await fetch(`/api/operator/negotiations/${negotiationToDelegate}/delegate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetOperatorId: selectedColleague })
+        body: JSON.stringify({ 
+          targetOperatorId: selectedColleague,
+          durationDays: delegationDuration
+        })
       });
       if (res.ok) {
-        toast.success("Trattativa delegata con successo!");
+        toast.success("Richiamo delegato con successo!");
         setNegotiations(negotiations.filter(n => n.id !== negotiationToDelegate));
         setDelegationModalOpen(false);
       } else {
@@ -118,12 +122,12 @@ export default function OperatorNegotiationsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-2xl max-w-md w-full">
             <h3 className="text-xl font-bold text-white mb-4 flex items-center">
-              <Send className="w-5 h-5 mr-2 text-indigo-400" /> Delega Trattativa
+              <Send className="w-5 h-5 mr-2 text-indigo-400" /> Delega Richiamo
             </h3>
             <p className="text-gray-400 text-sm mb-4">
-              Scegli un collega a cui delegare temporaneamente questo ricontatto. Questa operazione trasferisce la proprietà della trattativa.
+              Scegli un collega a cui delegare questo richiamo personale. Questa operazione trasferisce la proprietà del richiamo.
             </p>
-            <div className="mb-6">
+            <div className="mb-4">
               <label className="block text-sm font-medium text-gray-400 mb-2">Seleziona Collega</label>
               <select
                 value={selectedColleague}
@@ -133,6 +137,22 @@ export default function OperatorNegotiationsPage() {
                 {colleagues.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
+              </select>
+            </div>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-400 mb-2">Durata della Delega (Giorni)</label>
+              <select
+                value={delegationDuration}
+                onChange={(e) => setDelegationDuration(e.target.value)}
+                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="1">1 Giorno</option>
+                <option value="2">2 Giorni</option>
+                <option value="3">3 Giorni</option>
+                <option value="5">5 Giorni</option>
+                <option value="7">7 Giorni (1 Settimana)</option>
+                <option value="15">15 Giorni</option>
+                <option value="30">30 Giorni (1 Mese)</option>
               </select>
             </div>
             <div className="flex justify-end gap-3">
@@ -175,10 +195,10 @@ export default function OperatorNegotiationsPage() {
       <div className="mb-8">
         <h2 className="text-2xl font-semibold text-white tracking-tight flex items-center">
           <Handshake className="w-6 h-6 mr-3 text-purple-400" />
-          I Miei Ricontatti (Trattative)
+          I Miei Richiami Personali
         </h2>
         <p className="text-gray-400 mt-1">
-          Gestisci i contatti che hai messo in trattativa. Fissa appuntamenti, chiama o delega ai colleghi.
+          Gestisci i contatti che hai messo in ricontatto personale. Fissa appuntamenti, chiama o delega ai colleghi.
         </p>
       </div>
 
@@ -189,8 +209,8 @@ export default function OperatorNegotiationsPage() {
       ) : negotiations.length === 0 ? (
         <div className="bg-gray-800 rounded-xl border border-gray-700 p-12 text-center shadow-lg">
           <Handshake className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-white mb-2">Nessuna trattativa in corso</h3>
-          <p className="text-gray-400">Non hai ricontatti attivi al momento.</p>
+          <h3 className="text-xl font-bold text-white mb-2">Nessun richiamo in corso</h3>
+          <p className="text-gray-400">Non hai richiami personali attivi al momento.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -240,6 +260,7 @@ export default function OperatorNegotiationsPage() {
                 <div className="grid grid-cols-2 gap-3 mt-auto">
                   <button
                     disabled={isPending}
+                    onClick={() => router.push(`/operator-terminal?contactId=${neg.contact.id}`)}
                     className="col-span-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition font-medium text-sm flex items-center justify-center disabled:opacity-50"
                   >
                     <Phone className="w-4 h-4 mr-2" /> Chiama Ora
@@ -266,7 +287,7 @@ export default function OperatorNegotiationsPage() {
                     onClick={() => handleAbandon(neg.id)}
                     className="col-span-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-red-400 rounded-lg transition font-medium text-sm flex items-center justify-center"
                   >
-                    <XCircle className="w-4 h-4 mr-2" /> Abbandona Ricontatto
+                    <XCircle className="w-4 h-4 mr-2" /> Abbandona Richiamo
                   </button>
                 </div>
               </div>

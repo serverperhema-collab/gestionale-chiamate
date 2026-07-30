@@ -7,11 +7,22 @@ import toast from "react-hot-toast";
 interface AppointmentModalProps {
   contactId: string;
   cap: string;
+  initialReferentName?: string;
+  initialPhone?: string;
+  initialEmail?: string;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export default function AppointmentModal({ contactId, cap, onClose, onSuccess }: AppointmentModalProps) {
+export default function AppointmentModal({ 
+  contactId, 
+  cap, 
+  initialReferentName = "",
+  initialPhone = "",
+  initialEmail = "",
+  onClose, 
+  onSuccess 
+}: AppointmentModalProps) {
   const [searchCap, setSearchCap] = useState(cap);
   const [availableAgendas, setAvailableAgendas] = useState<any[]>([]);
   const [loadingAgendas, setLoadingAgendas] = useState(true);
@@ -25,11 +36,12 @@ export default function AppointmentModal({ contactId, cap, onClose, onSuccess }:
   const [derogaTime, setDerogaTime] = useState("");
   const [derogaDate, setDerogaDate] = useState("");
 
+  const [referents, setReferents] = useState<{ name: string; role: string; phone: string }[]>([
+    { name: initialReferentName, role: "", phone: initialPhone }
+  ]);
+
   const [formData, setFormData] = useState({
-    referentName: "",
-    referentRole: "",
-    phone: "",
-    email: "",
+    email: initialEmail,
     clientNeeds: ""
   });
 
@@ -147,7 +159,11 @@ export default function AppointmentModal({ contactId, cap, onClose, onSuccess }:
           date: finalDate,
           isDeroga,
           zoneAgendaId: isDeroga ? null : selectedAgenda?.id,
-          ...formData
+          referentName: JSON.stringify(referents),
+          referentRole: referents[0]?.role || "Multipli",
+          phone: referents[0]?.phone || "",
+          email: formData.email,
+          clientNeeds: formData.clientNeeds
         })
       });
 
@@ -363,42 +379,88 @@ export default function AppointmentModal({ contactId, cap, onClose, onSuccess }:
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-gray-300 border-b border-gray-700 pb-2">Scheda Commerciale</h3>
               
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Nome Referente *</label>
-                <input
-                  type="text"
-                  value={formData.referentName}
-                  onChange={(e) => setFormData({...formData, referentName: e.target.value})}
-                  className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500 transition"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Ruolo Referente *</label>
-                <input
-                  type="text"
-                  value={formData.referentRole}
-                  onChange={(e) => setFormData({...formData, referentRole: e.target.value})}
-                  placeholder="Es. Titolare, Responsabile Acquisti"
-                  className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500 transition"
-                  required
-                />
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-gray-400">Referenti Aziendali (da 1 a 5) *</span>
+                  {referents.length < 5 && (
+                    <button
+                      type="button"
+                      onClick={() => setReferents([...referents, { name: "", role: "", phone: "" }])}
+                      className="text-[10px] bg-blue-600/30 text-blue-400 hover:bg-blue-600 hover:text-white px-2 py-0.5 rounded border border-blue-500/30 transition font-semibold"
+                    >
+                      + Aggiungi Referente
+                    </button>
+                  )}
+                </div>
+
+                <div className="max-h-60 overflow-y-auto space-y-3 pr-1">
+                  {referents.map((ref, idx) => (
+                    <div key={idx} className="p-3 bg-gray-900/60 rounded-lg border border-gray-700 space-y-2 relative">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Referente #{idx + 1}</span>
+                        {referents.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => setReferents(referents.filter((_, i) => i !== idx))}
+                            className="text-[10px] text-red-400 hover:text-red-300 font-semibold"
+                          >
+                            Rimuovi
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-[9px] text-gray-500 uppercase font-bold mb-0.5">Nome *</label>
+                          <input
+                            type="text"
+                            value={ref.name}
+                            onChange={(e) => {
+                              const updated = [...referents];
+                              updated[idx].name = e.target.value;
+                              setReferents(updated);
+                            }}
+                            className="w-full bg-gray-950 border border-gray-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] text-gray-500 uppercase font-bold mb-0.5">Ruolo *</label>
+                          <input
+                            type="text"
+                            value={ref.role}
+                            onChange={(e) => {
+                              const updated = [...referents];
+                              updated[idx].role = e.target.value;
+                              setReferents(updated);
+                            }}
+                            placeholder="Titolare"
+                            className="w-full bg-gray-950 border border-gray-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] text-gray-500 uppercase font-bold mb-0.5">Tel. Diretto *</label>
+                          <input
+                            type="text"
+                            value={ref.phone}
+                            onChange={(e) => {
+                              const updated = [...referents];
+                              updated[idx].phone = e.target.value;
+                              setReferents(updated);
+                            }}
+                            className="w-full bg-gray-950 border border-gray-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Telefono Diretto *</label>
-                <input
-                  type="text"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                  className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500 transition"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Email Referente</label>
+                <label className="block text-xs text-gray-400 mb-1">Email di Riferimento (Opzionale)</label>
                 <input
                   type="email"
                   value={formData.email}
@@ -412,7 +474,7 @@ export default function AppointmentModal({ contactId, cap, onClose, onSuccess }:
                 <textarea
                   value={formData.clientNeeds}
                   onChange={(e) => setFormData({...formData, clientNeeds: e.target.value})}
-                  rows={4}
+                  rows={3}
                   className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-1.5 text-sm text-white resize-none focus:outline-none focus:border-blue-500 transition"
                   required
                 />

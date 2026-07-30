@@ -1,0 +1,1 @@
+const d = new Date('2026-07-22T22:00:00.000Z'); console.log(d.toISOString().split('T')[0]); const target = new Date(d.toISOString().split('T')[0]); target.setHours(0,0,0,0); console.log(target.toISOString());

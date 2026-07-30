@@ -20,6 +20,7 @@ interface LiveOperator {
   idleMinutes: number;
   maxIdleTimeMins: number;
   isIdle: boolean;
+  skipCount: number;
   currentContact: {
     id: string;
     name: string;
@@ -188,8 +189,13 @@ export default function LiveMonitorClient() {
                     <td className="p-4 text-center text-blue-400 font-bold">
                       {op.stats.logins}
                     </td>
-                    <td className="p-4 text-center text-gray-500 font-semibold">
+                    <td className="p-4 text-center text-gray-400 font-semibold">
                       {op.stats.skip}
+                      {op.skipCount > 0 && (
+                        <span className="text-xs text-amber-500 font-bold block mt-0.5" title="Skip consecutivi (blocco a 5)">
+                          ({op.skipCount}/5)
+                        </span>
+                      )}
                     </td>
                     <td className="p-4 text-center text-red-400 font-semibold">
                       {op.stats.noAnswer}

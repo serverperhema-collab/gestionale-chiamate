@@ -1,8 +1,11 @@
 "use client";
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Play, Loader2, Map as MapIcon, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Play, Loader2, Map as MapIcon, AlertTriangle, CheckCircle2, CheckSquare, Square, X, Search as SearchIcon, ChevronDown, ChevronUp, Key, ShieldAlert } from "lucide-react";
 import lazioData from "@/data/lazio_caps.json";
 import { useExtraction } from "../ExtractionContext";
+import { CATEGORIES } from "@/data/categories";
+
+const EXCLUDED_IDS = ["comuni", "polizia", "parchi_pubblici"];
 
 function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371; // raggio terrestre in km
@@ -25,6 +28,85 @@ export default function ExtractPage() {
   const [provincia, setProvincia] = useState("");
   const [comune, setComune] = useState("");
   const [statsLoading, setStatsLoading] = useState(false);
+
+  // Stati per la gestione chiavi API e Settori direttamente in pagina
+  const [apiKey, setApiKey] = useState("");
+  const [enabledSectors, setEnabledSectors] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSectorsExpanded, setIsSectorsExpanded] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedKey = localStorage.getItem("custom_google_api_key") || "";
+      setApiKey(storedKey);
+      
+      const storedSectors = localStorage.getItem("enabled_categories");
+      if (storedSectors) {
+        try {
+          setEnabledSectors(JSON.parse(storedSectors));
+        } catch (e) {
+          const defaultSectors = CATEGORIES.filter(c => !EXCLUDED_IDS.includes(c.id)).map(c => c.id);
+          setEnabledSectors(defaultSectors);
+        }
+      } else {
+        const defaultSectors = CATEGORIES.filter(c => !EXCLUDED_IDS.includes(c.id)).map(c => c.id);
+        setEnabledSectors(defaultSectors);
+      }
+    }
+  }, []);
+
+  const handleApiKeyChange = (val: string) => {
+    setApiKey(val);
+    localStorage.setItem("custom_google_api_key", val.trim());
+  };
+
+  const toggleSector = (id: string) => {
+    setEnabledSectors(prev => {
+      const updated = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      localStorage.setItem("enabled_categories", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const selectAll = () => {
+    const all = CATEGORIES.map(c => c.id);
+    setEnabledSectors(all);
+    localStorage.setItem("enabled_categories", JSON.stringify(all));
+  };
+
+  const selectRecommended = () => {
+    const recommended = CATEGORIES.filter(c => !EXCLUDED_IDS.includes(c.id)).map(c => c.id);
+    setEnabledSectors(recommended);
+    localStorage.setItem("enabled_categories", JSON.stringify(recommended));
+  };
+
+  const clearAll = () => {
+    setEnabledSectors([]);
+    localStorage.setItem("enabled_categories", JSON.stringify([]));
+  };
+
+  const filteredCategories = useMemo(() => {
+    if (!searchTerm) return CATEGORIES;
+    const term = searchTerm.toLowerCase();
+    return CATEGORIES.filter(c => 
+      c.label.toLowerCase().includes(term) || 
+      c.group.toLowerCase().includes(term)
+    );
+  }, [searchTerm]);
+
+  const groupedFilteredCategories = useMemo(() => {
+    const groups: Record<string, typeof CATEGORIES> = {};
+    filteredCategories.forEach(c => {
+      if (!groups[c.group]) groups[c.group] = [];
+      groups[c.group].push(c);
+    });
+    return groups;
+  }, [filteredCategories]);
+
+  // Controlla se sono selezionati Comuni, Caserme (polizia) o Parchi
+  const hasExcludedSelected = useMemo(() => {
+    return enabledSectors.some(s => EXCLUDED_IDS.includes(s));
+  }, [enabledSectors]);
 
   // Se arriviamo dalla Mappa con un CAP pre-selezionato
   useEffect(() => {
@@ -125,21 +207,17 @@ export default function ExtractPage() {
       alert("Seleziona un CAP prima di iniziare.");
       return;
     }
-    
-    let enabledCategories: string[] = [];
-    const stored = localStorage.getItem('enabled_categories');
-    if (stored) {
-      try {
-        enabledCategories = JSON.parse(stored);
-      } catch (e) {}
-    }
 
-    if (enabledCategories.length === 0) {
-      alert("Attenzione: non hai selezionato nessuna categoria! Vai in Impostazioni per spuntare i settori che ti interessano.");
+    if (enabledSectors.length === 0) {
+      alert("Attenzione: non hai selezionato nessun settore commerciale! Seleziona almeno un settore prima di avviare l'estrazione.");
       return;
     }
 
-    startGlobalExtraction(cap, source, enabledCategories, comune, provincia);
+    // Assicuriamo il salvataggio in localStorage per contesti esterni
+    localStorage.setItem("custom_google_api_key", apiKey.trim());
+    localStorage.setItem("enabled_categories", JSON.stringify(enabledSectors));
+
+    startGlobalExtraction(cap, source, enabledSectors, comune, provincia);
   };
 
   return (
@@ -243,7 +321,27 @@ export default function ExtractPage() {
 
 
 
-        <div className="mb-8">
+        {/* CHIAVE API DINAMICA IN PAGINA */}
+        {source === "google" && (
+          <div className="mb-6 bg-gray-900/50 p-4 rounded-xl border border-gray-700">
+            <label className="block text-sm font-medium text-gray-400 mb-2 flex items-center">
+              <Key className="w-4 h-4 mr-2 text-blue-400" />
+              Chiave Google Maps API Personale (Opzionale)
+            </label>
+            <input 
+              type="password" 
+              value={apiKey} 
+              onChange={(e) => handleApiKeyChange(e.target.value)}
+              placeholder="Lascia vuoto per usare la chiave predefinita (AIzaSyD...)" 
+              className="w-full bg-gray-950 border border-gray-700 text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-sm"
+            />
+            <p className="text-[11px] text-gray-500 mt-1">
+              Puoi cambiare questa chiave di volta in volta. Verrà salvata nel browser.
+            </p>
+          </div>
+        )}
+
+        <div className="mb-6">
           <label className="block text-sm font-medium text-gray-400 mb-3">Sorgente Dati</label>
           <div className="flex flex-col sm:flex-row gap-4">
             <label className={`flex-1 flex items-center p-4 border rounded-xl cursor-pointer transition-all ${source === 'google' ? 'border-blue-500 bg-blue-500/10 shadow-inner' : 'border-gray-700 bg-gray-900 hover:border-gray-600'}`}>
@@ -261,6 +359,126 @@ export default function ExtractPage() {
               </div>
             </label>
           </div>
+        </div>
+
+        {/* CONTROLLO SETTORI DINAMICO IN PAGINA */}
+        <div className="mb-8 border border-gray-700 rounded-xl overflow-hidden bg-gray-900/30">
+          <button 
+            type="button"
+            onClick={() => setIsSectorsExpanded(!isSectorsExpanded)}
+            className="w-full flex justify-between items-center p-4 bg-gray-800 hover:bg-gray-800/80 text-white font-medium transition-colors"
+          >
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-bold text-gray-200">Settori Commerciali di Ricerca</span>
+              <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full font-mono">
+                {enabledSectors.length} selezionati
+              </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-gray-400">{isSectorsExpanded ? "Nascondi" : "Configura"}</span>
+              {isSectorsExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </div>
+          </button>
+
+          {isSectorsExpanded && (
+            <div className="p-4 border-t border-gray-700 bg-gray-900/50 space-y-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                {/* Azioni rapide */}
+                <div className="flex flex-wrap gap-2">
+                  <button 
+                    type="button" 
+                    onClick={selectRecommended} 
+                    className="px-2.5 py-1 text-xs font-semibold bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 border border-emerald-500/30 rounded-lg transition"
+                  >
+                    Tutti tranne esclusi (Consigliato)
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={selectAll} 
+                    className="px-2.5 py-1 text-xs font-semibold bg-blue-900/40 hover:bg-blue-800/60 text-blue-200 border border-blue-500/20 rounded-lg transition"
+                  >
+                    Includi Comuni/Parchi/Forze Ordine
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={clearAll} 
+                    className="px-2.5 py-1 text-xs font-semibold bg-red-900/20 hover:bg-red-900/40 text-red-300 border border-red-500/20 rounded-lg transition"
+                  >
+                    Azzera
+                  </button>
+                </div>
+
+                {/* Cerca settore */}
+                <div className="relative flex-1 max-w-xs">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <SearchIcon className="h-4 w-4 text-gray-500" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Cerca settore..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-gray-950 border border-gray-700 rounded-lg pl-9 pr-4 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Avviso Esclusi */}
+              {hasExcludedSelected && (
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 flex items-start">
+                  <ShieldAlert className="w-4 h-4 text-yellow-500 mt-0.5 mr-2.5 flex-shrink-0" />
+                  <p className="text-[11px] text-yellow-500 leading-relaxed">
+                    <strong>Attenzione:</strong> Hai incluso Municipii, Forze dell'Ordine o Parchi Pubblici. Google potrebbe includere enti pubblici e istituzioni che non sono target commerciali.
+                  </p>
+                </div>
+              )}
+
+              {/* Griglia Settori */}
+              <div className="max-h-60 overflow-y-auto space-y-4 pr-1 scrollbar-thin scrollbar-thumb-gray-800">
+                {Object.entries(groupedFilteredCategories).map(([group, sectors]) => (
+                  <div key={group} className="space-y-1.5">
+                    <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider px-1">{group}</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                      {sectors.map(sector => {
+                        const isSelected = enabledSectors.includes(sector.id);
+                        const isExcludedByDefault = EXCLUDED_IDS.includes(sector.id);
+                        return (
+                          <label
+                            key={sector.id}
+                            className={`flex items-center p-2 rounded-lg border text-left cursor-pointer transition-all select-none ${
+                              isSelected
+                                ? isExcludedByDefault
+                                  ? 'bg-yellow-950/20 border-yellow-500/40 text-yellow-300'
+                                  : 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300'
+                                : 'bg-gray-950 border-gray-800 text-gray-500 hover:border-gray-700'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleSector(sector.id)}
+                              className="hidden"
+                            />
+                            <div className={`w-4 h-4 rounded flex items-center justify-center mr-2 flex-shrink-0 ${
+                              isSelected 
+                                ? isExcludedByDefault ? 'bg-yellow-600' : 'bg-emerald-600' 
+                                : 'bg-gray-900 border border-gray-700'
+                            }`}>
+                              {isSelected && <CheckSquare className="w-3.5 h-3.5 text-white" />}
+                            </div>
+                            <span className="text-xs truncate">{sector.label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+                {filteredCategories.length === 0 && (
+                  <p className="text-xs text-gray-500 text-center py-4">Nessun settore corrisponde alla ricerca.</p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
         
         <button 

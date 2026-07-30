@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
+import { checkExpiredDelegations } from "@/lib/delegationHelper";
 
 export async function GET(req: Request) {
   try {
@@ -9,6 +10,8 @@ export async function GET(req: Request) {
     if (!session || (session.user as any).role !== "OPERATORE") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
+
+    await checkExpiredDelegations();
 
     const userId = (session.user as any).id;
 
@@ -32,9 +35,38 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Sei bloccato per troppi 'Skip' ravvicinati.", skipLocked: true, lockedUntil: user.skipLockedUntil.toISOString() }, { status: 403 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const targetContactId = searchParams.get("contactId");
+
+    if (targetContactId) {
+      // Rilascia eventuali altri contatti correntemente assegnati che non siano ricontatti personali
+      await prisma.contact.updateMany({
+        where: { assignedToId: userId, id: { not: targetContactId }, isPersonalCallback: false },
+        data: { assignedToId: null }
+      });
+
+      // Assegna e carica il contatto desiderato
+      const targetContact = await prisma.contact.update({
+        where: { id: targetContactId },
+        data: { assignedToId: userId },
+        include: { phones: true, callLogs: { orderBy: { createdAt: "desc" }, take: 5 } }
+      });
+
+      // Aggiorna l'attività dell'utente
+      await prisma.user.update({
+        where: { id: userId },
+        data: { lastActivityAt: new Date() }
+      });
+
+      return NextResponse.json({ 
+        contact: targetContact, 
+        skipLocked: !!(user.skipLockedUntil && user.skipLockedUntil > new Date()) 
+      });
+    }
+
     // First check if the user already has a contact assigned to them (from manual creation or pending)
     const currentAssigned = await prisma.contact.findFirst({
-      where: { assignedToId: userId, isKo: false, isPersonalCallback: false },
+      where: { assignedToId: userId, isKo: false, blacklisted: false, isPersonalCallback: false },
       include: { phones: true, callLogs: { orderBy: { createdAt: "desc" }, take: 5 } }
     });
 
@@ -67,6 +99,7 @@ export async function GET(req: Request) {
     // Filter conditions
     const whereCondition: any = {
       isKo: false,
+      blacklisted: false,
       assignedToId: null, // Not assigned to anyone else
       OR: [
         { hiddenUntil: null },

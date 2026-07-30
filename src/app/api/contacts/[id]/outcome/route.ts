@@ -18,9 +18,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     const body = await req.json();
-    const { outcome, notes, recallDate, delayHours } = body;
+    const { outcome, notes, recallDate, delayHours, targetCompany } = body;
     // Check note obbligatorie
-    if (["NOT_AVAILABLE", "NEGOTIATION"].includes(outcome)) {
+    if (["NOT_AVAILABLE", "NEGOTIATION", "NON_INTERESSATO"].includes(outcome)) {
       if (!notes || notes.trim() === "") {
         return NextResponse.json({ error: "Le note sono obbligatorie per questo esito." }, { status: 400 });
       }
@@ -179,6 +179,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             data: { notAvailableLockedUntil: new Date(Date.now() + user.notAvailableLockTime * 60 * 1000) }
           }));
         }
+      } else if (outcome === "NON_INTERESSATO") {
+        // Nascondi per 90 giorni (3 mesi)
+        contactUpdateData.hiddenUntil = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+        contactUpdateData.lastOutcome = "NON_INTERESSATO";
       } else if (outcome === "NO_INFO") {
         // "butta in un angolo per 24 ore"
         contactUpdateData.hiddenUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -189,7 +193,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             contactId: id,
             operatorId: userId,
             reason: notes,
-            recallDate: new Date(recallDate)
+            recallDate: new Date(recallDate),
+            isApproved: true // Auto-approved recall
           }
         }));
       } else if (outcome === "APPOINTMENT") {
@@ -211,6 +216,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       // Togliamo questo blocco che sovrascriverebbe hiddenUntil e la rimetterebbe in circolo!
       // In negotiation non deve tornare nel calderone globale, ci pensa la tab "Le mie Trattative"
       
+      if (targetCompany) {
+        contactUpdateData.targetCompany = targetCompany;
+      }
+
       transaction.push(prisma.contact.update({
         where: { id: id },
         data: contactUpdateData

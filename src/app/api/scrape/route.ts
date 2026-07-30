@@ -251,6 +251,16 @@ export async function GET(req: NextRequest) {
                   continue;
               }
 
+              // Controllo blacklist per nome+CAP: impedisce la re-inserzione se il placeId OSM/Google è cambiato
+              const nameNormalized = l.name.toLowerCase().replace(/\s+/g, ' ').trim();
+              const blacklistHit = await prisma.contact.findFirst({
+                  where: { cap, blacklisted: true, name: { equals: l.name, mode: 'insensitive' } }
+              });
+              if (blacklistHit) {
+                  discarded++;
+                  continue;
+              }
+
               if (i % 5 === 0) await log(`Aggiunte ${added} aziende su ${totalFound}...`);
 
               const telefono = "N/D";
@@ -324,6 +334,15 @@ export async function GET(req: NextRequest) {
               const placeId = `osm_${el.id}`;
               const existing = await prisma.contact.findUnique({ where: { placeId } });
               if (existing) {
+                  discarded++;
+                  continue;
+              }
+
+              // Controllo blacklist per nome+CAP: impedisce la re-inserzione se l'ID OSM è cambiato
+              const blacklistHit = await prisma.contact.findFirst({
+                  where: { cap, blacklisted: true, name: { equals: name, mode: 'insensitive' } }
+              });
+              if (blacklistHit) {
                   discarded++;
                   continue;
               }

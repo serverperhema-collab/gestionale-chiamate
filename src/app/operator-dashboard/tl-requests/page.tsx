@@ -140,7 +140,7 @@ export default function OperatorTlRequestsPage() {
 
                 <div className="grid grid-cols-2 gap-3 mt-auto">
                   <Link
-                    href={`/operator-terminal?negotiationId=${neg.id}`}
+                    href={`/operator-terminal?contactId=${neg.contact.id}`}
                     className="col-span-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition font-medium text-sm flex items-center justify-center"
                   >
                     <Phone className="w-4 h-4 mr-2" /> Chiama Ora
@@ -154,12 +154,6 @@ export default function OperatorTlRequestsPage() {
                     className="col-span-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition font-medium text-sm flex items-center justify-center"
                   >
                     <Calendar className="w-4 h-4 mr-2" /> Fissa Appuntamento
-                  </button>
-                  <button
-                    onClick={() => handleAbandon(neg.id)}
-                    className="col-span-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-red-400 rounded-lg transition font-medium text-sm flex items-center justify-center"
-                  >
-                    <XCircle className="w-4 h-4 mr-2" /> Scarta Richiesta
                   </button>
                 </div>
               </div>

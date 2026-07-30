@@ -184,8 +184,8 @@ export default async function TLDashboardPage() {
           <Link href="/tl-dashboard/negotiations" className="group">
             <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-purple-500 transition h-full relative overflow-hidden">
               <Handshake className="w-8 h-8 text-purple-400 mb-4" />
-              <h2 className="text-lg font-semibold text-white">Trattative Pendenti</h2>
-              <p className="text-sm text-gray-400 mt-2">Approva i ricontatti degli operatori e imposta le scadenze (Point 6).</p>
+              <h2 className="text-lg font-semibold text-white">Richiami Personali</h2>
+              <p className="text-sm text-gray-400 mt-2">Visualizza e gestisci tutti i richiami personali e le trattative in corso degli operatori.</p>
             </div>
           </Link>
 

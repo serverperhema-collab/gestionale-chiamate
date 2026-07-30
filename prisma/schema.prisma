@@ -128,6 +128,17 @@ model Contact {
   isKo               Boolean   @default(false)
   isPersonalCallback Boolean   @default(false)
 
+  // Nuovi Campi per il Piano di Sviluppo
+  blacklisted        Boolean   @default(false)
+  blacklistReason    String?
+  delegatedToId      String?
+  delegatedUntil     DateTime?
+  reviewRequestedAt  DateTime?
+  reviewNote         String?
+  skipCount          Int       @default(0)
+  lastOutcome        String?
+  targetCompany      String?
+
   // Relations
   phones       ContactPhone[]
   callLogs     CallLog[]
@@ -166,6 +177,7 @@ enum CallOutcome {
   APPOINTMENT
   TRASH_REQUEST
   SKIP
+  NON_INTERESSATO
 }
 
 model CallLog {

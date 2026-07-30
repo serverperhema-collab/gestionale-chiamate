@@ -11,12 +11,12 @@ export async function GET(req: Request) {
     }
 
     const negotiations = await prisma.negotiation.findMany({
-      where: { isApproved: false, isAbandoned: false },
+      where: { isAbandoned: false },
       include: {
         contact: { select: { name: true, cap: true, originalPhone: true } },
         operator: { select: { name: true } }
       },
-      orderBy: { createdAt: "asc" }
+      orderBy: { recallDate: "asc" }
     });
 
     return NextResponse.json({ negotiations });

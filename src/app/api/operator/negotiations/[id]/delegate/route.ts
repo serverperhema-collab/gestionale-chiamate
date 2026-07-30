@@ -12,7 +12,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
 
     const userId = (session.user as any).id;
-    const { targetOperatorId } = await req.json();
+    const { targetOperatorId, durationDays } = await req.json();
 
     if (!targetOperatorId) {
       return NextResponse.json({ error: "Nessun operatore di destinazione specificato" }, { status: 400 });
@@ -33,6 +33,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       return NextResponse.json({ error: "Operatore di destinazione non valido" }, { status: 400 });
     }
 
+    // Calcola scadenza delega
+    const delegatedUntil = durationDays ? new Date(Date.now() + parseInt(durationDays) * 24 * 60 * 60 * 1000) : null;
+
     // Effettua la delega
     await prisma.$transaction([
       prisma.negotiation.update({
@@ -45,7 +48,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       }),
       prisma.contact.update({
         where: { id: negotiation.contactId },
-        data: { assignedToId: targetOperatorId }
+        data: { 
+          assignedToId: targetOperatorId,
+          delegatedToId: targetOperatorId,
+          delegatedUntil: delegatedUntil
+        }
       })
     ]);
 

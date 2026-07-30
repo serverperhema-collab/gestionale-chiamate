@@ -21,6 +21,7 @@ export async function GET() {
         name: true,
         lastActivityAt: true,
         maxIdleTimeMins: true,
+        skipCount: true,
         assignedContacts: {
           where: { isKo: false },
           select: {
@@ -101,6 +102,7 @@ export async function GET() {
         idleMinutes,
         maxIdleTimeMins: op.maxIdleTimeMins,
         isIdle,
+        skipCount: op.skipCount,
         currentContact: op.assignedContacts.length > 0 ? op.assignedContacts[0] : null,
         stats: { skip, noAnswer, negotiation, appt, enrichment, logins, minutesOn }
       };
