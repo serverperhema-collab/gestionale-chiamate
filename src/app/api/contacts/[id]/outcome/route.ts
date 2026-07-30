@@ -202,7 +202,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         contactUpdateData.hiddenUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 anno
       } else if (outcome === "TRASH_REQUEST") {
         contactUpdateData.hiddenUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // Nascondilo finché il TL non decide
+        contactUpdateData.reviewRequestedAt = new Date();
+        contactUpdateData.reviewNote = `RICHIESTA ELIMINAZIONE: ${notes || "Nessuna motivazione"}`;
         
+        eventEmitter.emit("tl-alert", { 
+          type: "REVIEW", 
+          operatorName: userName, 
+          reason: `Richiesta eliminazione contatto da valutare.` 
+        });
+
         transaction.push(prisma.deletionRequest.create({
           data: {
             contactId: id,
