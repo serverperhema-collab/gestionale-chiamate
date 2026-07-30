@@ -56,6 +56,48 @@ export async function GET() {
       }
     });
 
+    // Fetch review requests (Strict Lock notes)
+    const reviewContacts = await prisma.contact.findMany({
+      where: { reviewRequestedAt: { not: null } },
+      include: {
+        assignedTo: { select: { id: true, name: true } },
+        appointments: { where: { status: { in: ["PENDING", "CONFIRMED"] } }, select: { id: true, date: true, operatorId: true, operator: { select: { name: true } } } },
+        negotiations: { where: { isAbandoned: false }, select: { id: true, operatorId: true, operator: { select: { name: true } } } },
+        activityLogs: {
+          where: { action: "CONTACT_REVIEW_REQUESTED" },
+          orderBy: { date: 'desc' },
+          take: 1,
+          select: { user: { select: { id: true, name: true } } }
+        }
+      }
+    });
+
+    reviewContacts.forEach(c => {
+      const requester = c.activityLogs[0]?.user;
+      
+      let lockContext = "Nessun blocco specifico trovato";
+      let lockType = "NONE";
+      if (c.appointments.length > 0) {
+        lockType = "APPOINTMENT";
+        lockContext = `Appuntamento fissato da ${c.appointments[0].operator?.name} il ${c.appointments[0].date.toLocaleString('it-IT')}`;
+      } else if (c.negotiations.length > 0) {
+        lockType = "NEGOTIATION";
+        lockContext = `In Trattativa con ${c.negotiations[0].operator?.name}`;
+      }
+
+      activeAlerts.push({
+        type: 'REVIEW_REQUEST',
+        contactId: c.id,
+        contactName: c.name,
+        requesterName: requester?.name || "Sconosciuto",
+        requesterId: requester?.id || "",
+        reviewNote: c.reviewNote,
+        reviewRequestedAt: c.reviewRequestedAt,
+        lockContext,
+        lockType
+      });
+    });
+
     return NextResponse.json({ alerts: activeAlerts });
 
   } catch (error) {

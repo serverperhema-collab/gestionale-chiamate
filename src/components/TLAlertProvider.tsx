@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { usePathname } from "next/navigation";
 import { XCircle, AlertTriangle, Unlock, UserX } from "lucide-react";
+import TLReviewAlertModal from "./TLReviewAlertModal";
 
 export default function TLAlertProvider() {
   const alertedLocksRef = useRef<Set<string>>(new Set());
@@ -56,7 +57,12 @@ export default function TLAlertProvider() {
         if (!data.alerts || !Array.isArray(data.alerts)) return;
 
         for (const alert of data.alerts) {
-          const alertKey = `${alert.userId}-${alert.type}-${alert.lockedUntil}`;
+          let alertKey = "";
+          if (alert.type === 'REVIEW_REQUEST') {
+            alertKey = `REVIEW-${alert.contactId}-${new Date(alert.reviewRequestedAt).getTime()}`;
+          } else {
+            alertKey = `${alert.userId}-${alert.type}-${alert.lockedUntil}`;
+          }
           
           if (!alertedLocksRef.current.has(alertKey)) {
             alertedLocksRef.current.add(alertKey);
@@ -152,6 +158,18 @@ export default function TLAlertProvider() {
       setActionLoading(false);
     }
   };
+
+  if (activeModalAlert.type === 'REVIEW_REQUEST') {
+    return (
+      <TLReviewAlertModal 
+        alert={activeModalAlert} 
+        onClose={() => {
+          setActiveModalAlert(null);
+          window.dispatchEvent(new Event("tl-refresh-data"));
+        }} 
+      />
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
