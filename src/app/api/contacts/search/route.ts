@@ -6,10 +6,11 @@ import { authOptions } from "@/lib/authOptions";
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "TEAM_LEADER") {
+    if (!session || !["OPERATORE", "TEAM_LEADER"].includes((session.user as any).role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
+    const userId = (session.user as any).id;
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q");
 
@@ -20,18 +21,62 @@ export async function GET(req: Request) {
     const contacts = await prisma.contact.findMany({
       where: {
         OR: [
-          { name: { contains: q, mode: 'insensitive' } },
-          { originalPhone: { contains: q } },
-          { id: { equals: q } }
+          { name: { contains: q, mode: "insensitive" } },
+          { originalPhone: { contains: q, mode: "insensitive" } },
+          { address: { contains: q, mode: "insensitive" } },
+          { phones: { some: { phone: { contains: q, mode: "insensitive" } } } }
         ]
       },
-      take: 10,
-      select: { id: true, name: true, originalPhone: true, cap: true }
+      take: 20,
+      include: {
+        phones: true,
+        assignedTo: { select: { name: true } }
+      }
     });
 
-    return NextResponse.json({ contacts });
+    const now = new Date();
+
+    const formattedContacts = contacts.map((c) => {
+      let isLocked = false;
+      let lockReason = null;
+
+      if (c.blacklisted) {
+        isLocked = true;
+        lockReason = "Cestino Permanente (Blacklist)";
+      } else if (c.isKo) {
+        isLocked = true;
+        lockReason = "Scartato (KO)";
+      } else if (c.assignedToId && c.assignedToId !== userId) {
+        isLocked = true;
+        lockReason = `In lavorazione da: ${c.assignedTo?.name || "Altro operatore"}`;
+      } else if (c.hiddenUntil && c.hiddenUntil > now) {
+        isLocked = true;
+        if (c.lastOutcome === "NEGOTIATION") {
+          lockReason = "In Trattativa (Nascosto)";
+        } else if (c.lastOutcome === "NON_INTERESSATO") {
+          lockReason = "Non Interessato (Blocco 90gg)";
+        } else {
+          lockReason = `Nascosto fino al ${c.hiddenUntil.toLocaleDateString("it-IT")} (Esito recente)`;
+        }
+      } else if (c.lastOutcome === "NEGOTIATION") {
+        isLocked = true;
+        lockReason = "In Trattativa (Richiede verifica)";
+      }
+
+      return {
+        id: c.id,
+        name: c.name,
+        address: c.address,
+        cap: c.cap,
+        phone: c.phones?.[0]?.phone || c.originalPhone || "",
+        isLocked,
+        lockReason
+      };
+    });
+
+    return NextResponse.json({ contacts: formattedContacts });
   } catch (error) {
-    console.error("GET search contacts error:", error);
+    console.error("GET contacts/search error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

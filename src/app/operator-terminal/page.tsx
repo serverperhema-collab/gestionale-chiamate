@@ -7,6 +7,7 @@ import { signOut } from "next-auth/react";
 import Link from "next/link";
 import CreateContactModal from "@/components/CreateContactModal";
 import AppointmentModal from "@/components/AppointmentModal";
+import SearchContactModal from "@/components/SearchContactModal";
 
 export default function OperatorTerminal() {
   const [contact, setContact] = useState<any>(null);
@@ -54,6 +55,8 @@ export default function OperatorTerminal() {
   
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [reviewNotes, setReviewNotes] = useState("");
+
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
 
   const fetchNextContact = useCallback(async (forcedContactId?: string) => {
     setLoading(true);
@@ -298,6 +301,13 @@ export default function OperatorTerminal() {
           Terminale Operatore
         </h1>
         <div className="flex items-center space-x-4">
+          <button 
+            onClick={() => setSearchModalOpen(true)}
+            className="px-3 py-1.5 bg-blue-900/40 border border-blue-800/50 hover:bg-blue-800/60 text-sm text-blue-200 rounded transition font-medium flex items-center"
+          >
+            <Search className="w-4 h-4 mr-1.5" />
+            Cerca
+          </button>
           <Link href="/operator-dashboard/tl-requests" className="px-3 py-1.5 bg-red-900/40 border border-red-800/50 hover:bg-red-800/60 text-sm text-red-200 rounded transition font-medium">
             Richieste TL
           </Link>
@@ -926,6 +936,16 @@ export default function OperatorTerminal() {
             </div>
           </div>
         </div>
+      )}
+
+      {searchModalOpen && (
+        <SearchContactModal 
+          onClose={() => setSearchModalOpen(false)} 
+          onSelect={(id) => {
+            setSearchModalOpen(false);
+            fetchNextContact(id);
+          }}
+        />
       )}
     </div>
   );
