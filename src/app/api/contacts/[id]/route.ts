@@ -75,19 +75,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     if (email !== undefined) {
       updateData.email = email;
-      if (contact.email && contact.email.trim() !== "" && contact.email !== email) isDestructive = true;
     }
     if (referentName !== undefined) {
       updateData.referentName = referentName;
-      if (contact.referentName && contact.referentName.trim() !== "" && contact.referentName !== referentName) isDestructive = true;
     }
     if (website !== undefined) {
       updateData.website = website;
-      if (contact.website && contact.website.trim() !== "" && contact.website !== website) isDestructive = true;
     }
     if (notes !== undefined) {
       updateData.notes = notes;
-      // Notes are considered free text, we don't count them as destructive if they just append or change them
     }
 
     let willLock = false;
@@ -106,19 +102,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       
       const maxMods = user.maxDailyModifications ?? 5;
       if (newModCount >= maxMods) {
-        willLock = true;
+        // NON Blocchiamo più l'operatore, mandiamo solo l'alert
+        willLock = false;
         eventEmitter.emit("tl-alert", { 
-          type: "LOCK", 
+          type: "ALERT", 
           operatorName: userName, 
-          reason: `Bloccato per troppe modifiche ai contatti esistenti (${newModCount}).` 
+          reason: `Attenzione: l'operatore ha modificato molti NUMERI DI TELEFONO esistenti (${newModCount}).` 
         });
       }
 
-      const lockMins = user.modLockTimeMins ?? 10;
       userUpdateData = {
         dailyModifications: newModCount,
         lastModificationDate: new Date(),
-        modLockedUntil: willLock ? new Date(Date.now() + lockMins * 60 * 1000) : null
+        // modLockedUntil: null (rimosso il blocco)
       };
     }
 
