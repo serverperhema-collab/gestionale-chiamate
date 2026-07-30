@@ -71,7 +71,40 @@ export default function SearchContactModal({ onClose, onSelect }: SearchContactM
     }
   };
 
+  const [reviewNote, setReviewNote] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  const submitReviewRequest = async (contactId: string) => {
+    if (!reviewNote.trim()) {
+      toast.error("Inserisci una nota per la TL");
+      return;
+    }
+    setSubmittingReview(true);
+    try {
+      const res = await fetch(`/api/contacts/${contactId}/review-request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: reviewNote, preserveAssignment: true })
+      });
+      if (res.ok) {
+        toast.success("Segnalazione inviata alla TL!");
+        setShowWarning(false);
+        setSelectedContact(null);
+        setReviewNote("");
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Errore");
+      }
+    } catch (e) {
+      toast.error("Errore di rete");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   if (showWarning && selectedContact) {
+    const isStrict = selectedContact.isStrictLocked;
+
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div className="bg-gray-800 rounded-xl border border-red-500/50 w-full max-w-md p-6 shadow-2xl relative">
@@ -79,7 +112,7 @@ export default function SearchContactModal({ onClose, onSelect }: SearchContactM
             <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
               <AlertTriangle className="w-8 h-8 text-red-500" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">Attenzione!</h3>
+            <h3 className="text-xl font-bold text-white mb-2">{isStrict ? "Contatto Inviolabile" : "Attenzione!"}</h3>
             <p className="text-gray-300 mb-2">
               Stai cercando di gestire <strong>{selectedContact.name}</strong>, ma attualmente è in blocco.
             </p>
@@ -87,25 +120,51 @@ export default function SearchContactModal({ onClose, onSelect }: SearchContactM
               <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">Motivo del blocco:</p>
               <p className="text-red-400 font-medium">{selectedContact.lockReason}</p>
             </div>
-            <p className="text-sm text-gray-400 mb-6">
-              Forzando l'estrazione lo riporterai in stato lavorabile e te lo assegnerai. Vuoi procedere comunque?
-            </p>
+
+            {isStrict ? (
+              <div className="w-full text-left mb-6">
+                <p className="text-sm text-gray-400 mb-3">
+                  Non puoi forzare l'assegnazione perché è una trattativa o appuntamento di un altro operatore. Puoi inviare una nota alla TL.
+                </p>
+                <textarea
+                  value={reviewNote}
+                  onChange={(e) => setReviewNote(e.target.value)}
+                  placeholder="Scrivi qui cosa vuoi dire alla TL su questo contatto..."
+                  className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-red-500 text-sm h-24 resize-none"
+                />
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400 mb-6">
+                Forzando l'estrazione lo riporterai in stato lavorabile e te lo assegnerai. Vuoi procedere comunque?
+              </p>
+            )}
             
             <div className="flex space-x-3 w-full">
               <button 
-                disabled={assigning}
-                onClick={() => { setShowWarning(false); setSelectedContact(null); }}
+                disabled={assigning || submittingReview}
+                onClick={() => { setShowWarning(false); setSelectedContact(null); setReviewNote(""); }}
                 className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
               >
                 Annulla
               </button>
-              <button 
-                disabled={assigning}
-                onClick={() => forceAssign(selectedContact.id)}
-                className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition disabled:opacity-50"
-              >
-                {assigning ? "Estrazione..." : "Sì, Forza Assegnazione"}
-              </button>
+              
+              {isStrict ? (
+                <button 
+                  disabled={submittingReview}
+                  onClick={() => submitReviewRequest(selectedContact.id)}
+                  className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition disabled:opacity-50"
+                >
+                  {submittingReview ? "Invio..." : "Invia Nota a TL"}
+                </button>
+              ) : (
+                <button 
+                  disabled={assigning}
+                  onClick={() => forceAssign(selectedContact.id)}
+                  className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition disabled:opacity-50"
+                >
+                  {assigning ? "Estrazione..." : "Sì, Forza Assegnazione"}
+                </button>
+              )}
             </div>
           </div>
         </div>
