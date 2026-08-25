@@ -7,6 +7,7 @@ import LogoutButton from "@/components/LogoutButton";
 import CreateUserModal from "@/components/CreateUserModal";
 import { prisma } from "@/lib/prisma";
 import TlTasksWidget from "@/components/TlTasksWidget";
+import LiveClock from "@/components/LiveClock";
 
 export default async function TLDashboardPage() {
 
@@ -58,6 +59,7 @@ export default async function TLDashboardPage() {
           TL Control Center
         </h1>
         <div className="flex items-center space-x-6">
+          <LiveClock />
           <div className="flex items-center space-x-4 bg-gray-900 px-4 py-1.5 rounded-full border border-gray-700">
             <span className="text-sm font-medium text-gray-300">Bentornato, {session.user?.name}</span>
             <div className="h-4 w-px bg-gray-700"></div>
