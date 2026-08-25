@@ -9,15 +9,11 @@ export default function TLReviewAlertModal({ alert, onClose }: { alert: any, onC
   const [actionType, setActionType] = useState<string>("LEAVE_WITH_NOTE");
   const [note, setNote] = useState("");
   
-  // Per riassegnazione
   const [operators, setOperators] = useState<any[]>([]);
   const [selectedOperatorId, setSelectedOperatorId] = useState("");
   
-  // Per spostamento appuntamento
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("");
-
-  // Per calderone
   const [delayMins, setDelayMins] = useState("60");
 
   useEffect(() => {
@@ -43,7 +39,7 @@ export default function TLReviewAlertModal({ alert, onClose }: { alert: any, onC
       payload.note = note;
     } else if (actionType === "RESCHEDULE_APP") {
       if (!newDate || !newTime) { toast.error("Seleziona data e ora"); setLoading(false); return; }
-      payload.newDate = ${newDate}T:00;
+      payload.newDate = `${newDate}T${newTime}:00`;
       payload.note = note;
     } else if (actionType === "CANCEL_AND_CALDERONE") {
       if (!delayMins) { toast.error("Inserisci i minuti"); setLoading(false); return; }
@@ -54,7 +50,7 @@ export default function TLReviewAlertModal({ alert, onClose }: { alert: any, onC
     }
 
     try {
-      const res = await fetch(/api/contacts/ + alert.contactId + /review-action, {
+      const res = await fetch(`/api/contacts/${alert.contactId}/review-action`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -92,7 +88,7 @@ export default function TLReviewAlertModal({ alert, onClose }: { alert: any, onC
           <div className="mb-6">
             <h3 className="text-xl font-bold text-white">{alert.contactName}</h3>
             <p className="text-gray-400 mt-1">L'operatore <strong>{alert.requesterName}</strong> sta cercando di prenderlo, ma c'è un blocco:</p>
-            <div className={mt-3 p-3 rounded-lg border  + (isApp ? 'bg-blue-900/20 border-blue-800' : 'bg-indigo-900/20 border-indigo-800')}>
+            <div className={`mt-3 p-3 rounded-lg border ${isApp ? 'bg-blue-900/20 border-blue-800' : 'bg-indigo-900/20 border-indigo-800'}`}>
               <div className="flex items-center font-semibold text-gray-200">
                 {isApp ? <Calendar className="w-5 h-5 mr-2 text-blue-400"/> : <Handshake className="w-5 h-5 mr-2 text-indigo-400"/>}
                 {alert.lockContext}
@@ -106,7 +102,7 @@ export default function TLReviewAlertModal({ alert, onClose }: { alert: any, onC
           </div>
           <h4 className="text-sm font-bold text-gray-300 uppercase mb-3">Scegli Azione:</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-            <label className={cursor-pointer rounded-lg border p-3 flex items-center transition  + (actionType === 'LEAVE_WITH_NOTE' ? 'bg-purple-600/20 border-purple-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500')}>
+            <label className={`cursor-pointer rounded-lg border p-3 flex items-center transition ${actionType === 'LEAVE_WITH_NOTE' ? 'bg-purple-600/20 border-purple-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'}`}>
               <input type="radio" name="actionType" className="hidden" checked={actionType === 'LEAVE_WITH_NOTE'} onChange={() => setActionType('LEAVE_WITH_NOTE')} />
               <div className="w-4 h-4 rounded-full border border-current mr-3 flex-shrink-0 flex items-center justify-center">
                 {actionType === 'LEAVE_WITH_NOTE' && <div className="w-2 h-2 rounded-full bg-purple-500" />}
@@ -115,14 +111,14 @@ export default function TLReviewAlertModal({ alert, onClose }: { alert: any, onC
             </label>
             {isApp && (
               <>
-                <label className={cursor-pointer rounded-lg border p-3 flex items-center transition  + (actionType === 'RESCHEDULE_APP' ? 'bg-blue-600/20 border-blue-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500')}>
+                <label className={`cursor-pointer rounded-lg border p-3 flex items-center transition ${actionType === 'RESCHEDULE_APP' ? 'bg-blue-600/20 border-blue-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'}`}>
                   <input type="radio" name="actionType" className="hidden" checked={actionType === 'RESCHEDULE_APP'} onChange={() => setActionType('RESCHEDULE_APP')} />
                   <div className="w-4 h-4 rounded-full border border-current mr-3 flex-shrink-0 flex items-center justify-center">
                     {actionType === 'RESCHEDULE_APP' && <div className="w-2 h-2 rounded-full bg-blue-500" />}
                   </div>
                   <span className="text-sm font-medium">Sposta Appuntamento</span>
                 </label>
-                <label className={cursor-pointer rounded-lg border p-3 flex items-center transition  + (actionType === 'DOWNGRADE_TO_RECALL' ? 'bg-indigo-600/20 border-indigo-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500')}>
+                <label className={`cursor-pointer rounded-lg border p-3 flex items-center transition ${actionType === 'DOWNGRADE_TO_RECALL' ? 'bg-indigo-600/20 border-indigo-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'}`}>
                   <input type="radio" name="actionType" className="hidden" checked={actionType === 'DOWNGRADE_TO_RECALL'} onChange={() => setActionType('DOWNGRADE_TO_RECALL')} />
                   <div className="w-4 h-4 rounded-full border border-current mr-3 flex-shrink-0 flex items-center justify-center">
                     {actionType === 'DOWNGRADE_TO_RECALL' && <div className="w-2 h-2 rounded-full bg-indigo-500" />}
@@ -132,7 +128,7 @@ export default function TLReviewAlertModal({ alert, onClose }: { alert: any, onC
               </>
             )}
             {isNeg && (
-              <label className={cursor-pointer rounded-lg border p-3 flex items-center transition  + (actionType === 'REASSIGN_NEGOTIATION' ? 'bg-green-600/20 border-green-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500')}>
+              <label className={`cursor-pointer rounded-lg border p-3 flex items-center transition ${actionType === 'REASSIGN_NEGOTIATION' ? 'bg-green-600/20 border-green-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'}`}>
                 <input type="radio" name="actionType" className="hidden" checked={actionType === 'REASSIGN_NEGOTIATION'} onChange={() => setActionType('REASSIGN_NEGOTIATION')} />
                 <div className="w-4 h-4 rounded-full border border-current mr-3 flex-shrink-0 flex items-center justify-center">
                   {actionType === 'REASSIGN_NEGOTIATION' && <div className="w-2 h-2 rounded-full bg-green-500" />}
@@ -140,7 +136,7 @@ export default function TLReviewAlertModal({ alert, onClose }: { alert: any, onC
                 <span className="text-sm font-medium">Riassegna Trattativa</span>
               </label>
             )}
-            <label className={cursor-pointer rounded-lg border p-3 flex items-center transition  + (actionType === 'CANCEL_AND_CALDERONE' ? 'bg-red-600/20 border-red-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500')}>
+            <label className={`cursor-pointer rounded-lg border p-3 flex items-center transition ${actionType === 'CANCEL_AND_CALDERONE' ? 'bg-red-600/20 border-red-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'}`}>
               <input type="radio" name="actionType" className="hidden" checked={actionType === 'CANCEL_AND_CALDERONE'} onChange={() => setActionType('CANCEL_AND_CALDERONE')} />
               <div className="w-4 h-4 rounded-full border border-current mr-3 flex-shrink-0 flex items-center justify-center">
                 {actionType === 'CANCEL_AND_CALDERONE' && <div className="w-2 h-2 rounded-full bg-red-500" />}
