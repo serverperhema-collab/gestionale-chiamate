@@ -17,7 +17,8 @@ export async function GET() {
         OR: [
           { hiddenUntil: { gt: now } },
           { isKo: true }
-        ]
+        ],
+        reviewRequestedAt: null // Escludi i contatti in revisione (es. Richieste Eliminazione), che stanno in 'Contatti Fasulli'
       },
       select: {
         id: true,

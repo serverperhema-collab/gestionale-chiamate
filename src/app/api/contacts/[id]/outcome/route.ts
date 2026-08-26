@@ -117,7 +117,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }));
 
       // 2. Aggiorna lo stato del contatto in base all'esito
-      const contactUpdateData: any = { assignedToId: null };
+      // Rimuove automaticamente dalla coda TL se era in revisione (deroga lavorata)
+      const contactUpdateData: any = { assignedToId: null, reviewRequestedAt: null, reviewNote: null };
 
       if (outcome === "NO_ANSWER") {
         contactUpdateData.noAnswerCount = { increment: 1 };
@@ -201,7 +202,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         // Nascondiamo il contatto dal calderone, è in lavorazione o fissato
         contactUpdateData.hiddenUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 anno
       } else if (outcome === "TRASH_REQUEST") {
-        contactUpdateData.hiddenUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // Nascondilo finché il TL non decide
+        contactUpdateData.hiddenUntil = new Date(Date.now() + 3650 * 24 * 60 * 60 * 1000); // 10 anni (per sempre finché TL non sblocca)
         contactUpdateData.reviewRequestedAt = new Date();
         contactUpdateData.reviewNote = `RICHIESTA ELIMINAZIONE: ${notes || "Nessuna motivazione"}`;
         
@@ -216,6 +217,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             contactId: id,
             operatorId: userId,
             reason: notes || "Nessuna motivazione"
+          }
+        }));
+
+        transaction.push(prisma.activityLog.create({
+          data: {
+            userId: userId,
+            contactId: id,
+            action: "CONTACT_REVIEW_REQUESTED",
+            details: `RICHIESTA ELIMINAZIONE: ${notes || "Nessuna motivazione"}`
           }
         }));
       }

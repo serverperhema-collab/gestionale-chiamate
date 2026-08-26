@@ -72,7 +72,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
               className={`w-full flex items-center p-4 text-left transition ${pathname?.includes("/reviews") ? "bg-amber-900/30 text-amber-400 border-l-4 border-amber-500" : "text-gray-400 hover:bg-gray-700 hover:text-white border-l-4 border-transparent border-t border-t-gray-700"}`}
             >
               <ClipboardList className="w-5 h-5 mr-3" />
-              <span className="font-semibold text-sm">Richieste Revisione</span>
+              <span className="font-semibold text-sm">Notifiche da Gestire</span>
             </Link>
             <Link
               href="/tl-dashboard/settings/deletions"

@@ -88,8 +88,10 @@ export async function POST(req: Request) {
       await tx.contact.update({
         where: { id: contactId },
         data: {
-          hiddenUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // Nascosto per 1 anno
-          assignedToId: null // Rilasciato dall'operatore
+          hiddenUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+          assignedToId: null,
+          reviewRequestedAt: null, // Rimuovi dalla coda TL se era in revisione
+          reviewNote: null
         }
       });
 

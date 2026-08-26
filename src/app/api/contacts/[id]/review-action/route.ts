@@ -134,16 +134,48 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         } 
       }));
       logMessage = `TL ha annullato i blocchi attivi e rimandato il contatto nel Calderone (nascosto per ${delay} min). Nota: ${note}`;
-    } else {
-      return NextResponse.json({ error: "Azione sconosciuta" }, { status: 400 });
     }
+    // 6. RESTORE (Ripristina nel calderone dopo richiesta eliminazione)
+    else if (actionType === "RESTORE") {
+      logMessage = `TL ha rifiutato l'eliminazione e ripristinato il contatto nel calderone. Nota: ${note}`;
+      txs.push(prisma.contact.update({ 
+        where: { id }, 
+        data: { 
+          ...baseUpdate,
+          hiddenUntil: null // Togli dal cestino
+        } 
+      }));
+    }
+    // 7. BLACKLIST (Conferma cestinamento)
+    else if (actionType === "BLACKLIST") {
+      logMessage = `TL ha confermato l'eliminazione. Spostato in Blacklist (Cestino Permanente). Nota: ${note}`;
+      txs.push(prisma.contact.update({ 
+        where: { id }, 
+        data: { 
+          ...baseUpdate,
+          isKo: true,
+          blacklisted: true,
+          blacklistReason: note || "Cestinato da TL",
+          hiddenUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // Nascosto per 1 anno e filtrato
+        } 
+      }));
+    }
+    else {
+      return NextResponse.json({ error: "Azione non supportata" }, { status: 400 });
+    }
+
+    // Resolve any pending deletion request for this contact
+    txs.push(prisma.deletionRequest.updateMany({
+      where: { contactId: id, isResolved: false },
+      data: { isResolved: true }
+    }));
 
     // Always create activity log
     txs.push(prisma.activityLog.create({
       data: {
         userId: tlId,
         contactId: id,
-        action: "TL_REVIEW_ACTION",
+        action: "TL_APPOINTMENT_ACTION",
         details: logMessage
       }
     }));

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { Trash2, ArrowLeft, CheckCircle, XCircle, AlertTriangle, Users, CalendarX } from "lucide-react";
@@ -52,7 +52,7 @@ export default function DeletionsPage() {
     loadData();
   }, []);
 
-  const handleAction = async (id: string, action: "APPROVE" | "REJECT") => {
+  const handleAction = async (id: string, action: "RESTORE") => {
     setProcessingId(id);
     try {
       const res = await fetch("/api/tl/deletions", {
@@ -61,7 +61,7 @@ export default function DeletionsPage() {
         body: JSON.stringify({ id, action })
       });
       if (res.ok) {
-        toast.success(action === "APPROVE" ? "Richiesta approvata (Contatto in KO)" : "Richiesta rifiutata (Contatto ripristinato)");
+        toast.success("Contatto ripristinato con successo");
         setDeletions(deletions.filter(d => d.id !== id));
       } else {
         const data = await res.json();
@@ -83,10 +83,10 @@ export default function DeletionsPage() {
               onClick={() => setActiveTab("CONTATTI")}
               className={`w-full flex items-center p-4 text-left transition ${activeTab === "CONTATTI" ? "bg-red-900/30 text-red-400 border-l-4 border-red-500" : "text-gray-400 hover:bg-gray-700 hover:text-white border-l-4 border-transparent"}`}
             >
-              <Users className="w-5 h-5 mr-3" />
+              <Trash2 className="w-5 h-5 mr-3" />
               <div>
-                <div className="font-semibold text-sm">Contatti (Fasulli)</div>
-                <div className="text-xs opacity-70 mt-0.5">{deletions.length} da valutare</div>
+                <div className="font-semibold text-sm">Contatti Cestinati</div>
+                <div className="text-xs opacity-70 mt-0.5">{deletions.length} eliminati</div>
               </div>
             </button>
             <button
@@ -103,66 +103,50 @@ export default function DeletionsPage() {
         </div>
 
         {/* MAIN CONTENT */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {loading ? (
             <div className="flex justify-center p-12">
               <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : activeTab === "CONTATTI" ? (
-            /* TAB CONTATTI */
-            deletions.length === 0 ? (
-              <div className="bg-gray-800 rounded-xl border border-gray-700 p-12 text-center shadow-lg">
-                <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">Nessuna richiesta in sospeso</h3>
-                <p className="text-gray-400">Ottimo lavoro! Nessun contatto da eliminare.</p>
+            <div className="flex-1 w-full max-w-4xl">
+              <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg mb-6">
+                <h3 className="text-xl font-bold text-white mb-2">Contatti Cestinati (Blacklist)</h3>
+                <p className="text-gray-400 text-sm">Questi contatti sono stati scartati definitivamente e non sono più visibili agli operatori.</p>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                {deletions.map((del) => (
-                  <div key={del.id} className="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg relative flex flex-col">
-                    <div className="flex items-start justify-between mb-4 border-b border-gray-700 pb-4">
-                      <div>
-                        <h3 className="font-bold text-lg text-white mb-1">{del.contact.name}</h3>
-                        <p className="text-sm text-gray-400 font-mono">{del.contact.originalPhone || "Nessun numero"}</p>
-                        <p className="text-xs text-gray-500 mt-1">{del.contact.address || ""} {del.contact.cap}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="mb-6 flex-1">
-                      <div className="flex items-center text-sm text-red-400 font-semibold mb-2">
-                        <AlertTriangle className="w-4 h-4 mr-1.5" />
-                        Motivazione Operatore:
-                      </div>
-                      <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 text-sm text-gray-300 italic">
-                        "{del.reason}"
-                      </div>
-                      <div className="text-xs text-gray-500 mt-3 text-right">
-                        Richiesto da: <span className="font-semibold text-gray-300">{del.operatorName}</span>
-                        <br />
-                        Data: {new Date(del.createdAt).toLocaleString()}
-                      </div>
-                    </div>
 
-                    <div className="flex gap-3 mt-auto">
-                      <button
-                        onClick={() => handleAction(del.id, "REJECT")}
-                        disabled={processingId === del.id}
-                        className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition font-medium text-sm flex items-center justify-center disabled:opacity-50"
-                      >
-                        <XCircle className="w-4 h-4 mr-2" /> Rifiuta (Ripristina)
-                      </button>
-                      <button
-                        onClick={() => handleAction(del.id, "APPROVE")}
-                        disabled={processingId === del.id}
-                        className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition font-medium text-sm flex items-center justify-center disabled:opacity-50"
-                      >
-                        <CheckCircle className="w-4 h-4 mr-2" /> Approva (Manda KO)
-                      </button>
+              {deletions.length === 0 ? (
+                <div className="text-center py-12 bg-gray-800/50 rounded-xl border border-gray-700">
+                  <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-white mb-2">Nessun contatto cestinato</h3>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {deletions.map((del) => (
+                    <div key={del.id} className="bg-gray-900 rounded-xl border border-gray-700 p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:border-gray-600 transition">
+                      <div className="flex-1">
+                        <h4 className="font-bold text-white text-lg">{del.name}</h4>
+                        <p className="text-sm text-gray-400 mt-1">
+                          {del.address || "Indirizzo non disponibile"} (CAP {del.cap})
+                        </p>
+                        <div className="mt-3 bg-red-950/20 border border-red-900/30 rounded p-2 text-sm text-red-200">
+                          <strong>Motivo:</strong> {del.blacklistReason || "Cestinato da TL"}
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2 shrink-0 sm:w-48">
+                        <button
+                          onClick={() => handleAction(del.id, "RESTORE")}
+                          disabled={processingId === del.id}
+                          className="w-full py-2 bg-emerald-900/20 hover:bg-emerald-900/40 text-emerald-400 hover:text-emerald-300 border border-emerald-500/20 rounded transition text-sm font-semibold flex items-center justify-center gap-1.5 disabled:opacity-50"
+                        >
+                          <CheckCircle className="w-4 h-4" /> Ripristina (Sblocca)
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )
+                  ))}
+                </div>
+              )}
+            </div>
           ) : (
             /* TAB APPUNTAMENTI */
             appointments.length === 0 ? (

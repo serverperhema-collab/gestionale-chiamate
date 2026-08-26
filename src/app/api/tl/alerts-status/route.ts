@@ -56,7 +56,7 @@ export async function GET() {
       }
     });
 
-    // Fetch review requests (Strict Lock notes)
+    // Fetch review requests (Strict Lock notes e Richieste Eliminazione)
     const reviewContacts = await prisma.contact.findMany({
       where: { reviewRequestedAt: { not: null } },
       include: {

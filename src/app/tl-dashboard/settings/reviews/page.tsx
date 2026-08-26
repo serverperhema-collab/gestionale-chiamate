@@ -60,9 +60,9 @@ export default function ReviewsPage() {
     <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg">
       <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-700">
         <div>
-          <h3 className="text-lg font-bold text-white">Contatti da Revisionare</h3>
+          <h3 className="text-lg font-bold text-white">Notifiche da Gestire</h3>
           <p className="text-sm text-gray-400">
-            Contatti segnalati dagli operatori come già gestiti o anomali.
+            Richieste di sblocco ed eliminazione in sospeso (ignorate o non ancora gestite).
           </p>
         </div>
         <button 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { AlertTriangle, Clock, Calendar, Handshake, User, ArrowRight, XCircle } from "lucide-react";
@@ -69,16 +69,25 @@ export default function TLReviewAlertModal({ alert, onClose }: { alert: any, onC
     }
   };
 
+  const isTrashRequest = alert.reviewNote?.includes("RICHIESTA ELIMINAZIONE");
+
+  // Se è una richiesta di eliminazione, l'azione predefinita è BLACKLIST
+  useEffect(() => {
+    if (isTrashRequest) {
+      setActionType("BLACKLIST");
+    }
+  }, [isTrashRequest]);
+
   const isApp = alert.lockType === "APPOINTMENT";
   const isNeg = alert.lockType === "NEGOTIATION";
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
-      <div className="bg-gray-900 border border-purple-500/50 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
-        <div className="bg-purple-950/40 border-b border-purple-900/50 px-6 py-4 flex justify-between items-center shrink-0">
-          <div className="flex items-center text-purple-400 font-bold text-lg">
-            <AlertTriangle className="w-6 h-6 mr-3 text-purple-500" />
-            RICHIESTA SBLOCCO CONTATTO
+      <div className={`bg-gray-900 border ${isTrashRequest ? 'border-red-500/50' : 'border-purple-500/50'} rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]`}>
+        <div className={`${isTrashRequest ? 'bg-red-950/40 border-red-900/50 text-red-400' : 'bg-purple-950/40 border-purple-900/50 text-purple-400'} border-b px-6 py-4 flex justify-between items-center shrink-0`}>
+          <div className="flex items-center font-bold text-lg">
+            <AlertTriangle className={`w-6 h-6 mr-3 ${isTrashRequest ? 'text-red-500' : 'text-purple-500'}`} />
+            {isTrashRequest ? "RICHIESTA ELIMINAZIONE CONTATTO" : "RICHIESTA SBLOCCO CONTATTO"}
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition">
             <XCircle className="w-6 h-6" />
@@ -87,62 +96,89 @@ export default function TLReviewAlertModal({ alert, onClose }: { alert: any, onC
         <div className="p-6 overflow-y-auto flex-1">
           <div className="mb-6">
             <h3 className="text-xl font-bold text-white">{alert.contactName}</h3>
-            <p className="text-gray-400 mt-1">L'operatore <strong>{alert.requesterName}</strong> sta cercando di prenderlo, ma c'è un blocco:</p>
-            <div className={`mt-3 p-3 rounded-lg border ${isApp ? 'bg-blue-900/20 border-blue-800' : 'bg-indigo-900/20 border-indigo-800'}`}>
-              <div className="flex items-center font-semibold text-gray-200">
-                {isApp ? <Calendar className="w-5 h-5 mr-2 text-blue-400"/> : <Handshake className="w-5 h-5 mr-2 text-indigo-400"/>}
-                {alert.lockContext}
+            <p className="text-gray-400 mt-1">
+              {isTrashRequest 
+                ? <>L'operatore <strong>{alert.requesterName}</strong> ha richiesto di cestinare questo contatto.</>
+                : <>L'operatore <strong>{alert.requesterName}</strong> sta cercando di prenderlo, ma c'è un blocco:</>
+              }
+            </p>
+            {!isTrashRequest && (
+              <div className={`mt-3 p-3 rounded-lg border ${isApp ? 'bg-blue-900/20 border-blue-800' : 'bg-indigo-900/20 border-indigo-800'}`}>
+                <div className="flex items-center font-semibold text-gray-200">
+                  {isApp ? <Calendar className="w-5 h-5 mr-2 text-blue-400"/> : <Handshake className="w-5 h-5 mr-2 text-indigo-400"/>}
+                  {alert.lockContext}
+                </div>
               </div>
-            </div>
+            )}
           </div>
           <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 mb-6">
             <p className="text-sm font-semibold text-gray-400 uppercase mb-2">Nota operatore ({alert.requesterName}):</p>
             <p className="text-gray-200 italic">"{alert.reviewNote}"</p>
-            <p className="text-xs text-gray-500 mt-2">{new Date(alert.reviewRequestedAt).toLocaleString()}</p>
           </div>
           <h4 className="text-sm font-bold text-gray-300 uppercase mb-3">Scegli Azione:</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-            <label className={`cursor-pointer rounded-lg border p-3 flex items-center transition ${actionType === 'LEAVE_WITH_NOTE' ? 'bg-purple-600/20 border-purple-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'}`}>
-              <input type="radio" name="actionType" className="hidden" checked={actionType === 'LEAVE_WITH_NOTE'} onChange={() => setActionType('LEAVE_WITH_NOTE')} />
-              <div className="w-4 h-4 rounded-full border border-current mr-3 flex-shrink-0 flex items-center justify-center">
-                {actionType === 'LEAVE_WITH_NOTE' && <div className="w-2 h-2 rounded-full bg-purple-500" />}
-              </div>
-              <span className="text-sm font-medium">Lascia al proprietario (Nota)</span>
-            </label>
-            {isApp && (
+            {isTrashRequest ? (
               <>
-                <label className={`cursor-pointer rounded-lg border p-3 flex items-center transition ${actionType === 'RESCHEDULE_APP' ? 'bg-blue-600/20 border-blue-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'}`}>
-                  <input type="radio" name="actionType" className="hidden" checked={actionType === 'RESCHEDULE_APP'} onChange={() => setActionType('RESCHEDULE_APP')} />
+                <label className={`cursor-pointer rounded-lg border p-3 flex items-center transition ${actionType === 'BLACKLIST' ? 'bg-red-600/20 border-red-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'}`}>
+                  <input type="radio" name="actionType" className="hidden" checked={actionType === 'BLACKLIST'} onChange={() => setActionType('BLACKLIST')} />
                   <div className="w-4 h-4 rounded-full border border-current mr-3 flex-shrink-0 flex items-center justify-center">
-                    {actionType === 'RESCHEDULE_APP' && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                    {actionType === 'BLACKLIST' && <div className="w-2 h-2 rounded-full bg-red-500" />}
                   </div>
-                  <span className="text-sm font-medium">Sposta Appuntamento</span>
+                  <span className="text-sm font-medium">Conferma Cestino (Blacklist)</span>
                 </label>
-                <label className={`cursor-pointer rounded-lg border p-3 flex items-center transition ${actionType === 'DOWNGRADE_TO_RECALL' ? 'bg-indigo-600/20 border-indigo-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'}`}>
-                  <input type="radio" name="actionType" className="hidden" checked={actionType === 'DOWNGRADE_TO_RECALL'} onChange={() => setActionType('DOWNGRADE_TO_RECALL')} />
+                <label className={`cursor-pointer rounded-lg border p-3 flex items-center transition ${actionType === 'RESTORE' ? 'bg-emerald-600/20 border-emerald-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'}`}>
+                  <input type="radio" name="actionType" className="hidden" checked={actionType === 'RESTORE'} onChange={() => setActionType('RESTORE')} />
                   <div className="w-4 h-4 rounded-full border border-current mr-3 flex-shrink-0 flex items-center justify-center">
-                    {actionType === 'DOWNGRADE_TO_RECALL' && <div className="w-2 h-2 rounded-full bg-indigo-500" />}
+                    {actionType === 'RESTORE' && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
                   </div>
-                  <span className="text-sm font-medium">Annulla App &rarr; Manda in Richiamo</span>
+                  <span className="text-sm font-medium">Ignora e Ripristina nel Calderone</span>
+                </label>
+              </>
+            ) : (
+              <>
+                <label className={`cursor-pointer rounded-lg border p-3 flex items-center transition ${actionType === 'LEAVE_WITH_NOTE' ? 'bg-purple-600/20 border-purple-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'}`}>
+                  <input type="radio" name="actionType" className="hidden" checked={actionType === 'LEAVE_WITH_NOTE'} onChange={() => setActionType('LEAVE_WITH_NOTE')} />
+                  <div className="w-4 h-4 rounded-full border border-current mr-3 flex-shrink-0 flex items-center justify-center">
+                    {actionType === 'LEAVE_WITH_NOTE' && <div className="w-2 h-2 rounded-full bg-purple-500" />}
+                  </div>
+                  <span className="text-sm font-medium">Lascia al proprietario (Nota)</span>
+                </label>
+                {isApp && (
+                  <>
+                    <label className={`cursor-pointer rounded-lg border p-3 flex items-center transition ${actionType === 'RESCHEDULE_APP' ? 'bg-blue-600/20 border-blue-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'}`}>
+                      <input type="radio" name="actionType" className="hidden" checked={actionType === 'RESCHEDULE_APP'} onChange={() => setActionType('RESCHEDULE_APP')} />
+                      <div className="w-4 h-4 rounded-full border border-current mr-3 flex-shrink-0 flex items-center justify-center">
+                        {actionType === 'RESCHEDULE_APP' && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                      </div>
+                      <span className="text-sm font-medium">Sposta Appuntamento</span>
+                    </label>
+                    <label className={`cursor-pointer rounded-lg border p-3 flex items-center transition ${actionType === 'DOWNGRADE_TO_RECALL' ? 'bg-indigo-600/20 border-indigo-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'}`}>
+                      <input type="radio" name="actionType" className="hidden" checked={actionType === 'DOWNGRADE_TO_RECALL'} onChange={() => setActionType('DOWNGRADE_TO_RECALL')} />
+                      <div className="w-4 h-4 rounded-full border border-current mr-3 flex-shrink-0 flex items-center justify-center">
+                        {actionType === 'DOWNGRADE_TO_RECALL' && <div className="w-2 h-2 rounded-full bg-indigo-500" />}
+                      </div>
+                      <span className="text-sm font-medium">Annulla App &rarr; Manda in Richiamo</span>
+                    </label>
+                  </>
+                )}
+                {isNeg && (
+                  <label className={`cursor-pointer rounded-lg border p-3 flex items-center transition ${actionType === 'REASSIGN_NEGOTIATION' ? 'bg-green-600/20 border-green-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'}`}>
+                    <input type="radio" name="actionType" className="hidden" checked={actionType === 'REASSIGN_NEGOTIATION'} onChange={() => setActionType('REASSIGN_NEGOTIATION')} />
+                    <div className="w-4 h-4 rounded-full border border-current mr-3 flex-shrink-0 flex items-center justify-center">
+                      {actionType === 'REASSIGN_NEGOTIATION' && <div className="w-2 h-2 rounded-full bg-green-500" />}
+                    </div>
+                    <span className="text-sm font-medium">Riassegna Trattativa</span>
+                  </label>
+                )}
+                <label className={`cursor-pointer rounded-lg border p-3 flex items-center transition ${actionType === 'CANCEL_AND_CALDERONE' ? 'bg-red-600/20 border-red-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'}`}>
+                  <input type="radio" name="actionType" className="hidden" checked={actionType === 'CANCEL_AND_CALDERONE'} onChange={() => setActionType('CANCEL_AND_CALDERONE')} />
+                  <div className="w-4 h-4 rounded-full border border-current mr-3 flex-shrink-0 flex items-center justify-center">
+                    {actionType === 'CANCEL_AND_CALDERONE' && <div className="w-2 h-2 rounded-full bg-red-500" />}
+                  </div>
+                  <span className="text-sm font-medium">Annulla {isApp ? "App" : "Trattativa"} &rarr; Calderone</span>
                 </label>
               </>
             )}
-            {isNeg && (
-              <label className={`cursor-pointer rounded-lg border p-3 flex items-center transition ${actionType === 'REASSIGN_NEGOTIATION' ? 'bg-green-600/20 border-green-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'}`}>
-                <input type="radio" name="actionType" className="hidden" checked={actionType === 'REASSIGN_NEGOTIATION'} onChange={() => setActionType('REASSIGN_NEGOTIATION')} />
-                <div className="w-4 h-4 rounded-full border border-current mr-3 flex-shrink-0 flex items-center justify-center">
-                  {actionType === 'REASSIGN_NEGOTIATION' && <div className="w-2 h-2 rounded-full bg-green-500" />}
-                </div>
-                <span className="text-sm font-medium">Riassegna Trattativa</span>
-              </label>
-            )}
-            <label className={`cursor-pointer rounded-lg border p-3 flex items-center transition ${actionType === 'CANCEL_AND_CALDERONE' ? 'bg-red-600/20 border-red-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'}`}>
-              <input type="radio" name="actionType" className="hidden" checked={actionType === 'CANCEL_AND_CALDERONE'} onChange={() => setActionType('CANCEL_AND_CALDERONE')} />
-              <div className="w-4 h-4 rounded-full border border-current mr-3 flex-shrink-0 flex items-center justify-center">
-                {actionType === 'CANCEL_AND_CALDERONE' && <div className="w-2 h-2 rounded-full bg-red-500" />}
-              </div>
-              <span className="text-sm font-medium">Annulla {isApp ? "App" : "Trattativa"} &rarr; Calderone</span>
-            </label>
           </div>
           {actionType === 'RESCHEDULE_APP' && (
             <div className="grid grid-cols-2 gap-4 mb-4 bg-blue-900/10 p-4 rounded-lg border border-blue-900/30">
