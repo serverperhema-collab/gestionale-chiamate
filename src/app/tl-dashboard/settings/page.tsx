@@ -194,6 +194,7 @@ export default function SettingsPage() {
   });
 
   return (
+    <>
     <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden flex flex-col shadow-2xl w-full">
         <div className="p-6 border-b border-gray-800">
           <h3 className="text-xl font-bold text-white flex items-center mb-2">
@@ -395,5 +396,6 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+    </>
   );
 }
