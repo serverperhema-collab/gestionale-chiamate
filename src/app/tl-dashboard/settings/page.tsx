@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Settings, MapPin, Edit2, Check, XCircle, ChevronLeft, Trash2 } from "lucide-react";
+import { Settings, MapPin, Edit2, Check, XCircle, ChevronLeft, Trash2, AlertTriangle, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 
@@ -70,6 +70,37 @@ export default function SettingsPage() {
   const [editingCap, setEditingCap] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+
+  // Reset sistema
+  const [showResetPanel, setShowResetPanel] = useState(false);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetConfirm, setResetConfirm] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+
+  const handleReset = async () => {
+    if (!resetConfirm) { toast.error("Spunta la conferma prima di procedere"); return; }
+    setResetLoading(true);
+    try {
+      const res = await fetch("/api/tl/reset-system", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: resetPassword }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("✅ Reset completato! Tutti i dati operativi sono stati azzerati.");
+        setShowResetPanel(false);
+        setResetPassword("");
+        setResetConfirm(false);
+      } else {
+        toast.error(data.error || "Errore durante il reset");
+      }
+    } catch (e) {
+      toast.error("Errore di rete");
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   const fetchZones = async () => {
     try {
@@ -299,6 +330,68 @@ export default function SettingsPage() {
                 )}
               </tbody>
             </table>
+          </div>
+        )}
+      </div>
+
+      {/* ===== PANNELLO RESET SISTEMA ===== */}
+      <div className="mt-8 bg-gray-900 border border-red-900/50 rounded-xl overflow-hidden shadow-2xl w-full">
+        <div className="p-6 border-b border-red-900/30 flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-bold text-red-400 flex items-center mb-1">
+              <ShieldAlert className="w-5 h-5 mr-2" />
+              Reset Sistema
+            </h3>
+            <p className="text-gray-500 text-sm">
+              Azzera tutti i dati operativi (appuntamenti, trattative, log, assegnazioni). <strong className="text-gray-300">Contatti e account operatori NON vengono toccati.</strong>
+            </p>
+          </div>
+          <button
+            onClick={() => { setShowResetPanel(p => !p); setResetPassword(""); setResetConfirm(false); }}
+            className="px-4 py-2 bg-red-900/30 hover:bg-red-900/50 border border-red-700/50 text-red-400 rounded-lg font-semibold transition text-sm"
+          >
+            {showResetPanel ? "Annulla" : "⚠️ Avvia Reset"}
+          </button>
+        </div>
+
+        {showResetPanel && (
+          <div className="p-6 space-y-5">
+            <div className="bg-red-950/30 border border-red-800/40 rounded-lg p-4 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+              <p className="text-red-300 text-sm">
+                <strong>Attenzione!</strong> Questa operazione è irreversibile. Verranno eliminati definitivamente: tutti gli appuntamenti, le trattative, i log chiamate, i log attività, le assegnazioni giornaliere, le zone agenda, le richieste preventivo e i record KO. Tutti i contatti torneranno "vergini" nel calderone.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-400 mb-2 font-medium">Password di Sicurezza</label>
+              <input
+                type="password"
+                value={resetPassword}
+                onChange={e => setResetPassword(e.target.value)}
+                placeholder="Inserisci la password..."
+                className="w-full max-w-xs bg-gray-800 border border-gray-700 focus:border-red-500 rounded-lg px-4 py-2.5 text-white outline-none"
+              />
+            </div>
+
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={resetConfirm}
+                onChange={e => setResetConfirm(e.target.checked)}
+                className="w-4 h-4 accent-red-500"
+              />
+              <span className="text-gray-300 text-sm">Ho capito che questa operazione è irreversibile e voglio procedere.</span>
+            </label>
+
+            <button
+              onClick={handleReset}
+              disabled={resetLoading || !resetPassword}
+              className="flex items-center px-6 py-3 bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg font-bold transition shadow-lg shadow-red-900/30"
+            >
+              <Trash2 className="w-5 h-5 mr-2" />
+              {resetLoading ? "Reset in corso..." : "Conferma Reset Definitivo"}
+            </button>
           </div>
         )}
       </div>
