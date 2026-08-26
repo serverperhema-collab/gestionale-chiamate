@@ -19,7 +19,7 @@ function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
 }
 
 export default function ExtractPage() {
-  const { logs, isExtracting, startExtraction: startGlobalExtraction, searchedCaps } = useExtraction();
+  const { logs, isExtracting, startExtraction: startGlobalExtraction, searchedCaps, batchProgress } = useExtraction();
   const [cap, setCap] = useState("");
   const logEndRef = useRef<HTMLDivElement>(null);
   const [source, setSource] = useState("google");
@@ -226,6 +226,30 @@ export default function ExtractPage() {
         <MapIcon className="w-8 h-8 mr-3 text-emerald-400" />
         Manager Territoriale Lazio
       </h1>
+
+      {/* BARRA PROGRESSO BATCH */}
+      {batchProgress && (
+        <div className="bg-gray-800 p-4 rounded-2xl border border-emerald-700/50 shadow-xl">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-semibold text-emerald-400 flex items-center">
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Elaborazione Blocco {batchProgress.current} di {batchProgress.total}
+            </span>
+            <span className="text-sm font-mono text-gray-400">
+              {Math.round((batchProgress.current / batchProgress.total) * 100)}%
+            </span>
+          </div>
+          <div className="w-full bg-gray-700 rounded-full h-3">
+            <div
+              className="bg-emerald-500 h-3 rounded-full transition-all duration-700"
+              style={{ width: `${(batchProgress.current / batchProgress.total) * 100}%` }}
+            />
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Il sistema suddivide automaticamente i settori in blocchi da 5 per evitare timeout. Attendi il completamento di tutti i blocchi.
+          </p>
+        </div>
+      )}
 
       {/* DASHBOARD PROGRESSO */}
       <div className="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-xl">
