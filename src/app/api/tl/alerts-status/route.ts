@@ -65,7 +65,7 @@ export async function GET() {
         negotiations: { where: { isAbandoned: false }, select: { id: true, operatorId: true, operator: { select: { name: true } } } },
         activityLogs: {
           where: { action: "CONTACT_REVIEW_REQUESTED" },
-          orderBy: { date: 'desc' },
+          orderBy: { createdAt: 'desc' },
           take: 1,
           select: { user: { select: { id: true, name: true } } }
         }

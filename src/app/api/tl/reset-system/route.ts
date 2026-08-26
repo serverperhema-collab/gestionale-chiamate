@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -18,6 +18,9 @@ export async function POST(req: Request) {
     }
 
     // Esegui il reset in ordine sicuro (rispettando le foreign key)
+    // Ordine corretto: prima i figli, poi i genitori (rispetto FK)
+    await prisma.appointmentOutcome.deleteMany();
+    await prisma.quoteRequest.deleteMany();
     await prisma.appointment.deleteMany();
     await prisma.negotiation.deleteMany();
     await prisma.activityLog.deleteMany();
@@ -25,8 +28,8 @@ export async function POST(req: Request) {
     await prisma.dailyAssignment.deleteMany();
     await prisma.tlTask.deleteMany();
     await prisma.zoneAgenda.deleteMany();
-    await prisma.quoteRequest.deleteMany();
     await prisma.koRecord.deleteMany();
+    await prisma.deletionRequest.deleteMany();
 
     // Ripristina lo stato di ogni contatto (mantiene anagrafiche e numeri)
     await prisma.contact.updateMany({
