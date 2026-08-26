@@ -68,12 +68,18 @@ export async function GET() {
           orderBy: { createdAt: 'desc' },
           take: 1,
           select: { user: { select: { id: true, name: true } } }
+        },
+        deletionRequests: {
+          where: { isResolved: false },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { operator: { select: { id: true, name: true } } }
         }
       }
     });
 
     reviewContacts.forEach(c => {
-      const requester = c.activityLogs[0]?.user;
+      const requester = c.activityLogs[0]?.user || c.deletionRequests?.[0]?.operator;
       
       let lockContext = "Nessun blocco specifico trovato";
       let lockType = "NONE";
@@ -98,8 +104,32 @@ export async function GET() {
       });
     });
 
-    return NextResponse.json({ alerts: activeAlerts });
+    const derogaApps = await prisma.appointment.findMany({
+      where: { isDeroga: true, isApproved: false, status: { in: ["PENDING", "CONFIRMED"] } },
+      include: {
+        operator: { select: { id: true, name: true } },
+        contact: { select: { name: true, city: true, province: true, cap: true, address: true } }
+      }
+    });
 
+    derogaApps.forEach(app => {
+      activeAlerts.push({
+        type: 'DEROGA_APP_REQUEST',
+        appId: app.id,
+        operatorName: app.operator?.name || "Sconosciuto",
+        contactName: app.contact?.name || "Azienda non disponibile",
+        city: app.contact?.city || "",
+        province: app.contact?.province || "",
+        cap: app.contact?.cap || "",
+        address: app.contact?.address || "",
+        date: app.date,
+        referentName: app.referentName,
+        phone: app.phone,
+        clientNeeds: app.clientNeeds
+      });
+    });
+
+    return NextResponse.json({ alerts: activeAlerts });
   } catch (error) {
     console.error("GET alerts error:", error);
     return NextResponse.json({ error: "Errore interno" }, { status: 500 });

@@ -210,11 +210,13 @@ export default function TLReviewAlertModal({ alert, onClose }: { alert: any, onC
             </div>
           )}
           <div className="mb-2">
-            <label className="block text-sm text-gray-400 mb-1">Nota da lasciare nel log del contatto (obbligatoria se "Lascia al proprietario")</label>
+            <label className="block text-sm text-gray-400 mb-1">
+              Nota da lasciare nel log del contatto {isTrashRequest ? "(Opzionale)" : "(Obbligatoria se 'Lascia al proprietario')"}
+            </label>
             <textarea
               value={note}
               onChange={e => setNote(e.target.value)}
-              placeholder="Es: Ho verificato, il cliente ha chiesto di essere richiamato stasera..."
+              placeholder={isTrashRequest ? "Es: Confermo, numero inesistente..." : "Es: Ho verificato, il cliente ha chiesto di essere richiamato stasera..."}
               className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-purple-500 h-20 resize-none"
             />
           </div>

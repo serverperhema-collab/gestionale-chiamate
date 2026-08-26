@@ -159,7 +159,7 @@ export default function AppointmentModal({
           date: finalDate,
           isDeroga,
           zoneAgendaId: isDeroga ? null : selectedAgenda?.id,
-          referentName: JSON.stringify(referents),
+          referentName: referents.map(r => r.name).join(", "),
           referentRole: referents[0]?.role || "Multipli",
           phone: referents[0]?.phone || "",
           email: formData.email,

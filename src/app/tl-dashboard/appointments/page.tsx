@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import AppointmentActionModal from "@/components/AppointmentActionModal";
 import CreateAppointmentModalTL from "@/components/CreateAppointmentModalTL";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 function AddAgendaModal({ date, onClose, onSuccess }: { date: Date, onClose: () => void, onSuccess: () => void }) {
   const [capsInput, setCapsInput] = useState("");
@@ -88,6 +89,7 @@ function AddAgendaModal({ date, onClose, onSuccess }: { date: Date, onClose: () 
 }
 
 export default function UnifiedCalendarPage() {
+  const searchParams = useSearchParams();
   const [appointments, setAppointments] = useState<any[]>([]);
   const [agendas, setAgendas] = useState<any[]>([]);
   const [commerciali, setCommerciali] = useState<any[]>([]);
@@ -102,6 +104,41 @@ export default function UnifiedCalendarPage() {
   
   const [editingNotesAgenda, setEditingNotesAgenda] = useState<any>(null);
   const [agendaNotes, setAgendaNotes] = useState("");
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [resApp, resCal, resUsers] = await Promise.all([
+        fetch("/api/tl/appointments"),
+        fetch("/api/tl/calendar"),
+        fetch("/api/users")
+      ]);
+      const dataApp = resApp.ok ? await resApp.json() : { appointments: [] };
+      const dataCal = resCal.ok ? await resCal.json() : { agendas: [] };
+      const dataUsers = resUsers.ok ? await resUsers.json() : { users: [] };
+
+      setAppointments(dataApp.appointments || []);
+      setAgendas(dataCal.agendas || []);
+      if (dataUsers.users) {
+        setCommerciali(dataUsers.users.filter((u: any) => u.role === "COMMERCIALE" && u.isActive));
+      }
+
+      // If we have a query parameter, try to open that appointment
+      const selectedApptId = searchParams?.get('selectedApptId');
+      if (selectedApptId && dataApp.appointments) {
+        const appt = dataApp.appointments.find((a: any) => a.id === selectedApptId);
+        if (appt) setSelectedAppt(appt);
+      }
+    } catch (e) {
+      toast.error("Errore di caricamento dati");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [searchParams]);
 
   const handleToggleAgendaStatus = async (agenda: any, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -166,35 +203,6 @@ export default function UnifiedCalendarPage() {
     return firstMonday;
   });
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [resAgendas, resAppts, resUsers] = await Promise.all([
-        fetch('/api/tl/calendar'),
-        fetch('/api/tl/appointments'),
-        fetch('/api/users')
-      ]);
-
-      if (resAgendas.ok) {
-        const data = await resAgendas.json();
-        setAgendas(data.agendas || []);
-      }
-      
-      if (resAppts.ok) {
-        const data = await resAppts.json();
-        setAppointments(data.appointments || []);
-      }
-      
-      if (resUsers.ok) {
-        const data = await resUsers.json();
-        setCommerciali((data.users || []).filter((u: any) => u.role === "COMMERCIALE" && u.isActive));
-      }
-    } catch (error) {
-      toast.error("Errore nel caricamento dei dati");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleRenameAgenda = async (id: string, newName: string) => {
     if (!newName.trim()) return;

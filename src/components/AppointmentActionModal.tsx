@@ -399,7 +399,11 @@ export default function AppointmentActionModal({ appointment, commerciali, onClo
                     {isEditing ? (
                       <input value={editData.address} onChange={e => setEditData({...editData, address: e.target.value})} className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-white" />
                     ) : (
-                      <p className="text-sm text-white">{fullData?.contact?.address || appointment.contact?.address || "-"}</p>
+                      <p className="text-sm text-white">
+                        {[fullData?.contact?.address || appointment.contact?.address, fullData?.contact?.city || appointment.contact?.city, fullData?.contact?.province || appointment.contact?.province]
+                          .filter(Boolean)
+                          .join(", ") || "-"}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -433,7 +437,15 @@ export default function AppointmentActionModal({ appointment, commerciali, onClo
                     {isEditing ? (
                       <input value={editData.referentName} onChange={e => setEditData({...editData, referentName: e.target.value})} className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-emerald-500" />
                     ) : (
-                      <p className="text-sm text-white">{appointment.referentName}</p>
+                      <p className="text-sm text-white">
+                        {(() => {
+                          try {
+                            const parsed = JSON.parse(appointment.referentName);
+                            if (Array.isArray(parsed)) return parsed.map(p => p.name).join(", ");
+                          } catch {}
+                          return appointment.referentName;
+                        })()}
+                      </p>
                     )}
                   </div>
                   <div>
