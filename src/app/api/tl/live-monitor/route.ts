@@ -60,6 +60,11 @@ export async function GET() {
       // Calculate Stats
       let skip = 0;
       let noAnswer = 0;
+      let notAvailable = 0;
+      let nonInteressato = 0;
+      let noInfo = 0;
+      let trashRequest = 0;
+      let reviewRequest = 0;
       let negotiation = 0;
       let appt = 0;
       let enrichment = 0;
@@ -68,7 +73,12 @@ export async function GET() {
 
       op.callLogs.forEach(log => {
         if (log.outcome === "SKIP") skip++;
-        if (log.outcome === "NO_ANSWER" || log.outcome === "NOT_AVAILABLE") noAnswer++;
+        if (log.outcome === "NO_ANSWER") noAnswer++;
+        if (log.outcome === "NOT_AVAILABLE") notAvailable++;
+        if (log.outcome === "NON_INTERESSATO") nonInteressato++;
+        if (log.outcome === "NO_INFO") noInfo++;
+        if (log.outcome === "TRASH_REQUEST") trashRequest++;
+        if (log.outcome === "REVIEW_REQUEST") reviewRequest++;
         if (log.outcome === "NEGOTIATION") negotiation++;
         if (log.outcome === "APPOINTMENT") appt++;
       });
@@ -104,7 +114,7 @@ export async function GET() {
         isIdle,
         skipCount: op.skipCount,
         currentContact: op.assignedContacts.length > 0 ? op.assignedContacts[0] : null,
-        stats: { skip, noAnswer, negotiation, appt, enrichment, logins, minutesOn }
+        stats: { skip, noAnswer, notAvailable, nonInteressato, noInfo, trashRequest, reviewRequest, negotiation, appt, enrichment, logins, minutesOn }
       };
     });
 

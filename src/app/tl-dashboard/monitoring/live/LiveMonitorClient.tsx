@@ -7,6 +7,11 @@ import { ShieldOff, Clock, UserCheck, PlayCircle, LogIn, PhoneOff, PhoneForwarde
 interface OperatorStats {
   skip: number;
   noAnswer: number;
+  notAvailable: number;
+  nonInteressato: number;
+  noInfo: number;
+  trashRequest: number;
+  reviewRequest: number;
   negotiation: number;
   appt: number;
   enrichment: number;
@@ -93,13 +98,18 @@ export default function LiveMonitorClient() {
   const totals = operators.reduce((acc, op) => {
     acc.skip += op.stats.skip;
     acc.noAnswer += op.stats.noAnswer;
+    acc.notAvailable += op.stats.notAvailable;
+    acc.nonInteressato += op.stats.nonInteressato;
+    acc.noInfo += op.stats.noInfo;
+    acc.trashRequest += op.stats.trashRequest;
+    acc.reviewRequest += op.stats.reviewRequest;
     acc.negotiation += op.stats.negotiation;
     acc.appt += op.stats.appt;
     acc.enrichment += op.stats.enrichment;
     acc.logins += op.stats.logins;
     acc.minutesOn += op.stats.minutesOn;
     return acc;
-  }, { skip: 0, noAnswer: 0, negotiation: 0, appt: 0, enrichment: 0, logins: 0, minutesOn: 0 });
+  }, { skip: 0, noAnswer: 0, notAvailable: 0, nonInteressato: 0, noInfo: 0, trashRequest: 0, reviewRequest: 0, negotiation: 0, appt: 0, enrichment: 0, logins: 0, minutesOn: 0 });
 
   return (
     <div className="space-y-6">
@@ -148,7 +158,12 @@ export default function LiveMonitorClient() {
                 <th className="p-4 text-center text-blue-400" title="Totale contatti passati davanti all'operatore">Tot. Contatti</th>
                 <th className="p-4 text-center text-emerald-400" title="Rapporto tra minuti online e contatti totali">Ritmo</th>
                 <th className="p-4 text-center text-gray-500">Skip</th>
+                <th className="p-4 text-center text-orange-400">Non Rep.</th>
                 <th className="p-4 text-center text-red-400">No Risp.</th>
+                <th className="p-4 text-center text-gray-400">No Info</th>
+                <th className="p-4 text-center text-red-600">Non Int.</th>
+                <th className="p-4 text-center text-rose-500">Cestino</th>
+                <th className="p-4 text-center text-amber-500">Sblocco</th>
                 <th className="p-4 text-center text-yellow-400">Trattative</th>
                 <th className="p-4 text-center text-green-400">Appunt.</th>
                 <th className="p-4 text-center text-purple-400">Integrazioni</th>
@@ -161,7 +176,7 @@ export default function LiveMonitorClient() {
                 const min = op.stats.minutesOn % 60;
                 const timeString = ore > 0 ? `${ore}h ${min}m` : `${min}m`;
 
-                const totContacts = op.stats.skip + op.stats.noAnswer + op.stats.negotiation + op.stats.appt + op.stats.enrichment;
+                const totContacts = op.stats.skip + op.stats.noAnswer + op.stats.notAvailable + op.stats.nonInteressato + op.stats.noInfo + op.stats.trashRequest + op.stats.reviewRequest + op.stats.negotiation + op.stats.appt;
                 const ritmo = totContacts > 0 ? Math.floor(op.stats.minutesOn / totContacts) : 0;
                 const ritmoText = totContacts > 0 ? `1 / ${ritmo}m` : "-";
 
@@ -209,8 +224,23 @@ export default function LiveMonitorClient() {
                         </span>
                       )}
                     </td>
+                    <td className="p-4 text-center text-orange-400 font-semibold">
+                      {op.stats.notAvailable}
+                    </td>
                     <td className="p-4 text-center text-red-400 font-semibold">
                       {op.stats.noAnswer}
+                    </td>
+                    <td className="p-4 text-center text-gray-400 font-semibold">
+                      {op.stats.noInfo}
+                    </td>
+                    <td className="p-4 text-center text-red-600 font-semibold">
+                      {op.stats.nonInteressato}
+                    </td>
+                    <td className="p-4 text-center text-rose-500 font-semibold">
+                      {op.stats.trashRequest}
+                    </td>
+                    <td className="p-4 text-center text-amber-500 font-semibold">
+                      {op.stats.reviewRequest}
                     </td>
                     <td className="p-4 text-center text-yellow-400 font-semibold">
                       {op.stats.negotiation}
