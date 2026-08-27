@@ -145,6 +145,8 @@ export default function LiveMonitorClient() {
                 <th className="p-4 text-center">Stato</th>
                 <th className="p-4 text-center" title="Tempo online oggi (primo log -> ora)">Minuti On</th>
                 <th className="p-4 text-center" title="Volte che ha fatto login">Logins</th>
+                <th className="p-4 text-center text-blue-400" title="Totale contatti passati davanti all'operatore">Tot. Contatti</th>
+                <th className="p-4 text-center text-emerald-400" title="Rapporto tra minuti online e contatti totali">Ritmo</th>
                 <th className="p-4 text-center text-gray-500">Skip</th>
                 <th className="p-4 text-center text-red-400">No Risp.</th>
                 <th className="p-4 text-center text-yellow-400">Trattative</th>
@@ -158,6 +160,10 @@ export default function LiveMonitorClient() {
                 const ore = Math.floor(op.stats.minutesOn / 60);
                 const min = op.stats.minutesOn % 60;
                 const timeString = ore > 0 ? `${ore}h ${min}m` : `${min}m`;
+
+                const totContacts = op.stats.skip + op.stats.noAnswer + op.stats.negotiation + op.stats.appt + op.stats.enrichment;
+                const ritmo = totContacts > 0 ? Math.floor(op.stats.minutesOn / totContacts) : 0;
+                const ritmoText = totContacts > 0 ? `1 / ${ritmo}m` : "-";
 
                 return (
                   <tr key={op.id} className={`transition ${op.isIdle ? 'bg-red-950/20 hover:bg-red-950/40' : 'hover:bg-gray-800'}`}>
@@ -188,6 +194,12 @@ export default function LiveMonitorClient() {
                     </td>
                     <td className="p-4 text-center text-blue-400 font-bold">
                       {op.stats.logins}
+                    </td>
+                    <td className="p-4 text-center text-blue-400 font-bold">
+                      {totContacts}
+                    </td>
+                    <td className="p-4 text-center text-emerald-400 font-semibold font-mono">
+                      {ritmoText}
                     </td>
                     <td className="p-4 text-center text-gray-400 font-semibold">
                       {op.stats.skip}
