@@ -130,8 +130,6 @@ export default function TLAlertProvider() {
     };
   }, []);
 
-  if (!activeModalAlert) return null;
-
   const lockTypeLabels: Record<string, string> = {
     'SKIP': 'Eccesso di Skip',
     'NO_ANSWER': 'Troppi Non Risponde',
