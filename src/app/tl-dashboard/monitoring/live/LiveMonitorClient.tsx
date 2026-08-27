@@ -25,6 +25,7 @@ interface LiveOperator {
   idleMinutes: number;
   maxIdleTimeMins: number;
   isIdle: boolean;
+  isDisconnected: boolean;
   skipCount: number;
   currentContact: {
     id: string;
@@ -176,7 +177,7 @@ export default function LiveMonitorClient() {
         </div>
         <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
           <div className="text-xs text-gray-400 uppercase font-bold mb-1">Non Risp. / Non Rep.</div>
-          <div className="text-2xl font-bold text-red-400">{totals.noAnswer}</div>
+          <div className="text-2xl font-bold text-red-400">{totals.noAnswer + totals.notAvailable}</div>
         </div>
         <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
           <div className="text-xs text-gray-400 uppercase font-bold mb-1">Trattative</div>
@@ -196,7 +197,7 @@ export default function LiveMonitorClient() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-950 border-b border-gray-800 text-xs uppercase tracking-wider text-gray-400 font-semibold">
+              <tr className="bg-gray-950 border-b border-gray-800 text-xs uppercase tracking-wider text-gray-400 font-semibold whitespace-nowrap">
                 <th className="p-4">Operatore</th>
                 <th className="p-4 text-center">Stato</th>
                 <th className="p-4 text-center" title="Tempo online oggi (primo log -> ora)">Minuti On</th>
@@ -227,29 +228,39 @@ export default function LiveMonitorClient() {
                 const ritmoText = totContacts > 0 ? `1 / ${ritmo}m` : "-";
 
                 return (
-                  <tr key={op.id} className={`transition ${op.isIdle ? 'bg-red-950/20 hover:bg-red-950/40' : 'hover:bg-gray-800'}`}>
-                    <td className="p-4">
+                  <tr key={op.id} className={`transition ${op.isDisconnected ? 'bg-gray-800/50 hover:bg-gray-800/80 opacity-50' : op.isIdle ? 'bg-red-950/20 hover:bg-red-950/40' : 'hover:bg-gray-800'}`}>
+                    <td className="p-4 w-48">
                       <div className="font-semibold text-white">{op.name}</div>
                       {op.isIdle && op.currentContact && (
-                        <div className="text-xs text-red-400 mt-1 flex items-center">
-                          <StopCircle className="w-3 h-3 mr-1" />
-                          Bloccato su: {op.currentContact.name} ({op.currentContact.cap})
+                        <div 
+                          className="text-xs text-red-400 mt-1 flex items-start max-w-full"
+                          title={`Bloccato su: ${op.currentContact.name} (${op.currentContact.cap})`}
+                        >
+                          <StopCircle className="w-3 h-3 mr-1 flex-shrink-0 mt-0.5" />
+                          <span className="line-clamp-2">
+                            Bloccato su: {op.currentContact.name} ({op.currentContact.cap})
+                          </span>
                         </div>
                       )}
                     </td>
-                    <td className="p-4 text-center">
-                      {op.isIdle ? (
-                        <div className="inline-flex items-center px-2 py-1 rounded-full bg-red-900/50 text-red-400 text-xs font-bold animate-pulse border border-red-700">
-                          <Clock className="w-3 h-3 mr-1" />
-                          Fermo da {op.idleMinutes} min
-                        </div>
-                      ) : (
-                        <div className="inline-flex items-center px-2 py-1 rounded-full bg-green-900/30 text-green-400 text-xs font-bold">
-                          <PlayCircle className="w-3 h-3 mr-1" />
-                          Attivo
-                        </div>
-                      )}
-                    </td>
+                      <td className="p-4 text-center">
+                        {op.isDisconnected ? (
+                          <div className="inline-flex items-center px-2 py-1 rounded-full bg-gray-900/50 text-gray-500 text-xs font-bold border border-gray-700">
+                            <PhoneOff className="w-3 h-3 mr-1" />
+                            Disconnesso
+                          </div>
+                        ) : op.isIdle ? (
+                          <div className="inline-flex items-center px-2 py-1 rounded-full bg-red-900/50 text-red-400 text-xs font-bold animate-pulse border border-red-700">
+                            <Clock className="w-3 h-3 mr-1" />
+                            Fermo da {op.idleMinutes} min
+                          </div>
+                        ) : (
+                          <div className="inline-flex items-center px-2 py-1 rounded-full bg-green-900/30 text-green-400 text-xs font-bold">
+                            <PlayCircle className="w-3 h-3 mr-1" />
+                            Attivo
+                          </div>
+                        )}
+                      </td>
                     <td className="p-4 text-center font-mono text-gray-300 font-medium group">
                       <div className="flex items-center justify-center gap-1">
                         <span>{timeString}</span>

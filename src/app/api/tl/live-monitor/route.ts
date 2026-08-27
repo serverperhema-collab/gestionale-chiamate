@@ -112,6 +112,19 @@ export async function GET() {
       }
       
       minutesOn = Math.max(0, minutesOn + timeAdjustment);
+      
+      // Check if last activity log is a logout
+      let isDisconnected = false;
+      if (op.activityLogs.length > 0) {
+        // Find the log with the latest createdAt
+        const latestLog = op.activityLogs.reduce((latest, current) => {
+          return new Date(current.createdAt).getTime() > new Date(latest.createdAt).getTime() ? current : latest;
+        }, op.activityLogs[0]);
+        
+        if (["FORCE_LOGOUT", "AUTO_LOGOUT", "LOGOUT"].includes(latestLog.action)) {
+          isDisconnected = true;
+        }
+      }
 
       return {
         id: op.id,
@@ -119,6 +132,7 @@ export async function GET() {
         idleMinutes,
         maxIdleTimeMins: op.maxIdleTimeMins,
         isIdle,
+        isDisconnected,
         skipCount: op.skipCount,
         currentContact: op.assignedContacts.length > 0 ? op.assignedContacts[0] : null,
         stats: { skip, noAnswer, notAvailable, nonInteressato, noInfo, trashRequest, reviewRequest, negotiation, appt, enrichment, logins, minutesOn }

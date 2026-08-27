@@ -64,22 +64,16 @@ export async function GET() {
         appointments: { where: { status: { in: ["PENDING", "CONFIRMED"] } }, select: { id: true, date: true, operatorId: true, operator: { select: { name: true } } } },
         negotiations: { where: { isAbandoned: false }, select: { id: true, operatorId: true, operator: { select: { name: true } } } },
         activityLogs: {
-          where: { action: "CONTACT_REVIEW_REQUESTED" },
+          where: { action: { in: ["CONTACT_REVIEW_REQUESTED", "CONTACT_DELETION_REQUESTED"] } },
           orderBy: { createdAt: 'desc' },
           take: 1,
           select: { user: { select: { id: true, name: true } } }
-        },
-        deletionRequests: {
-          where: { isResolved: false },
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-          select: { operator: { select: { id: true, name: true } } }
         }
       }
     });
 
     reviewContacts.forEach(c => {
-      const requester = c.activityLogs[0]?.user || c.deletionRequests?.[0]?.operator;
+      const requester = c.activityLogs[0]?.user;
       
       let lockContext = "Nessun blocco specifico trovato";
       let lockType = "NONE";
