@@ -108,7 +108,7 @@ export async function GET() {
       where: { isDeroga: true, isApproved: false, status: { in: ["PENDING", "CONFIRMED"] } },
       include: {
         operator: { select: { id: true, name: true } },
-        contact: { select: { name: true, city: true, province: true, cap: true, address: true } }
+        contact: { select: { name: true, cap: true, address: true } }
       }
     });
 
@@ -118,8 +118,6 @@ export async function GET() {
         appId: app.id,
         operatorName: app.operator?.name || "Sconosciuto",
         contactName: app.contact?.name || "Azienda non disponibile",
-        city: app.contact?.city || "",
-        province: app.contact?.province || "",
         cap: app.contact?.cap || "",
         address: app.contact?.address || "",
         date: app.date,

@@ -219,7 +219,7 @@ export default function TLAlertProvider() {
               <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 text-sm space-y-2 mb-6">
                 <div><span className="text-gray-500">Azienda:</span> <span className="text-white font-medium">{activeModalAlert.contactName}</span></div>
                 <div><span className="text-gray-500">Data e Ora:</span> <span className="text-white">{new Date(activeModalAlert.date).toLocaleString('it-IT')}</span></div>
-                <div><span className="text-gray-500">Località:</span> <span className="text-white">{activeModalAlert.address}, {activeModalAlert.city} ({activeModalAlert.province}) {activeModalAlert.cap}</span></div>
+                <div><span className="text-gray-500">Località:</span> <span className="text-white">{activeModalAlert.address ? `${activeModalAlert.address} ` : ""}{activeModalAlert.cap}</span></div>
                 <div><span className="text-gray-500">Referente:</span> <span className="text-white">
                   {(() => {
                     try {
