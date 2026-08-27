@@ -90,6 +90,25 @@ export default function LiveMonitorClient() {
     }
   };
 
+  const handleForceLogout = async (operatorId: string, operatorName: string) => {
+    if (!confirm(`Sei sicura di voler disconnettere forzatamente l'operatore ${operatorName}? Verrà cacciato dal gestionale.`)) {
+      return;
+    }
+    
+    try {
+      const res = await fetch(`/api/users/${operatorId}/force-logout`, {
+        method: "POST"
+      });
+      if (res.ok) {
+        toast.success(`Operatore ${operatorName} disconnesso con successo.`);
+      } else {
+        toast.error("Errore durante la disconnessione");
+      }
+    } catch (e) {
+      toast.error("Errore di rete");
+    }
+  };
+
   if (loading && operators.length === 0) {
     return <div className="text-gray-400">Caricamento tabellone operativo...</div>;
   }
@@ -251,20 +270,27 @@ export default function LiveMonitorClient() {
                     <td className="p-4 text-center text-purple-400 font-semibold">
                       {op.stats.enrichment}
                     </td>
-                    <td className="p-4 text-center">
-                      {op.isIdle && op.currentContact ? (
+                    <td className="p-4 flex flex-col gap-2 items-center justify-center">
+                      {op.isIdle && op.currentContact && (
                         <button
                           onClick={() => handleUnassign(op.currentContact!.id, op.name)}
                           disabled={unassigningId === op.currentContact.id}
-                          className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs font-medium rounded shadow transition disabled:opacity-50 flex items-center justify-center mx-auto"
+                          className="w-full px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs font-medium rounded shadow transition disabled:opacity-50 flex items-center justify-center"
                           title="Scollega contatto e rimettilo nel calderone"
                         >
                           <ShieldOff className="w-3 h-3 mr-1" />
                           Scollega
                         </button>
-                      ) : (
-                        <span className="text-gray-600 text-xs">-</span>
                       )}
+                      
+                      <button
+                        onClick={() => handleForceLogout(op.id, op.name)}
+                        className="w-full px-3 py-1 bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white text-xs font-medium rounded shadow transition flex items-center justify-center"
+                        title="Forza la disconnessione (logout) dell'operatore"
+                      >
+                        <PhoneOff className="w-3 h-3 mr-1" />
+                        Disconnetti
+                      </button>
                     </td>
                   </tr>
                 );

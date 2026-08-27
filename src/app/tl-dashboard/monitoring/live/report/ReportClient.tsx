@@ -11,6 +11,11 @@ interface OperatorData {
   stats: {
     skip: number;
     noAnswer: number;
+    notAvailable: number;
+    nonInteressato: number;
+    noInfo: number;
+    trashRequest: number;
+    reviewRequest: number;
     negotiation: number;
     appt: number;
     enrichment: number;
@@ -175,31 +180,50 @@ export default function ReportClient({ operators }: { operators: { id: string, n
           </div>
 
           <table className="w-full text-left border-collapse mb-8">
-            <thead>
-              <tr className="bg-gray-100 text-gray-700 text-sm uppercase tracking-wider font-bold border-b-2 border-gray-300">
-                <th className="p-3">Operatore</th>
-                <th className="p-3 text-center">Giorni Lav.</th>
-                <th className="p-3 text-center">Ore Totali</th>
-                <th className="p-3 text-center">Logins</th>
-                <th className="p-3 text-center">Skip</th>
-                <th className="p-3 text-center">Non Risp.</th>
-                <th className="p-3 text-center">Trattative</th>
-                <th className="p-3 text-center text-green-700">Appunt.</th>
-                <th className="p-3 text-center">Integrazioni</th>
-              </tr>
-            </thead>
+              <thead>
+                <tr className="bg-gray-100 text-gray-700 text-sm uppercase tracking-wider font-bold border-b-2 border-gray-300">
+                  <th className="p-3">Operatore</th>
+                  <th className="p-3 text-center">Giorni Lav.</th>
+                  <th className="p-3 text-center">Ore Totali</th>
+                  <th className="p-3 text-center">Logins</th>
+                  <th className="p-3 text-center text-blue-700">Tot. Contatti</th>
+                  <th className="p-3 text-center text-emerald-700">Ritmo</th>
+                  <th className="p-3 text-center">Skip</th>
+                  <th className="p-3 text-center">Non Rep.</th>
+                  <th className="p-3 text-center">Non Risp.</th>
+                  <th className="p-3 text-center">No Info</th>
+                  <th className="p-3 text-center">Non Int.</th>
+                  <th className="p-3 text-center">Cestino</th>
+                  <th className="p-3 text-center">Sblocco</th>
+                  <th className="p-3 text-center">Trattative</th>
+                  <th className="p-3 text-center text-green-700">Appunt.</th>
+                  <th className="p-3 text-center">Integrazioni</th>
+                </tr>
+              </thead>
             <tbody className="divide-y divide-gray-200">
               {reportData.map((op, i) => {
                 const ore = Math.floor(op.stats.minutesOn / 60);
                 const min = op.stats.minutesOn % 60;
+                
+                const totContacts = op.stats.skip + op.stats.noAnswer + op.stats.notAvailable + op.stats.nonInteressato + op.stats.noInfo + op.stats.trashRequest + op.stats.reviewRequest + op.stats.negotiation + op.stats.appt;
+                const ritmo = totContacts > 0 ? Math.floor(op.stats.minutesOn / totContacts) : 0;
+                const ritmoText = totContacts > 0 ? `1 / ${ritmo}m` : "-";
+
                 return (
                   <tr key={op.id} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                     <td className="p-3 font-bold text-gray-900">{op.name}</td>
                     <td className="p-3 text-center font-medium text-gray-600">{op.stats.daysWorked}</td>
                     <td className="p-3 text-center font-mono font-medium">{ore}h {min}m</td>
                     <td className="p-3 text-center text-gray-700">{op.stats.logins}</td>
+                    <td className="p-3 text-center text-blue-700 font-bold">{totContacts}</td>
+                    <td className="p-3 text-center text-emerald-700 font-mono font-bold">{ritmoText}</td>
                     <td className="p-3 text-center text-gray-700">{op.stats.skip}</td>
-                    <td className="p-3 text-center text-gray-700">{op.stats.noAnswer}</td>
+                    <td className="p-3 text-center text-orange-600">{op.stats.notAvailable}</td>
+                    <td className="p-3 text-center text-red-500">{op.stats.noAnswer}</td>
+                    <td className="p-3 text-center text-gray-500">{op.stats.noInfo}</td>
+                    <td className="p-3 text-center text-red-700">{op.stats.nonInteressato}</td>
+                    <td className="p-3 text-center text-rose-600">{op.stats.trashRequest}</td>
+                    <td className="p-3 text-center text-amber-600">{op.stats.reviewRequest}</td>
                     <td className="p-3 text-center font-semibold text-yellow-600">{op.stats.negotiation}</td>
                     <td className="p-3 text-center font-bold text-green-600">{op.stats.appt}</td>
                     <td className="p-3 text-center text-gray-700">{op.stats.enrichment}</td>
@@ -208,31 +232,40 @@ export default function ReportClient({ operators }: { operators: { id: string, n
               })}
               {reportData.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="p-8 text-center text-gray-500 font-medium">
+                  <td colSpan={16} className="p-8 text-center text-gray-500 font-medium">
                     Nessun dato trovato per il periodo e gli operatori selezionati.
                   </td>
                 </tr>
               )}
             </tbody>
             {reportData.length > 0 && (
-              <tfoot className="bg-gray-900 text-white font-bold">
-                <tr>
-                  <td className="p-3 uppercase">Totali di Sala</td>
-                  <td className="p-3 text-center">{reportData.reduce((acc, op) => acc + op.stats.daysWorked, 0)}</td>
-                  <td className="p-3 text-center font-mono">
-                    {(() => {
-                      const totMins = reportData.reduce((acc, op) => acc + op.stats.minutesOn, 0);
-                      return `${Math.floor(totMins / 60)}h ${totMins % 60}m`;
-                    })()}
-                  </td>
-                  <td className="p-3 text-center">{reportData.reduce((acc, op) => acc + op.stats.logins, 0)}</td>
-                  <td className="p-3 text-center">{reportData.reduce((acc, op) => acc + op.stats.skip, 0)}</td>
-                  <td className="p-3 text-center">{reportData.reduce((acc, op) => acc + op.stats.noAnswer, 0)}</td>
-                  <td className="p-3 text-center text-yellow-400">{reportData.reduce((acc, op) => acc + op.stats.negotiation, 0)}</td>
-                  <td className="p-3 text-center text-green-400">{reportData.reduce((acc, op) => acc + op.stats.appt, 0)}</td>
-                  <td className="p-3 text-center">{reportData.reduce((acc, op) => acc + op.stats.enrichment, 0)}</td>
-                </tr>
-              </tfoot>
+                <tfoot className="bg-gray-900 text-white font-bold">
+                  <tr>
+                    <td className="p-3 uppercase">Totali di Sala</td>
+                    <td className="p-3 text-center">{reportData.reduce((acc, op) => acc + op.stats.daysWorked, 0)}</td>
+                    <td className="p-3 text-center font-mono">
+                      {(() => {
+                        const totMins = reportData.reduce((acc, op) => acc + op.stats.minutesOn, 0);
+                        return `${Math.floor(totMins / 60)}h ${totMins % 60}m`;
+                      })()}
+                    </td>
+                    <td className="p-3 text-center">{reportData.reduce((acc, op) => acc + op.stats.logins, 0)}</td>
+                    <td className="p-3 text-center text-blue-400">
+                      {reportData.reduce((acc, op) => acc + (op.stats.skip + op.stats.noAnswer + op.stats.notAvailable + op.stats.nonInteressato + op.stats.noInfo + op.stats.trashRequest + op.stats.reviewRequest + op.stats.negotiation + op.stats.appt), 0)}
+                    </td>
+                    <td className="p-3 text-center text-emerald-400">-</td>
+                    <td className="p-3 text-center">{reportData.reduce((acc, op) => acc + op.stats.skip, 0)}</td>
+                    <td className="p-3 text-center text-orange-400">{reportData.reduce((acc, op) => acc + op.stats.notAvailable, 0)}</td>
+                    <td className="p-3 text-center text-red-400">{reportData.reduce((acc, op) => acc + op.stats.noAnswer, 0)}</td>
+                    <td className="p-3 text-center text-gray-400">{reportData.reduce((acc, op) => acc + op.stats.noInfo, 0)}</td>
+                    <td className="p-3 text-center text-red-600">{reportData.reduce((acc, op) => acc + op.stats.nonInteressato, 0)}</td>
+                    <td className="p-3 text-center text-rose-500">{reportData.reduce((acc, op) => acc + op.stats.trashRequest, 0)}</td>
+                    <td className="p-3 text-center text-amber-500">{reportData.reduce((acc, op) => acc + op.stats.reviewRequest, 0)}</td>
+                    <td className="p-3 text-center text-yellow-400">{reportData.reduce((acc, op) => acc + op.stats.negotiation, 0)}</td>
+                    <td className="p-3 text-center text-green-400">{reportData.reduce((acc, op) => acc + op.stats.appt, 0)}</td>
+                    <td className="p-3 text-center text-purple-400">{reportData.reduce((acc, op) => acc + op.stats.enrichment, 0)}</td>
+                  </tr>
+                </tfoot>
             )}
           </table>
 

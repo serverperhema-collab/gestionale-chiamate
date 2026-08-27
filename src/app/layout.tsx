@@ -4,6 +4,7 @@ import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
 import { Toaster } from "react-hot-toast";
 import { ExtractionProvider } from "./ExtractionContext";
+import SessionEnforcer from "@/components/SessionEnforcer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body className={`${inter.className} bg-gray-900 text-gray-100 min-h-screen flex flex-col`}>
         <AuthProvider>
           <ExtractionProvider>
+            <SessionEnforcer />
             <Toaster position="top-right" />
             {children}
           </ExtractionProvider>
