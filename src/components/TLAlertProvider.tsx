@@ -130,15 +130,6 @@ export default function TLAlertProvider() {
     };
   }, []);
 
-  const lockTypeLabels: Record<string, string> = {
-    'SKIP': 'Eccesso di Skip',
-    'NO_ANSWER': 'Troppi Non Risponde',
-    'NOT_AVAILABLE': 'Troppi Non Reperibile',
-    'MOD_LOCK': 'Troppe Modifiche Distruttive'
-  };
-
-  const label = lockTypeLabels[activeModalAlert.type] || activeModalAlert.type;
-
   const handleUnlock = async () => {
     setActionLoading(true);
     try {
@@ -184,6 +175,14 @@ export default function TLAlertProvider() {
 
   const renderModal = () => {
     if (!activeModalAlert) return null;
+
+    const lockTypeLabels: Record<string, string> = {
+      'SKIP': 'Eccesso di Skip',
+      'NO_ANSWER': 'Troppi Non Risponde',
+      'NOT_AVAILABLE': 'Troppi Non Reperibile',
+      'MOD_LOCK': 'Troppe Modifiche Distruttive'
+    };
+    const label = lockTypeLabels[activeModalAlert.type] || activeModalAlert.type;
 
     if (activeModalAlert.type === 'REVIEW_REQUEST') {
       return (
