@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import { ShieldOff, Clock, UserCheck, PlayCircle, LogIn, PhoneOff, PhoneForwarded, Target, FilePlus2, StopCircle } from "lucide-react";
+import { ShieldOff, Clock, UserCheck, PlayCircle, LogIn, PhoneOff, PhoneForwarded, Target, FilePlus2, StopCircle, Pencil } from "lucide-react";
 
 interface OperatorStats {
   skip: number;
@@ -103,6 +103,33 @@ export default function LiveMonitorClient() {
         toast.success(`Operatore ${operatorName} disconnesso con successo.`);
       } else {
         toast.error("Errore durante la disconnessione");
+      }
+    } catch (e) {
+      toast.error("Errore di rete");
+    }
+  };
+
+  const handleTimeAdjust = async (operatorId: string, operatorName: string) => {
+    const val = prompt(`Modifica il tempo di log di ${operatorName} oggi.\nInserisci i minuti da AGGIUNGERE (es. 30) o SOTTRARRE (es. -15):`);
+    if (!val) return;
+    
+    const minutes = parseInt(val, 10);
+    if (isNaN(minutes)) {
+      toast.error("Inserisci un numero valido di minuti");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/users/${operatorId}/time-adjust`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ minutes })
+      });
+      if (res.ok) {
+        toast.success(`Tempo modificato di ${minutes} minuti per ${operatorName}`);
+        fetchStatus();
+      } else {
+        toast.error("Errore durante la modifica del tempo");
       }
     } catch (e) {
       toast.error("Errore di rete");
@@ -223,8 +250,17 @@ export default function LiveMonitorClient() {
                         </div>
                       )}
                     </td>
-                    <td className="p-4 text-center font-mono text-gray-300 font-medium">
-                      {timeString}
+                    <td className="p-4 text-center font-mono text-gray-300 font-medium group">
+                      <div className="flex items-center justify-center gap-1">
+                        <span>{timeString}</span>
+                        <button 
+                          onClick={() => handleTimeAdjust(op.id, op.name)}
+                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-700 rounded transition"
+                          title="Modifica tempo di log"
+                        >
+                          <Pencil className="w-3 h-3 text-gray-400 hover:text-white" />
+                        </button>
+                      </div>
                     </td>
                     <td className="p-4 text-center text-blue-400 font-bold">
                       {op.stats.logins}

@@ -163,8 +163,8 @@ export default function ReportClient({ operators }: { operators: { id: string, n
 
       {/* Report View */}
       {reportData && (
-        <div className="bg-white text-black p-8 rounded-xl print:p-0 print:shadow-none shadow-xl print:m-0 mx-auto w-full max-w-6xl">
-          <div className="flex justify-between items-start border-b pb-6 mb-6 border-gray-200">
+        <div className="bg-white text-black p-8 rounded-xl print:p-0 print:shadow-none shadow-xl print:m-0 w-full overflow-x-auto">
+          <div className="flex justify-between items-start border-b pb-6 mb-6 border-gray-200 min-w-max">
             <div>
               <h2 className="text-3xl font-black text-gray-900 tracking-tight">REPORT ATTIVITÀ</h2>
               <p className="text-gray-600 mt-1 font-medium">
@@ -179,7 +179,8 @@ export default function ReportClient({ operators }: { operators: { id: string, n
             </div>
           </div>
 
-          <table className="w-full text-left border-collapse mb-8">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse mb-8 min-w-max">
               <thead>
                 <tr className="bg-gray-100 text-gray-700 text-sm uppercase tracking-wider font-bold border-b-2 border-gray-300">
                   <th className="p-3">Operatore</th>
@@ -267,9 +268,10 @@ export default function ReportClient({ operators }: { operators: { id: string, n
                   </tr>
                 </tfoot>
             )}
-          </table>
+            </table>
+          </div>
 
-          <div className="text-center text-gray-400 text-xs mt-12 print:block border-t pt-4">
+          <div className="text-center text-gray-400 text-xs mt-12 print:block border-t pt-4 min-w-max">
             Generato dal Gestionale Estrazioni - {new Date().toLocaleString('it-IT')}
           </div>
         </div>

@@ -91,6 +91,8 @@ export async function GET() {
       // Calculate minutesOn: from first action today to lastActivityAt
       // Find the earliest log time
       let firstLogMs: number | null = null;
+      let timeAdjustment = 0;
+
       op.callLogs.forEach(log => {
         const t = new Date(log.createdAt).getTime();
         if (!firstLogMs || t < firstLogMs) firstLogMs = t;
@@ -98,13 +100,18 @@ export async function GET() {
       op.activityLogs.forEach(log => {
         const t = new Date(log.createdAt).getTime();
         if (!firstLogMs || t < firstLogMs) firstLogMs = t;
+        
+        if (log.action === "TIME_ADJUSTMENT") {
+          timeAdjustment += parseInt(log.details) || 0;
+        }
       });
 
       if (firstLogMs && op.lastActivityAt) {
         const lastMs = new Date(op.lastActivityAt).getTime();
-        // Se lastMs è più piccolo (non dovrebbe), min 0
         minutesOn = Math.max(0, Math.floor((lastMs - firstLogMs) / 60000));
       }
+      
+      minutesOn = Math.max(0, minutesOn + timeAdjustment);
 
       return {
         id: op.id,

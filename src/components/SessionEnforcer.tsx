@@ -38,7 +38,7 @@ export default function SessionEnforcer() {
 
       // 2. Controllo Disconnessione Forzata dal TL
       try {
-        const res = await fetch("/api/user/status");
+        const res = await fetch("/api/user/status", { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           if (data.forceLogout) {

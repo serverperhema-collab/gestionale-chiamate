@@ -63,6 +63,7 @@ export async function GET(req: Request) {
 
       // Group logs by day to calculate accurate daily "Minutes On"
       const dailyLogs: Record<string, number[]> = {};
+      const dailyAdjustments: Record<string, number> = {};
 
       op.callLogs.forEach(log => {
         if (log.outcome === "SKIP") skip++;
@@ -87,6 +88,11 @@ export async function GET(req: Request) {
         const dateStr = new Date(log.createdAt).toISOString().split('T')[0];
         if (!dailyLogs[dateStr]) dailyLogs[dateStr] = [];
         dailyLogs[dateStr].push(new Date(log.createdAt).getTime());
+
+        if (log.action === "TIME_ADJUSTMENT") {
+          if (!dailyAdjustments[dateStr]) dailyAdjustments[dateStr] = 0;
+          dailyAdjustments[dateStr] += parseInt(log.details) || 0;
+        }
       });
 
       let totalMinutesOn = 0;
@@ -98,8 +104,13 @@ export async function GET(req: Request) {
           daysWorked++;
           const minTime = Math.min(...times);
           const maxTime = Math.max(...times);
-          const minutesForDay = Math.floor((maxTime - minTime) / 60000);
-          totalMinutesOn += minutesForDay;
+          let minutesForDay = Math.floor((maxTime - minTime) / 60000);
+          
+          if (dailyAdjustments[date]) {
+            minutesForDay += dailyAdjustments[date];
+          }
+          
+          totalMinutesOn += Math.max(0, minutesForDay);
         }
       }
 
