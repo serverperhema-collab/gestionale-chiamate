@@ -197,24 +197,24 @@ export default function LiveMonitorClient() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-950 border-b border-gray-800 text-xs uppercase tracking-wider text-gray-400 font-semibold whitespace-nowrap">
-                <th className="p-4">Operatore</th>
-                <th className="p-4 text-center">Stato</th>
-                <th className="p-4 text-center" title="Tempo online oggi (primo log -> ora)">Minuti On</th>
-                <th className="p-4 text-center" title="Volte che ha fatto login">Logins</th>
-                <th className="p-4 text-center text-blue-400" title="Totale contatti passati davanti all'operatore">Tot. Contatti</th>
-                <th className="p-4 text-center text-emerald-400" title="Rapporto tra minuti online e contatti totali">Ritmo</th>
-                <th className="p-4 text-center text-gray-500">Skip</th>
-                <th className="p-4 text-center text-orange-400">Non Rep.</th>
-                <th className="p-4 text-center text-red-400">No Risp.</th>
-                <th className="p-4 text-center text-gray-400">No Info</th>
-                <th className="p-4 text-center text-red-600">Non Int.</th>
-                <th className="p-4 text-center text-rose-500">Cestino</th>
-                <th className="p-4 text-center text-amber-500">Sblocco</th>
-                <th className="p-4 text-center text-yellow-400">Trattative</th>
-                <th className="p-4 text-center text-green-400">Appunt.</th>
-                <th className="p-4 text-center text-purple-400">Integrazioni</th>
-                <th className="p-4 text-center">Azione</th>
+              <tr className="bg-gray-950 border-b border-gray-800 text-[11px] uppercase tracking-wider text-gray-400 font-semibold leading-tight">
+                <th className="px-2 py-3">Operatore</th>
+                <th className="px-2 py-3 text-center">Stato</th>
+                <th className="px-2 py-3 text-center" title="Tempo online oggi (primo log -> ora)">Minuti On</th>
+                <th className="px-2 py-3 text-center" title="Volte che ha fatto login">Logins</th>
+                <th className="px-2 py-3 text-center text-blue-400" title="Totale contatti passati davanti all'operatore">Tot. Contatti</th>
+                <th className="px-2 py-3 text-center text-emerald-400" title="Rapporto tra minuti online e contatti totali">Ritmo</th>
+                <th className="px-2 py-3 text-center text-gray-500">Skip</th>
+                <th className="px-2 py-3 text-center text-orange-400">Non Rep.</th>
+                <th className="px-2 py-3 text-center text-red-400">No Risp.</th>
+                <th className="px-2 py-3 text-center text-gray-400">No Info</th>
+                <th className="px-2 py-3 text-center text-red-600">Non Int.</th>
+                <th className="px-2 py-3 text-center text-rose-500">Cestino</th>
+                <th className="px-2 py-3 text-center text-amber-500">Sblocco</th>
+                <th className="px-2 py-3 text-center text-yellow-400">Trattative</th>
+                <th className="px-2 py-3 text-center text-green-400">Appunt.</th>
+                <th className="px-2 py-3 text-center text-purple-400">Integrazioni</th>
+                <th className="px-2 py-3 text-center">Azione</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800">
@@ -228,10 +228,10 @@ export default function LiveMonitorClient() {
                 const ritmoText = totContacts > 0 ? `1 / ${ritmo}m` : "-";
 
                 return (
-                  <tr key={op.id} className={`transition ${op.isDisconnected ? 'bg-gray-800/50 hover:bg-gray-800/80 opacity-50' : op.isIdle ? 'bg-red-950/20 hover:bg-red-950/40' : 'hover:bg-gray-800'}`}>
-                    <td className="p-4 w-48">
+                  <tr key={op.id} className={`transition ${op.isDisconnected ? 'bg-gray-800/40 hover:bg-gray-800/60' : op.isIdle ? 'bg-red-950/20 hover:bg-red-950/40' : 'hover:bg-gray-800'}`}>
+                    <td className="px-2 py-3 w-48">
                       <div className="font-semibold text-white">{op.name}</div>
-                      {op.isIdle && op.currentContact && (
+                      {!op.isDisconnected && op.isIdle && op.currentContact && (
                         <div 
                           className="text-xs text-red-400 mt-1 flex items-start max-w-full"
                           title={`Bloccato su: ${op.currentContact.name} (${op.currentContact.cap})`}
@@ -243,7 +243,7 @@ export default function LiveMonitorClient() {
                         </div>
                       )}
                     </td>
-                      <td className="p-4 text-center">
+                      <td className="px-2 py-3 text-center">
                         {op.isDisconnected ? (
                           <div className="inline-flex items-center px-2 py-1 rounded-full bg-gray-900/50 text-gray-500 text-xs font-bold border border-gray-700">
                             <PhoneOff className="w-3 h-3 mr-1" />
@@ -261,7 +261,7 @@ export default function LiveMonitorClient() {
                           </div>
                         )}
                       </td>
-                    <td className="p-4 text-center font-mono text-gray-300 font-medium group">
+                    <td className="px-2 py-3 text-center font-mono text-gray-300 font-medium group">
                       <div className="flex items-center justify-center gap-1">
                         <span>{timeString}</span>
                         <button 
@@ -273,16 +273,16 @@ export default function LiveMonitorClient() {
                         </button>
                       </div>
                     </td>
-                    <td className="p-4 text-center text-blue-400 font-bold">
+                    <td className="px-2 py-3 text-center text-blue-400 font-bold">
                       {op.stats.logins}
                     </td>
-                    <td className="p-4 text-center text-blue-400 font-bold">
+                    <td className="px-2 py-3 text-center text-blue-400 font-bold">
                       {totContacts}
                     </td>
-                    <td className="p-4 text-center text-emerald-400 font-semibold font-mono">
+                    <td className="px-2 py-3 text-center text-emerald-400 font-semibold font-mono">
                       {ritmoText}
                     </td>
-                    <td className="p-4 text-center text-gray-400 font-semibold">
+                    <td className="px-2 py-3 text-center text-gray-400 font-semibold">
                       {op.stats.skip}
                       {op.skipCount > 0 && (
                         <span className="text-xs text-amber-500 font-bold block mt-0.5" title="Skip consecutivi (blocco a 5)">
@@ -290,34 +290,34 @@ export default function LiveMonitorClient() {
                         </span>
                       )}
                     </td>
-                    <td className="p-4 text-center text-orange-400 font-semibold">
+                    <td className="px-2 py-3 text-center text-orange-400 font-semibold">
                       {op.stats.notAvailable}
                     </td>
-                    <td className="p-4 text-center text-red-400 font-semibold">
+                    <td className="px-2 py-3 text-center text-red-400 font-semibold">
                       {op.stats.noAnswer}
                     </td>
-                    <td className="p-4 text-center text-gray-400 font-semibold">
+                    <td className="px-2 py-3 text-center text-gray-400 font-semibold">
                       {op.stats.noInfo}
                     </td>
-                    <td className="p-4 text-center text-red-600 font-semibold">
+                    <td className="px-2 py-3 text-center text-red-600 font-semibold">
                       {op.stats.nonInteressato}
                     </td>
-                    <td className="p-4 text-center text-rose-500 font-semibold">
+                    <td className="px-2 py-3 text-center text-rose-500 font-semibold">
                       {op.stats.trashRequest}
                     </td>
-                    <td className="p-4 text-center text-amber-500 font-semibold">
+                    <td className="px-2 py-3 text-center text-amber-500 font-semibold">
                       {op.stats.reviewRequest}
                     </td>
-                    <td className="p-4 text-center text-yellow-400 font-semibold">
+                    <td className="px-2 py-3 text-center text-yellow-400 font-semibold">
                       {op.stats.negotiation}
                     </td>
-                    <td className="p-4 text-center text-green-400 font-semibold">
+                    <td className="px-2 py-3 text-center text-green-400 font-semibold">
                       {op.stats.appt}
                     </td>
-                    <td className="p-4 text-center text-purple-400 font-semibold">
+                    <td className="px-2 py-3 text-center text-purple-400 font-semibold">
                       {op.stats.enrichment}
                     </td>
-                    <td className="p-4 flex flex-col gap-2 items-center justify-center">
+                    <td className="px-2 py-3 flex flex-col gap-2 items-center justify-center">
                       {op.isIdle && op.currentContact && (
                         <button
                           onClick={() => handleUnassign(op.currentContact!.id, op.name)}
