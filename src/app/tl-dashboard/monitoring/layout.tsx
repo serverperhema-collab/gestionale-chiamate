@@ -11,15 +11,15 @@ export default function MonitoringLayout({ children }: { children: React.ReactNo
   const isLandingPage = pathname === "/tl-dashboard/monitoring";
 
   return (
-    <div className="flex-1 p-8 bg-gray-900 min-h-screen text-gray-100 flex flex-col">
-      <div className="mb-6">
+    <div className="flex-1 p-8 bg-gray-900 min-h-screen text-gray-100 flex flex-col print:p-0 print:bg-white">
+      <div className="mb-6 print:hidden">
         <Link href="/tl-dashboard" className="inline-flex items-center px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 rounded-lg transition shadow-sm font-medium">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Torna alla Dashboard
         </Link>
       </div>
 
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-8 print:hidden">
         <div>
           <h2 className="text-2xl font-semibold text-white tracking-tight flex items-center">
             <AreaChart className="w-6 h-6 mr-3 text-cyan-400" />
@@ -45,7 +45,7 @@ export default function MonitoringLayout({ children }: { children: React.ReactNo
           </div>
 
           {/* SIDE MENU (RIGHT) */}
-          <div className="w-64 flex-shrink-0">
+          <div className="w-64 flex-shrink-0 print:hidden">
             <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden sticky top-8">
               <Link
                 href="/tl-dashboard/monitoring/live"
