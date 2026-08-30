@@ -364,7 +364,14 @@ export default function ExtractPage() {
 
 
 
-        
+        {/* SELEZIONE SORGENTE */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-400 mb-2">Motore di Ricerca (Opzionale)</label>
+          <div className="flex gap-4">
+            <label className={`flex-1 flex items-center p-4 border rounded-xl cursor-pointer transition-all ${source === 'google' ? 'border-blue-500 bg-blue-500/10 shadow-inner' : 'border-gray-700 bg-gray-900 hover:border-gray-600'}`}>
+              <input type="radio" name="source" value="google" checked={source === 'google'} onChange={() => setSource('google')} className="hidden" />
+              <div className="ml-2">
+                <div className="font-bold text-white">Google Maps API</div>
                 <div className="text-xs text-gray-400 mt-1">Dati ricchi, telefoni garantiti, a pagamento</div>
               </div>
             </label>
@@ -377,6 +384,7 @@ export default function ExtractPage() {
             </label>
           </div>
         </div>
+
 
         {/* CONTROLLO SETTORI DINAMICO IN PAGINA */}
         <div className="mb-8 border border-gray-700 rounded-xl overflow-hidden bg-gray-900/30">
@@ -522,4 +530,7 @@ export default function ExtractPage() {
     </div>
   );
 }
+
+
+
 

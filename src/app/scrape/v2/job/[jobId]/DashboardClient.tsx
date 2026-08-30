@@ -1,5 +1,5 @@
-import QuadtreeVisualizer from '@/components/QuadtreeVisualizer';
 'use client';
+import QuadtreeVisualizer from '@/components/QuadtreeVisualizer';
 
 import React, { useEffect, useState } from 'react';
 
@@ -356,6 +356,7 @@ export default function DashboardClient({ jobId }: { jobId: string }) {
         </div>
     );
 }
+
 
 
 
