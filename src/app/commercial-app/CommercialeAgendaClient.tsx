@@ -149,7 +149,16 @@ export default function CommercialeAgendaClient() {
                   <div className="bg-gray-950 p-3 rounded-xl border border-gray-800 space-y-2">
                     <div className="flex items-center text-sm">
                       <User className="w-4 h-4 mr-2 text-gray-500" />
-                      <span className="text-gray-300">{appt.referentName} <span className="text-gray-500">({appt.referentRole})</span></span>
+                      <span className="text-gray-300">
+                        {(() => {
+                          try {
+                            const parsed = JSON.parse(appt.referentName);
+                            if (Array.isArray(parsed)) return parsed.map((p: any) => p.name).join(", ");
+                          } catch {}
+                          return appt.referentName;
+                        })()} 
+                        <span className="text-gray-500 ml-1">({appt.referentRole})</span>
+                      </span>
                     </div>
                     <div className="flex items-center text-sm">
                       <Phone className="w-4 h-4 mr-2 text-gray-500" />
