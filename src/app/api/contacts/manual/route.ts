@@ -164,6 +164,8 @@ export async function POST(req: Request) {
     const newContact = await prisma.contact.create({
       data: {
         placeId: `manual_${Date.now()}_${Math.random().toString(36).substring(7)}`, // Pseudo placeId for manual entries
+        source: 'MANUAL',
+        sourceId: `manual_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         name,
         cap,
         sector: sector || "Generico",

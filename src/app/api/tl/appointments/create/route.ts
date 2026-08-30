@@ -24,8 +24,7 @@ export async function POST(req: Request) {
       if (newContactData) {
         const createdContact = await tx.contact.create({
           data: {
-            placeId: `manual_tl_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-            name: newContactData.name,
+            placeId: `manual_tl_${Date.now()}_${Math.random().toString(36).substring(7)}`, source: 'MANUAL', sourceId: `manual_tl_${Date.now()}_${Math.random().toString(36).substring(7)}`, name: newContactData.name,
             address: `${newContactData.address}, ${newContactData.city} (${newContactData.province})`,
             cap: newContactData.cap,
             sector: "Generico",

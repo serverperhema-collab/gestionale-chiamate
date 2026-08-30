@@ -43,7 +43,7 @@ export async function GET(req: Request) {
         },
         activityLogs: {
           where: { createdAt: { gte: startDate, lte: endDate } },
-          select: { action: true, createdAt: true }
+          select: { action: true, createdAt: true, details: true }
         }
       }
     });
@@ -72,7 +72,7 @@ export async function GET(req: Request) {
         if (log.outcome === "NON_INTERESSATO") nonInteressato++;
         if (log.outcome === "NO_INFO") noInfo++;
         if (log.outcome === "TRASH_REQUEST") trashRequest++;
-        if (log.outcome === "REVIEW_REQUEST") reviewRequest++;
+        if (log.outcome === ("REVIEW_REQUEST" as any)) reviewRequest++;
         if (log.outcome === "NEGOTIATION") negotiation++;
         if (log.outcome === "APPOINTMENT") appt++;
 
@@ -91,7 +91,7 @@ export async function GET(req: Request) {
 
         if (log.action === "TIME_ADJUSTMENT") {
           if (!dailyAdjustments[dateStr]) dailyAdjustments[dateStr] = 0;
-          dailyAdjustments[dateStr] += parseInt(log.details) || 0;
+          dailyAdjustments[dateStr] += parseInt(log.details || "0") || 0;
         }
       });
 
@@ -145,3 +145,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Errore interno del server" }, { status: 500 });
   }
 }
+
+
+

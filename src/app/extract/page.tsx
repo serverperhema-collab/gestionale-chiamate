@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Play, Loader2, Map as MapIcon, AlertTriangle, CheckCircle2, CheckSquare, Square, X, Search as SearchIcon, ChevronDown, ChevronUp, Key, ShieldAlert } from "lucide-react";
 import lazioData from "@/data/lazio_caps.json";
 import { useExtraction } from "../ExtractionContext";
@@ -30,15 +31,15 @@ export default function ExtractPage() {
   const [statsLoading, setStatsLoading] = useState(false);
 
   // Stati per la gestione chiavi API e Settori direttamente in pagina
-  const [apiKey, setApiKey] = useState("");
+  
   const [enabledSectors, setEnabledSectors] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isSectorsExpanded, setIsSectorsExpanded] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const storedKey = localStorage.getItem("custom_google_api_key") || "";
-      setApiKey(storedKey);
+      
+      
       
       const storedSectors = localStorage.getItem("enabled_categories");
       if (storedSectors) {
@@ -55,10 +56,7 @@ export default function ExtractPage() {
     }
   }, []);
 
-  const handleApiKeyChange = (val: string) => {
-    setApiKey(val);
-    localStorage.setItem("custom_google_api_key", val.trim());
-  };
+  
 
   const toggleSector = (id: string) => {
     setEnabledSectors(prev => {
@@ -202,7 +200,10 @@ export default function ExtractPage() {
 
   const isCapSearched = cap && searchedCaps.includes(cap);
 
-  const handleStartExtraction = () => {
+  const router = useRouter();
+  const [isStartingV2, setIsStartingV2] = useState(false);
+
+  const handleStartExtraction = async () => {
     if (!cap) {
       alert("Seleziona un CAP prima di iniziare.");
       return;
@@ -214,10 +215,28 @@ export default function ExtractPage() {
     }
 
     // Assicuriamo il salvataggio in localStorage per contesti esterni
-    localStorage.setItem("custom_google_api_key", apiKey.trim());
+    
     localStorage.setItem("enabled_categories", JSON.stringify(enabledSectors));
 
-    startGlobalExtraction(cap, source, enabledSectors, comune, provincia);
+    setIsStartingV2(true);
+    try {
+        const res = await fetch('/api/scrape/v2/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cap, source, sectors: enabledSectors })
+        });
+        const json = await res.json();
+        if (json.success) {
+            router.push(`/scrape/v2/job/${json.data.jobId}`);
+        } else {
+            alert("Errore avvio job: " + json.error);
+            setIsStartingV2(false);
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Errore avvio job v2");
+        setIsStartingV2(false);
+    }
   };
 
   return (
@@ -345,33 +364,7 @@ export default function ExtractPage() {
 
 
 
-        {/* CHIAVE API DINAMICA IN PAGINA */}
-        {source === "google" && (
-          <div className="mb-6 bg-gray-900/50 p-4 rounded-xl border border-gray-700">
-            <label className="block text-sm font-medium text-gray-400 mb-2 flex items-center">
-              <Key className="w-4 h-4 mr-2 text-blue-400" />
-              Chiave Google Maps API Personale (Opzionale)
-            </label>
-            <input 
-              type="password" 
-              value={apiKey} 
-              onChange={(e) => handleApiKeyChange(e.target.value)}
-              placeholder="Lascia vuoto per usare la chiave predefinita (AIzaSyD...)" 
-              className="w-full bg-gray-950 border border-gray-700 text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-sm"
-            />
-            <p className="text-[11px] text-gray-500 mt-1">
-              Puoi cambiare questa chiave di volta in volta. Verrà salvata nel browser.
-            </p>
-          </div>
-        )}
-
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-400 mb-3">Sorgente Dati</label>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <label className={`flex-1 flex items-center p-4 border rounded-xl cursor-pointer transition-all ${source === 'google' ? 'border-blue-500 bg-blue-500/10 shadow-inner' : 'border-gray-700 bg-gray-900 hover:border-gray-600'}`}>
-              <input type="radio" name="source" value="google" checked={source === 'google'} onChange={() => setSource('google')} className="hidden" />
-              <div className="ml-2">
-                <div className="font-bold text-white">Google Maps API</div>
+        
                 <div className="text-xs text-gray-400 mt-1">Dati ricchi, telefoni garantiti, a pagamento</div>
               </div>
             </label>
@@ -507,11 +500,11 @@ export default function ExtractPage() {
         
         <button 
           onClick={handleStartExtraction}
-          disabled={isExtracting || !cap}
+          disabled={isStartingV2 || !cap}
           className="w-full flex justify-center items-center py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20"
         >
-          {isExtracting ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Play className="w-5 h-5 mr-2" />}
-          {isExtracting ? "Estrazione in corso..." : "Avvia Motore di Ricerca"}
+          {isStartingV2 ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Play className="w-5 h-5 mr-2" />}
+          {isStartingV2 ? "Avvio motore..." : "Avvia Motore di Ricerca (V2)"}
         </button>
       </div>
 
@@ -529,3 +522,4 @@ export default function ExtractPage() {
     </div>
   );
 }
+

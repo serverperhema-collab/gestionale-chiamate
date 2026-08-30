@@ -37,7 +37,7 @@ export async function GET() {
         },
         activityLogs: {
           where: { createdAt: { gte: todayStart } },
-          select: { action: true, createdAt: true }
+          select: { action: true, createdAt: true, details: true }
         }
       }
     });
@@ -78,7 +78,7 @@ export async function GET() {
         if (log.outcome === "NON_INTERESSATO") nonInteressato++;
         if (log.outcome === "NO_INFO") noInfo++;
         if (log.outcome === "TRASH_REQUEST") trashRequest++;
-        if (log.outcome === "REVIEW_REQUEST") reviewRequest++;
+        if (log.outcome === ("REVIEW_REQUEST" as any)) reviewRequest++;
         if (log.outcome === "NEGOTIATION") negotiation++;
         if (log.outcome === "APPOINTMENT") appt++;
       });
@@ -102,7 +102,7 @@ export async function GET() {
         if (!firstLogMs || t < firstLogMs) firstLogMs = t;
         
         if (log.action === "TIME_ADJUSTMENT") {
-          timeAdjustment += parseInt(log.details) || 0;
+          timeAdjustment += parseInt(log.details || "0") || 0;
         }
       });
 
@@ -146,3 +146,5 @@ export async function GET() {
     return NextResponse.json({ error: "Errore interno del server" }, { status: 500 });
   }
 }
+
+

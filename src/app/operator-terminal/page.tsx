@@ -340,7 +340,7 @@ export default function OperatorTerminal() {
             <div className="mt-6 bg-red-950/50 border border-red-500/50 rounded-lg p-4 w-full">
               <span className="text-sm text-red-300 font-bold block">Rivolgiti al tuo responsabile per farti riammettere nel sistema.</span>
             </div>
-            <button onClick={fetchNextContact} className="mt-6 px-6 py-2.5 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg text-white font-medium transition shadow-sm">
+            <button onClick={() => fetchNextContact()} className="mt-6 px-6 py-2.5 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg text-white font-medium transition shadow-sm">
               Ricarica Pagina
             </button>
           </div>
@@ -357,7 +357,7 @@ export default function OperatorTerminal() {
                 <span className="text-3xl font-mono text-white font-bold">{countdown}</span>
               </div>
             )}
-            <button onClick={fetchNextContact} className="mt-6 px-6 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg text-white font-medium transition">
+            <button onClick={() => fetchNextContact()} className="mt-6 px-6 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg text-white font-medium transition">
               Verifica Sblocco
             </button>
           </div>
@@ -368,7 +368,7 @@ export default function OperatorTerminal() {
             <p className="text-gray-400">
               Non ci sono contatti disponibili per i CAP assegnati o non hai un'assegnazione per oggi.
             </p>
-            <button onClick={fetchNextContact} className="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-medium transition">
+            <button onClick={() => fetchNextContact()} className="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-medium transition">
               Riprova
             </button>
           </div>

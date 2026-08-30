@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum Role {
@@ -73,17 +74,17 @@ model User {
   modLockTimeMins       Int @default(10)
 
   // Relations
-  dailyAssignments   DailyAssignment[]
-  callLogs           CallLog[]
-  activityLogs       ActivityLog[]
-  negotiations       Negotiation[]
-  asCommerciale      Appointment[]  @relation("CommercialeAppointments")
-  asOperator         Appointment[]  @relation("OperatorAppointments")
-  assignedContacts   Contact[]      @relation("AssignedContacts")
-  zoneAgendas        ZoneAgenda[]
-  quoteRequests      QuoteRequest[]
-  attendances        Attendance[]   @relation("AttendanceOperator")
-  attendanceUpdates  Attendance[]   @relation("AttendanceUpdatedBy")
+  dailyAssignments  DailyAssignment[]
+  callLogs          CallLog[]
+  activityLogs      ActivityLog[]
+  negotiations      Negotiation[]
+  asCommerciale     Appointment[]     @relation("CommercialeAppointments")
+  asOperator        Appointment[]     @relation("OperatorAppointments")
+  assignedContacts  Contact[]         @relation("AssignedContacts")
+  zoneAgendas       ZoneAgenda[]
+  quoteRequests     QuoteRequest[]
+  attendances       Attendance[]      @relation("AttendanceOperator")
+  attendanceUpdates Attendance[]      @relation("AttendanceUpdatedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -104,8 +105,19 @@ model DailyAssignment {
 }
 
 model Contact {
-  id             String  @id @default(cuid())
-  placeId        String  @unique
+  id String @id @default(cuid())
+
+  // --- EXTRACTION ENGINE V2 ---
+  source           ExtractionSource @default(GOOGLE)
+  sourceId         String
+  rawName          String           @default("")
+  rawAddress       String?
+  normalizedName   String?
+  normalizedStreet String?
+  normalizedNumber String?
+  dedupeKey        String?
+
+  placeId        String?
   name           String
   originalPhone  String?
   hours          String?
@@ -131,15 +143,15 @@ model Contact {
   isPersonalCallback Boolean   @default(false)
 
   // Nuovi Campi per il Piano di Sviluppo
-  blacklisted        Boolean   @default(false)
-  blacklistReason    String?
-  delegatedToId      String?
-  delegatedUntil     DateTime?
-  reviewRequestedAt  DateTime?
-  reviewNote         String?
-  skipCount          Int       @default(0)
-  lastOutcome        String?
-  targetCompany      String?
+  blacklisted       Boolean   @default(false)
+  blacklistReason   String?
+  delegatedToId     String?
+  delegatedUntil    DateTime?
+  reviewRequestedAt DateTime?
+  reviewNote        String?
+  skipCount         Int       @default(0)
+  lastOutcome       String?
+  targetCompany     String?
 
   // Relations
   phones       ContactPhone[]
@@ -153,6 +165,8 @@ model Contact {
   updatedAt DateTime @updatedAt
   TlTask    TlTask[]
 
+  @@unique([source, sourceId])
+  @@index([dedupeKey])
   @@index([name])
   @@index([cap])
   @@index([sector])
@@ -274,11 +288,11 @@ model Appointment {
   clientNeeds  String
   tlNotes      String?
 
-  status ApptStatus @default(PENDING)
+  status           ApptStatus        @default(PENDING)
   commercialStatus CommercialStatus?
-  isSecondAppt     Boolean @default(false)
+  isSecondAppt     Boolean           @default(false)
 
-  outcomes AppointmentOutcome[]
+  outcomes     AppointmentOutcome[]
   quoteRequest QuoteRequest?
 
   createdAt DateTime @default(now())
@@ -330,22 +344,22 @@ enum QuoteStatus {
 }
 
 model AppointmentOutcome {
-  id            String            @id @default(cuid())
-  appointmentId String            @unique
-  appointment   Appointment       @relation(fields: [appointmentId], references: [id])
-  
-  outcomeFinal     OutcomeFinal
-  skipReason       SkipReason?
-  notes            String
+  id            String      @id @default(cuid())
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+
+  outcomeFinal OutcomeFinal
+  skipReason   SkipReason?
+  notes        String
 
   nextActionType   NextActionType?
   nextActionTarget NextActionTarget?
   nextActionDate   DateTime?
 
-  koRequested      Boolean  @default(false)
-  quoteAttached    Boolean  @default(false)
-  quoteUrl         String?
-  quoteRequested   Boolean  @default(false)
+  koRequested    Boolean @default(false)
+  quoteAttached  Boolean @default(false)
+  quoteUrl       String?
+  quoteRequested Boolean @default(false)
 
   createdAt DateTime @default(now())
 }
@@ -356,14 +370,14 @@ model QuoteRequest {
   appointment   Appointment @relation(fields: [appointmentId], references: [id])
   commercialeId String
   commerciale   User        @relation(fields: [commercialeId], references: [id])
-  
-  notes         String
-  status        QuoteStatus  @default(PENDING)
-  
-  tlNotes       String?
-  quoteUrl      String?
-  resolvedAt    DateTime?
-  
+
+  notes  String
+  status QuoteStatus @default(PENDING)
+
+  tlNotes    String?
+  quoteUrl   String?
+  resolvedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -400,8 +414,8 @@ model ZoneAgenda {
   commercialeId String?
   commerciale   User?   @relation(fields: [commercialeId], references: [id])
 
-  isClosed      Boolean @default(false)
-  tlNotes       String?
+  isClosed Boolean @default(false)
+  tlNotes  String?
 
   appointments Appointment[]
 
@@ -437,8 +451,8 @@ model Attendance {
   date   DateTime @db.Date
 
   status         AttendanceStatus
-  shiftMorning   Boolean @default(false)
-  shiftAfternoon Boolean @default(false)
+  shiftMorning   Boolean          @default(false)
+  shiftAfternoon Boolean          @default(false)
 
   // Calcolato ESCLUSIVAMENTE dal backend:
   // Mattina=4h | Pomeriggio=3h | Entrambi=7h | Nessuno=0h
@@ -457,7 +471,7 @@ model Attendance {
 
   // Tracciamento: chi ha fatto l'ultimo salvataggio
   updatedById String?
-  updatedBy   User?  @relation("AttendanceUpdatedBy", fields: [updatedById], references: [id])
+  updatedBy   User?   @relation("AttendanceUpdatedBy", fields: [updatedById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -465,3 +479,149 @@ model Attendance {
   // Vincolo fondamentale: un solo record per operatore per giorno
   @@unique([userId, date])
 }
+
+enum ScrapingJobStatus {
+  RUNNING
+  PAUSED
+  COMPLETED
+  FAILED
+}
+
+enum QueryStatus {
+  PENDING
+  RUNNING
+  PAGE_LIMIT_REACHED
+  LOW_YIELD
+  BRANCH_CLOSED
+  FAILED
+}
+
+enum ExtractionSource {
+  GOOGLE
+  OSM
+  MANUAL
+}
+
+model ScrapingJob {
+  id               String            @id @default(cuid())
+  cap              String
+  status           ScrapingJobStatus @default(RUNNING)
+  maxEstimatedCost Float
+  currentCost      Float             @default(0)
+  maxQueries       Int
+  queriesExecuted  Int               @default(0)
+
+  queries ScrapingQuery[]
+
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  ScrapingJobEvent ScrapingJobEvent[]
+}
+
+model QueryFamily {
+  id      String @id // Formato: CONCEPT__SCOPE (es. IDRAULICO__CAP_00172)
+  concept String
+  scope   String
+
+  // Knowledge Base Statistics
+  totalQueries           Int   @default(0)
+  totalResults           Int   @default(0)
+  totalNewResults        Int   @default(0)
+  totalDuplicates        Int   @default(0)
+  avgActualYield         Float @default(0)
+  avgNewResultsPerQuery  Float @default(0)
+  estimatedVsActualError Float @default(0)
+  avgConfidence          Float @default(0.5)
+
+  queries ScrapingQuery[]
+
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  QueryStrategyStat QueryStrategyStat[]
+}
+
+model ScrapingQuery {
+  id       String      @id @default(cuid())
+  jobId    String
+  job      ScrapingJob @relation(fields: [jobId], references: [id])
+  familyId String
+  family   QueryFamily @relation(fields: [familyId], references: [id])
+
+  queryText String
+  strategy  String // BASE, SYNONYM, GEO_CELL, OSM_SEED
+
+  status QueryStatus @default(PENDING)
+
+  // Dati specifici per strategie Quadtree (GeoCell)
+  geoCellId       String?
+  parentGeoCellId String?
+  geoDepth        Int?
+  cellMinLat      Float?
+  cellMaxLat      Float?
+  cellMinLng      Float?
+  cellMaxLng      Float?
+  searchCenterLat Float?
+  searchCenterLng Float?
+  searchRadius    Float?
+
+  // EXPECTED
+  estimatedYield  Float?
+  confidence      Float?
+  gapMultiplier   Float?
+  explorationMult Float?
+  estimatedCost   Float?
+  priority        Float?
+  plannerReason   String?
+
+  // ACTUAL
+  resultCount    Int?
+  newResultCount Int?
+  duplicateCount Int?
+  actualYield    Float?
+  executionCost  Float?
+  executionDurMs Int?
+
+  lockedAt    DateTime?
+  heartbeatAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@unique([jobId, queryText])
+  @@index([jobId, status])
+  @@index([jobId, status, priority])
+}
+
+model QueryStrategyStat {
+  id       String      @id @default(cuid())
+  familyId String
+  family   QueryFamily @relation(fields: [familyId], references: [id])
+
+  strategy  String
+  geoDepth  Int?
+  geoCellId String?
+
+  totalQueries    Int @default(0)
+  totalResults    Int @default(0)
+  totalNewResults Int @default(0)
+  totalDuplicates Int @default(0)
+
+  avgActualYield         Float @default(0)
+  avgNewResultsPerQuery  Float @default(0)
+  estimatedVsActualError Float @default(0)
+  confidence             Float @default(0.25)
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([familyId, strategy, geoDepth, geoCellId])
+}
+
+model ScrapingJobEvent {
+  id        String      @id @default(cuid())
+  jobId     String
+  job       ScrapingJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  timestamp DateTime    @default(now())
+  type      String
+  message   String
+  metadata  Json?
+}
+
+
