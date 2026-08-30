@@ -122,6 +122,27 @@ export default function OperatorAppointmentsPage() {
                       {appt.tlNotes}
                     </div>
                   )}
+
+                  {appt.status === "DONE" && appt.outcomes && appt.outcomes.length > 0 && (
+                    <div className="mb-4 p-3 bg-gray-950 border border-gray-700 rounded-lg text-sm text-gray-300 shadow-inner">
+                      <div className="font-bold text-gray-400 uppercase tracking-wider text-[10px] mb-2 flex justify-between items-center">
+                        Esito Commerciale
+                        {appt.outcomes[0].quoteRequested && (
+                           <span className="text-purple-400 bg-purple-900/30 px-2 py-0.5 rounded border border-purple-800">Preventivo Richiesto</span>
+                        )}
+                      </div>
+                      <div className={`font-bold text-lg mb-2 ${
+                        appt.outcomes[0].outcomeFinal === 'VENDUTO' ? 'text-emerald-400' :
+                        appt.outcomes[0].outcomeFinal === 'KO' ? 'text-red-400' :
+                        'text-blue-400'
+                      }`}>
+                        {appt.outcomes[0].outcomeFinal.replace("_", " ")}
+                      </div>
+                      <div className="italic bg-gray-900 p-2 rounded border border-gray-800 text-gray-400">
+                        "{appt.outcomes[0].notes}"
+                      </div>
+                    </div>
+                  )}
                   
                   {isBounced && (
                     <div className="mb-4 p-3 bg-red-900/20 border border-red-800/30 rounded-lg text-sm text-red-300">
