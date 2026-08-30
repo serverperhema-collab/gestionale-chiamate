@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Activity, Radio, BarChart2, ArrowLeft, AreaChart } from "lucide-react";
+import { Activity, Radio, BarChart2, ArrowLeft, AreaChart, CalendarDays } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 export default function MonitoringLayout({ children }: { children: React.ReactNode }) {
@@ -69,6 +69,14 @@ export default function MonitoringLayout({ children }: { children: React.ReactNo
               >
                 <Activity className="w-5 h-5 mr-3" />
                 <span className="font-semibold text-sm">Registro Attività</span>
+              </Link>
+
+              <Link
+                href="/tl-dashboard/monitoring/attendance"
+                className={`w-full flex items-center p-4 text-left transition ${pathname?.includes("/attendance") ? "bg-cyan-900/30 text-cyan-400 border-r-4 border-cyan-500" : "text-gray-400 hover:bg-gray-700 hover:text-white border-r-4 border-transparent border-t border-t-gray-700"}`}
+              >
+                <CalendarDays className="w-5 h-5 mr-3" />
+                <span className="font-semibold text-sm">Presenze</span>
               </Link>
             </div>
           </div>

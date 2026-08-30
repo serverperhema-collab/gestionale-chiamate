@@ -73,15 +73,17 @@ model User {
   modLockTimeMins       Int @default(10)
 
   // Relations
-  dailyAssignments DailyAssignment[]
-  callLogs         CallLog[]
-  activityLogs     ActivityLog[]
-  negotiations     Negotiation[]
-  asCommerciale    Appointment[]     @relation("CommercialeAppointments")
-  asOperator       Appointment[]     @relation("OperatorAppointments")
-  assignedContacts Contact[]         @relation("AssignedContacts")
-  zoneAgendas      ZoneAgenda[]
-  quoteRequests    QuoteRequest[]
+  dailyAssignments   DailyAssignment[]
+  callLogs           CallLog[]
+  activityLogs       ActivityLog[]
+  negotiations       Negotiation[]
+  asCommerciale      Appointment[]  @relation("CommercialeAppointments")
+  asOperator         Appointment[]  @relation("OperatorAppointments")
+  assignedContacts   Contact[]      @relation("AssignedContacts")
+  zoneAgendas        ZoneAgenda[]
+  quoteRequests      QuoteRequest[]
+  attendances        Attendance[]   @relation("AttendanceOperator")
+  attendanceUpdates  Attendance[]   @relation("AttendanceUpdatedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -413,4 +415,53 @@ model CapZoneMapping {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum AttendanceStatus {
+  PRESENTE
+  PARZIALE
+  ASSENTE
+}
+
+enum AbsenceReason {
+  MALATTIA
+  FERIE
+  PERMESSO
+  ALTRO
+}
+
+model Attendance {
+  id     String   @id @default(cuid())
+  userId String
+  user   User     @relation("AttendanceOperator", fields: [userId], references: [id])
+  date   DateTime @db.Date
+
+  status         AttendanceStatus
+  shiftMorning   Boolean @default(false)
+  shiftAfternoon Boolean @default(false)
+
+  // Calcolato ESCLUSIVAMENTE dal backend:
+  // Mattina=4h | Pomeriggio=3h | Entrambi=7h | Nessuno=0h
+  plannedHours Float @default(0)
+
+  // PRESENTE  → hoursWorked = plannedHours (backend lo forza, non modificabile)
+  // PARZIALE  → 0 < hoursWorked < plannedHours (modificabile dal TL)
+  // ASSENTE   → hoursWorked = 0 (backend lo forza)
+  hoursWorked Float @default(0)
+
+  // PRESENTE  → reason = null, customReason = null (backend li pulisce)
+  // ASSENTE / PARZIALE → reason obbligatorio
+  // ALTRO     → customReason obbligatorio
+  reason       AbsenceReason?
+  customReason String?
+
+  // Tracciamento: chi ha fatto l'ultimo salvataggio
+  updatedById String?
+  updatedBy   User?  @relation("AttendanceUpdatedBy", fields: [updatedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Vincolo fondamentale: un solo record per operatore per giorno
+  @@unique([userId, date])
 }
