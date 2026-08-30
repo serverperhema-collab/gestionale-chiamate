@@ -18,15 +18,25 @@ export function exportAgendaToPDF(appointments: any[], commercialName: string, d
   doc.setFontSize(12);
   doc.text(`Data: ${dateStr}`, 14, 30);
   
-  const tableData = appointments.map(app => [
-    new Date(app.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    app.contact.name,
-    app.contact.address || "-",
-    app.contact.cap,
-    app.phone,
-    `${app.referentName} (${app.referentRole})`,
-    app.clientNeeds || "-"
-  ]);
+  const tableData = appointments.map(app => {
+    let cleanReferentName = app.referentName;
+    try {
+      const parsed = JSON.parse(app.referentName);
+      if (Array.isArray(parsed)) {
+        cleanReferentName = parsed.map((p: any) => p.name).join(", ");
+      }
+    } catch {}
+
+    return [
+      new Date(app.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      app.contact.name,
+      app.contact.address || "-",
+      app.contact.cap,
+      app.phone,
+      `${cleanReferentName} (${app.referentRole})`,
+      app.clientNeeds || "-"
+    ];
+  });
 
   autoTable(doc, {
     startY: 40,
@@ -37,5 +47,6 @@ export function exportAgendaToPDF(appointments: any[], commercialName: string, d
     headStyles: { fillColor: [41, 128, 185] },
   });
 
-  doc.save(`Agenda_${commercialName.replace(/\s+/g, '_')}_${dateStr}.pdf`);
+  doc.autoPrint();
+  window.open(doc.output('bloburl'), '_blank');
 }
