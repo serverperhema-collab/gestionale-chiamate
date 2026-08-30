@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { redirect } from "next/navigation";
-import { Users, Activity, Calendar, Database, Target, TrendingUp, PhoneCall, DownloadCloud, Trash2, Snowflake, Handshake, Settings, Radio, BarChart2, AreaChart, CheckCircle, FileSignature, FileText } from "lucide-react";
+import { Users, Activity, Calendar, Database, Target, TrendingUp, PhoneCall, DownloadCloud, Trash2, Snowflake, Handshake, Settings, Radio, BarChart2, AreaChart, CheckCircle, FileSignature, FileText, CalendarDays } from "lucide-react";
 import Link from "next/link";
 import LogoutButton from "@/components/LogoutButton";
 import CreateUserModal from "@/components/CreateUserModal";
@@ -140,6 +140,7 @@ export default async function TLDashboardPage() {
 
         {/* Navigation Sections */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
           <Link href="/tl-dashboard/assignments" className="group">
             <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-emerald-500 transition h-full">
               <Users className="w-8 h-8 text-emerald-400 mb-4" />
@@ -147,23 +148,25 @@ export default async function TLDashboardPage() {
               <p className="text-sm text-gray-400 mt-2">Distribuisci i CAP e le Campagne agli Operatori per filtrare il calderone.</p>
             </div>
           </Link>
-          
+
           <Link href="/tl-dashboard/monitoring" className="group">
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-cyan-500 transition h-full relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-2 bg-cyan-600 rounded-bl-lg">
-                <span className="text-[10px] font-bold text-white uppercase tracking-wider">Nuovo</span>
-              </div>
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-cyan-500 transition h-full">
               <AreaChart className="w-8 h-8 text-cyan-400 mb-4" />
               <h2 className="text-lg font-semibold text-white">Controllo & Report</h2>
               <p className="text-sm text-gray-400 mt-2">Accedi al Monitor Live, ai Report e al Registro Attività.</p>
             </div>
           </Link>
 
+          <Link href="/tl-dashboard/monitoring/attendance" className="group">
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-teal-500 transition h-full">
+              <CalendarDays className="w-8 h-8 text-teal-400 mb-4" />
+              <h2 className="text-lg font-semibold text-white">Gestione Presenze</h2>
+              <p className="text-sm text-gray-400 mt-2">Registra le presenze, le assenze e i permessi degli operatori. Esporta il report mensile.</p>
+            </div>
+          </Link>
+
           <Link href="/tl-dashboard/appointments" className="group">
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-purple-500 transition h-full relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-2 bg-purple-600 rounded-bl-lg">
-                <span className="text-[10px] font-bold text-white uppercase tracking-wider">Nuovo</span>
-              </div>
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-purple-500 transition h-full">
               <Calendar className="w-8 h-8 text-purple-400 mb-4" />
               <h2 className="text-lg font-semibold text-white">Agende & Appuntamenti</h2>
               <p className="text-sm text-gray-400 mt-2">Gestisci le agende (zone) e conferma gli appuntamenti presi dagli operatori.</p>
@@ -171,20 +174,15 @@ export default async function TLDashboardPage() {
           </Link>
 
           <Link href="/tl-dashboard/security" className="group">
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-red-500 transition h-full relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-2 bg-red-600 rounded-bl-lg">
-                <span className="text-[10px] font-bold text-white uppercase tracking-wider">Allarmi</span>
-              </div>
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-red-500 transition h-full">
               <Target className="w-8 h-8 text-red-400 mb-4" />
               <h2 className="text-lg font-semibold text-white">Sicurezza & Blocchi</h2>
               <p className="text-sm text-gray-400 mt-2">Gestisci gli operatori bloccati per troppi Skip o Modifiche e sbloccali.</p>
             </div>
           </Link>
 
-
-
           <Link href="/tl-dashboard/negotiations" className="group">
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-purple-500 transition h-full relative overflow-hidden">
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-purple-500 transition h-full">
               <Handshake className="w-8 h-8 text-purple-400 mb-4" />
               <h2 className="text-lg font-semibold text-white">Richiami Personali</h2>
               <p className="text-sm text-gray-400 mt-2">Visualizza e gestisci tutti i richiami personali e le trattative in corso degli operatori.</p>
@@ -192,10 +190,7 @@ export default async function TLDashboardPage() {
           </Link>
 
           <Link href="/tl-dashboard/outcomes" className="group">
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-blue-500 transition h-full relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-2 bg-blue-600 rounded-bl-lg">
-                <span className="text-[10px] font-bold text-white uppercase tracking-wider">Nuovo</span>
-              </div>
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-blue-500 transition h-full">
               <CheckCircle className="w-8 h-8 text-blue-400 mb-4" />
               <h2 className="text-lg font-semibold text-white">Esiti Commerciali</h2>
               <p className="text-sm text-gray-400 mt-2">Gestisci gli esiti delle visite e decidi sui KO richiesti.</p>
@@ -203,27 +198,21 @@ export default async function TLDashboardPage() {
           </Link>
 
           <Link href="/tl-dashboard/quotes" className="group">
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-pink-500 transition h-full relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-2 bg-pink-600 rounded-bl-lg">
-                <span className="text-[10px] font-bold text-white uppercase tracking-wider">Nuovo</span>
-              </div>
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-pink-500 transition h-full">
               <FileText className="w-8 h-8 text-pink-400 mb-4" />
               <h2 className="text-lg font-semibold text-white">Preventivi</h2>
               <p className="text-sm text-gray-400 mt-2">Sviluppa i preventivi richiesti dai commerciali.</p>
             </div>
           </Link>
 
-
           <Link href="/tl-dashboard/settings" className="group">
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-amber-500 transition h-full relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-2 bg-amber-600 rounded-bl-lg">
-                <span className="text-[10px] font-bold text-white uppercase tracking-wider">Nuovo</span>
-              </div>
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-amber-500 transition h-full">
               <Settings className="w-8 h-8 text-amber-400 mb-4" />
               <h2 className="text-lg font-semibold text-white">Configurazioni & Utility</h2>
               <p className="text-sm text-gray-400 mt-2">Accedi alla mappatura CAP, all'estrazione API e alla gestione account.</p>
             </div>
           </Link>
+
         </div>
       </main>
     </div>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { Printer, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
@@ -62,20 +62,22 @@ function toISODate(d: Date): string {
 
 function getMonthRange(offset = 0): { from: string; to: string } {
   const now = new Date();
-  const first = new Date(now.getFullYear(), now.getMonth() + offset, 1);
-  const last = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0);
+  const year = now.getFullYear();
+  const month = now.getMonth() + offset;
+  // Date.UTC evita lo shift del fuso orario (Italia UTC+2)
+  const first = new Date(Date.UTC(year, month, 1));
+  const last = new Date(Date.UTC(year, month + 1, 0));
   return { from: toISODate(first), to: toISODate(last) };
 }
 
 function getWeekRange(): { from: string; to: string } {
   const now = new Date();
   const day = now.getDay();
-  const diffMon = (day === 0 ? -6 : 1 - day);
-  const mon = new Date(now);
-  mon.setDate(now.getDate() + diffMon);
-  const sun = new Date(mon);
-  sun.setDate(mon.getDate() + 6);
-  return { from: toISODate(mon), to: toISODate(sun) };
+  const diffMon = day === 0 ? -6 : 1 - day;
+  // Costruiamo le date in UTC per evitare shift di fuso
+  const monUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() + diffMon);
+  const sunUTC = monUTC + 6 * 86400000;
+  return { from: toISODate(new Date(monUTC)), to: toISODate(new Date(sunUTC)) };
 }
 
 function generateDates(from: string, to: string): Date[] {
