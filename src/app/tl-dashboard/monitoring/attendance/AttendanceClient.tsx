@@ -332,66 +332,126 @@ export default function AttendanceClient() {
       {isLoading ? (
         <div className="text-center py-16 text-gray-400">Caricamento...</div>
       ) : (
-        <div className="overflow-x-auto print:overflow-visible">
-          <table className="text-left border-collapse w-full print:text-[9px]" style={{ minWidth: `${200 + dates.length * 48}px` }}>
-            <thead>
-              <tr className="bg-gray-950 print:bg-gray-200 border-b border-gray-800 text-[10px] uppercase tracking-wide text-gray-400 print:text-gray-700 font-semibold">
-                <th className="px-3 py-2 w-36 sticky left-0 bg-gray-950 print:bg-gray-200 z-10">Operatore</th>
-                {dates.map((d) => {
-                  const weekend = isWeekend(d);
-                  return (
-                    <th
-                      key={d.toISOString()}
-                      className={`px-1 py-2 text-center w-12 ${weekend ? "bg-gray-900/60 print:bg-gray-100" : ""}`}
-                    >
-                      <div>{String(d.getUTCDate()).padStart(2, "0")}</div>
-                      <div className={weekend ? "text-gray-500" : "text-gray-500"}>{DAY_SHORT[d.getUTCDay()]}</div>
-                    </th>
-                  );
-                })}
-                <th className="px-2 py-2 text-center text-cyan-400 print:text-cyan-700 whitespace-nowrap">Ore Tot.</th>
-                <th className="px-2 py-2 text-center text-amber-400 print:text-amber-700">Ferie</th>
-                <th className="px-2 py-2 text-center text-red-400 print:text-red-700">Malattia</th>
-                <th className="px-2 py-2 text-center text-purple-400 print:text-purple-700">Permessi</th>
-                <th className="px-2 py-2 text-center text-red-500 print:text-red-700 whitespace-nowrap">Ass. Tot.</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-800 print:divide-gray-300">
-              {operators.map((op) => (
-                <tr key={op.id} className="hover:bg-gray-800/40 print:hover:bg-transparent transition">
-                  <td className="px-3 py-1 font-semibold text-white print:text-black sticky left-0 bg-gray-900 print:bg-white z-10 text-sm">
-                    {op.name}
-                  </td>
+        <>
+          <div className="overflow-x-auto print:hidden">
+            <table className="text-left border-collapse w-full" style={{ minWidth: `${200 + dates.length * 48}px` }}>
+              <thead>
+                <tr className="bg-gray-950 border-b border-gray-800 text-[10px] uppercase tracking-wide text-gray-400 font-semibold">
+                  <th className="px-3 py-2 w-36 sticky left-0 bg-gray-950 z-10">Operatore</th>
                   {dates.map((d) => {
-                    const dateStr = toISODate(d);
-                    const record = op.attendances.find((a) => a.date.startsWith(dateStr)) || null;
                     const weekend = isWeekend(d);
                     return (
-                      <td
+                      <th
                         key={d.toISOString()}
-                        className={`p-0 print:p-0.5 border-l border-gray-800 print:border-gray-300 ${weekend ? "bg-gray-900/40 print:bg-gray-50" : ""}`}
+                        className={`px-1 py-2 text-center w-12 ${weekend ? "bg-gray-900/60" : ""}`}
                       >
-                        <AttendanceCell record={record} onClick={() => handleCellClick(op, d)} />
-                      </td>
+                        <div>{String(d.getUTCDate()).padStart(2, "0")}</div>
+                        <div className="text-gray-500">{DAY_SHORT[d.getUTCDay()]}</div>
+                      </th>
                     );
                   })}
-                  <td className="px-2 py-1 text-center text-cyan-300 print:text-cyan-700 font-bold">{formatHours(op.stats.totalHours)}</td>
-                  <td className="px-2 py-1 text-center text-amber-300 print:text-amber-700">{op.stats.ferie || "–"}</td>
-                  <td className="px-2 py-1 text-center text-red-300 print:text-red-700">{op.stats.malattia || "–"}</td>
-                  <td className="px-2 py-1 text-center text-purple-300 print:text-purple-700">{op.stats.permessi || "–"}</td>
-                  <td className="px-2 py-1 text-center text-red-400 print:text-red-700 font-semibold">{op.stats.totalAbsences || "–"}</td>
+                  <th className="px-2 py-2 text-center text-cyan-400 whitespace-nowrap">Ore Tot.</th>
+                  <th className="px-2 py-2 text-center text-amber-400">Ferie</th>
+                  <th className="px-2 py-2 text-center text-red-400">Malattia</th>
+                  <th className="px-2 py-2 text-center text-purple-400">Permessi</th>
+                  <th className="px-2 py-2 text-center text-red-500 whitespace-nowrap">Ass. Tot.</th>
                 </tr>
-              ))}
-              {operators.length === 0 && (
-                <tr>
-                  <td colSpan={dates.length + 6} className="text-center py-12 text-gray-500">
-                    Nessun operatore trovato.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-gray-800">
+                {operators.map((op) => (
+                  <tr key={op.id} className="hover:bg-gray-800/40 transition">
+                    <td className="px-3 py-1 font-semibold text-white sticky left-0 bg-gray-900 z-10 text-sm">
+                      {op.name}
+                    </td>
+                    {dates.map((d) => {
+                      const dateStr = toISODate(d);
+                      const record = op.attendances.find((a) => a.date.startsWith(dateStr)) || null;
+                      const weekend = isWeekend(d);
+                      return (
+                        <td
+                          key={d.toISOString()}
+                          className={`p-0 border-l border-gray-800 ${weekend ? "bg-gray-900/40" : ""}`}
+                        >
+                          <AttendanceCell record={record} onClick={() => handleCellClick(op, d)} />
+                        </td>
+                      );
+                    })}
+                    <td className="px-2 py-1 text-center text-cyan-300 font-bold">{formatHours(op.stats.totalHours)}</td>
+                    <td className="px-2 py-1 text-center text-amber-300">{op.stats.ferie || "–"}</td>
+                    <td className="px-2 py-1 text-center text-red-300">{op.stats.malattia || "–"}</td>
+                    <td className="px-2 py-1 text-center text-purple-300">{op.stats.permessi || "–"}</td>
+                    <td className="px-2 py-1 text-center text-red-400 font-semibold">{op.stats.totalAbsences || "–"}</td>
+                  </tr>
+                ))}
+                {operators.length === 0 && (
+                  <tr>
+                    <td colSpan={dates.length + 6} className="text-center py-12 text-gray-500">
+                      Nessun operatore trovato.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ── STAMPA ANALITICA (SOLO PRINT) ───────────────────────────── */}
+          <div className="hidden print:block space-y-6 mt-4">
+            <h2 className="text-lg font-bold mb-4 border-b border-gray-300 pb-2">
+              Report Analitico Presenze: {new Date(from).toLocaleDateString("it-IT")} - {new Date(to).toLocaleDateString("it-IT")}
+            </h2>
+            {operators.map((op) => (
+              <div key={op.id} className="break-inside-avoid border border-gray-300 rounded-lg p-4 mb-4 bg-white">
+                <div className="flex justify-between items-end border-b border-gray-200 pb-2 mb-3">
+                  <h3 className="text-base font-bold text-black">{op.name}</h3>
+                  <div className="text-xs text-gray-700 flex gap-4">
+                    <span>Ore Totali: <strong className="text-black">{formatHours(op.stats.totalHours)}</strong></span>
+                    <span>Ferie: <strong>{op.stats.ferie}</strong></span>
+                    <span>Malattia: <strong>{op.stats.malattia}</strong></span>
+                    <span>Permessi: <strong>{op.stats.permessi}</strong></span>
+                  </div>
+                </div>
+                
+                {op.attendances.length === 0 ? (
+                  <p className="text-xs text-gray-500 italic">Nessuna registrazione in questo periodo.</p>
+                ) : (
+                  <table className="w-full text-xs text-left border-collapse">
+                    <thead>
+                      <tr className="bg-gray-100 text-gray-700">
+                        <th className="py-1 px-2 border-b border-gray-200 w-32">Data</th>
+                        <th className="py-1 px-2 border-b border-gray-200 w-24">Stato</th>
+                        <th className="py-1 px-2 border-b border-gray-200 w-24">Ore</th>
+                        <th className="py-1 px-2 border-b border-gray-200">Motivo / Note</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {op.attendances.map((record) => {
+                        const d = new Date(record.date);
+                        const dateStr = d.toLocaleDateString("it-IT", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" });
+                        return (
+                          <tr key={record.id} className="border-b border-gray-100 last:border-0">
+                            <td className="py-1.5 px-2 capitalize">{dateStr}</td>
+                            <td className="py-1.5 px-2 font-medium">
+                              {record.status === "PRESENTE" && <span className="text-green-700">Presente</span>}
+                              {record.status === "PARZIALE" && <span className="text-amber-700">Parziale</span>}
+                              {record.status === "ASSENTE" && <span className="text-red-700">Assente</span>}
+                            </td>
+                            <td className="py-1.5 px-2">
+                              {formatHours(record.hoursWorked)} {record.status === "PARZIALE" && <span className="text-gray-400">/ {formatHours(record.plannedHours)}</span>}
+                            </td>
+                            <td className="py-1.5 px-2 text-gray-600">
+                              {record.reason ? REASON_LABEL[record.reason] : ""}
+                              {record.customReason ? (record.reason ? ` - ${record.customReason}` : record.customReason) : ""}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* ── MODAL ────────────────────────────────────────────────────── */}
