@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 
 // === Tipi di Dati ===
 type JobData = {
-    id: string; status: string; cap: string; createdAt: string; maxEstimatedCost: number; currentCost: number; maxQueries: number;
+    id: string; status: string; cap: string; createdAt: string; maxEstimatedCost: number; currentCost: number; maxQueries: number; queriesExecuted: number;
     _count?: { queries: number }; googleContacts: number; osmContacts: number; totalNewContacts: number; totalDuplicates: number;
     pendingQueries: number; yieldUltime5: number; newContactsUltime5: number;
 };
@@ -167,7 +167,7 @@ export default function DashboardClient() {
                 </div>
                 <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
                     <div className="text-gray-400 text-sm">Query Completate</div>
-                    <div className="text-2xl font-bold text-white">{job._count?.queries || 0} / {job.maxQueries}</div>
+                    <div className="text-2xl font-bold text-white">{job.queriesExecuted} / {job.maxQueries}</div>
                 </div>
                 {calibration && (
                     <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 col-span-2">
@@ -217,7 +217,7 @@ export default function DashboardClient() {
                                     <td className="p-3 text-right font-mono text-gray-300">{formatNum(s.avgActualYield, 1, 100)}%</td>
                                     <td className="p-3 text-right font-mono text-gray-300">{formatNum(s.avgNewResultsPerQuery, 1)}</td>
                                     <td className="p-3 text-right font-mono text-gray-300">{formatNum(s.confidence, 2)}</td>
-                                    <td className="p-3 text-right text-red-300">`${formatNum(s.executionCost, 3)}</td>
+                                    <td className="p-3 text-right text-red-300">${formatNum(s.executionCost, 3)}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -364,6 +364,8 @@ export default function DashboardClient() {
         </div>
     );
 }
+
+
 
 
 

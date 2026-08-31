@@ -32,6 +32,8 @@ export async function POST(req: NextRequest) {
 
         // 3. Esecuzione (Google / OSM)
         console.log(`[Worker] Eseguo query ${query.id} [${query.strategy}]: "${query.queryText}"`);
+        const job = await prisma.scrapingJob.findUnique({ where: { id: jobId } });
+        const family = await prisma.queryFamily.findUnique({ where: { id: query.familyId } });
         const execResult = await ExecutionEngine.execute(query);
 
         if (!execResult.success) {
@@ -57,8 +59,9 @@ export async function POST(req: NextRequest) {
                     dedupeKey: contact.dedupeKey,
                     // Dati minimi legacy per compatibilità UI:
                     name: contact.rawName,
-                    cap: '00000',
-                    sector: 'Generico'
+                    address: contact.rawAddress,
+                    cap: job?.cap || '00000',
+                    sector: family?.concept || 'Generico'
                 }
             });
         }
@@ -98,4 +101,5 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }
+
 
