@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
         // 5. Salvataggio su DB dei contatti validi
         if (query.strategy !== 'OSM_SEED') {
-        for (const contact of newContacts) {
+        for (const contact of newContacts as any[]) {
             await prisma.contact.create({
                 data: {
                     source: contact.source,
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
 
         const actualData = {
             resultCount,
-            newResultCount: newContacts.length,
+            newResultCount: query.strategy === 'OSM_SEED' ? 0 : newContacts.length,
             duplicateCount,
             executionCost: execResult.executionCost,
             executionDurMs
@@ -121,6 +121,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }
+
+
 
 
 

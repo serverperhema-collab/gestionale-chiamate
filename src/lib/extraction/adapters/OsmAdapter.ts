@@ -73,10 +73,20 @@ export class OsmAdapter {
 
         try {
             const conceptLower = concept.toLowerCase();
-            let osmTag = '["amenity"="restaurant"]';
+            let osmTag = null;
             if (conceptLower.includes('pizzeria')) osmTag = '["amenity"="restaurant"]["cuisine"~"pizza"]';
             else if (conceptLower.includes('idraulico')) osmTag = '["craft"="plumber"]';
             else if (conceptLower.includes('elettricista')) osmTag = '["craft"="electrician"]';
+            else if (conceptLower.includes('alberghi')) osmTag = '["tourism"="hotel"]';
+            else if (conceptLower.includes('campeggi')) osmTag = '["tourism"="camp_site"]';
+            else if (conceptLower.includes('parcheggi')) osmTag = '["amenity"="parking"]';
+            else if (conceptLower.includes('distributori')) osmTag = '["amenity"="fuel"]';
+            else if (conceptLower.includes('poste')) osmTag = '["amenity"="post_office"]';
+            
+            // Se la categoria non e mappata su OSM, ritorniamo 0 risultati per evitare falsi positivi
+            if (!osmTag) {
+                return { success: true, rawContacts: [], executionCost: 0, resultLimit: 0 };
+            }
             
             const query = `
                 [out:json][timeout:10];
@@ -200,5 +210,6 @@ export class OsmAdapter {
         }
     }
 }
+
 
 

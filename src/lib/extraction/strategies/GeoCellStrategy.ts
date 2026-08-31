@@ -1,21 +1,13 @@
 import { ExtractionStrategy, StrategyType, PlannerContext, CandidateQuery } from './ExtractionStrategy';
 import { BudgetControllerService } from '../BudgetControllerService';
 import { GeoEngine, GeoCell } from '../geo/GeoEngine';
+import { CapResolver } from '../geo/CapResolver';
 import { prisma } from '../../prisma';
 import crypto from 'crypto';
 
 export class GeoCellStrategy implements ExtractionStrategy {
     readonly type: StrategyType = 'GEO_CELL';
     private readonly MAX_GEO_DEPTH = 3; 
-
-    private getCapRootBounds(cap: string) {
-        return {
-            minLat: 41.79,
-            maxLat: 42.00,
-            minLng: 12.35,
-            maxLng: 12.65
-        };
-    }
 
     async generateCandidates(context: PlannerContext): Promise<CandidateQuery[]> {
         const candidates: CandidateQuery[] = [];
@@ -26,11 +18,13 @@ export class GeoCellStrategy implements ExtractionStrategy {
 
         const generatedIds = new Set(existingQueries.map(q => q.geoCellId).filter(Boolean));
 
-        const bounds = this.getCapRootBounds(context.job.cap);
+        const bounds = await CapResolver.getBounds(context.job.cap);
         const rootBbox = `${bounds.minLat},${bounds.minLng},${bounds.maxLat},${bounds.maxLng}`;
         const rootQueryHash = crypto.createHash('sha256').update(`${context.family.concept}_${rootBbox}_v1`).digest('hex');
         const rootCache = await prisma.osmQueryCache.findUnique({ where: { queryHash: rootQueryHash } });
         const allOsmPois = (rootCache?.resultData as any[]) || [];
+
+        const osmValid = rootCache ? true : false; 
 
         if (existingQueries.length === 0) {
             const rootCell = GeoEngine.createCell(
@@ -40,7 +34,7 @@ export class GeoCellStrategy implements ExtractionStrategy {
             );
 
             if (!generatedIds.has(rootCell.geoCellId)) {
-                candidates.push(await this.mapCellToCandidate(rootCell, context, null, allOsmPois));
+                candidates.push(await this.mapCellToCandidate(rootCell, context, null, allOsmPois, osmValid));
             }
             return candidates;
         }
@@ -64,7 +58,7 @@ export class GeoCellStrategy implements ExtractionStrategy {
                 
                 for (const child of children) {
                     if (!generatedIds.has(child.geoCellId)) {
-                        candidates.push(await this.mapCellToCandidate(child, context, parentCell.geoCellId, allOsmPois));
+                        candidates.push(await this.mapCellToCandidate(child, context, parentCell.geoCellId, allOsmPois, osmValid));
                         generatedIds.add(child.geoCellId); 
                     }
                 }
@@ -74,31 +68,34 @@ export class GeoCellStrategy implements ExtractionStrategy {
         return candidates;
     }
 
-    private async mapCellToCandidate(cell: GeoCell, context: PlannerContext, parentId: string | null, allOsmPois: any[]): Promise<CandidateQuery> {
-        // Conta quanti POI OSM cadono ESATTAMENTE dentro questa specifica sotto-cella (Bounding Box check)
-        const osmMatches = allOsmPois.filter(poi => 
-            poi.lat >= cell.cellMinLat && poi.lat <= cell.cellMaxLat &&
-            poi.lng >= cell.cellMinLng && poi.lng <= cell.cellMaxLng
-        ).length;
+    private async mapCellToCandidate(cell: GeoCell, context: PlannerContext, parentId: string | null, allOsmPois: any[], osmValid: boolean): Promise<CandidateQuery> {
+        let gapMultiplier = 1.0;
+        let debugMath: any = { osmMatches: 0, cellAreaKm2: 0, osmDensity: 0, googleDensity: 0, gapRatio: 1 };
 
-        // Google Density (Gia trovati da altre strategie?)
-        let googleMatches = 0;
+        if (osmValid) {
+            const osmMatches = allOsmPois.filter(poi => 
+                poi.lat >= cell.cellMinLat && poi.lat <= cell.cellMaxLat &&
+                poi.lng >= cell.cellMinLng && poi.lng <= cell.cellMaxLng
+            ).length;
 
-        // Area in Km2
-        const latDiffKm = (cell.cellMaxLat - cell.cellMinLat) * 111.0;
-        const lngDiffKm = (cell.cellMaxLng - cell.cellMinLng) * 111.0 * Math.cos(cell.searchCenterLat * Math.PI / 180);
-        const cellAreaKm2 = Math.max(latDiffKm * lngDiffKm, 0.01);
+            let googleMatches = 0;
 
-        const osmDensity = osmMatches / cellAreaKm2;
-        const googleDensity = googleMatches / cellAreaKm2;
+            const latDiffKm = (cell.cellMaxLat - cell.cellMinLat) * 111.0;
+            const lngDiffKm = (cell.cellMaxLng - cell.cellMinLng) * 111.0 * Math.cos(cell.searchCenterLat * Math.PI / 180);
+            const cellAreaKm2 = Math.max(latDiffKm * lngDiffKm, 0.01);
 
-        const epsilon = 0.1;
-        const gapRatio = (osmDensity + epsilon) / (googleDensity + epsilon);
-        
-        const alpha = 0.5;
-        let gapMultiplier = 1 + alpha * Math.log1p(gapRatio);
-        
-        gapMultiplier = Math.min(Math.max(gapMultiplier, 0.5), 3.0);
+            const osmDensity = osmMatches / cellAreaKm2;
+            const googleDensity = googleMatches / cellAreaKm2;
+
+            const epsilon = 0.1;
+            const gapRatio = (osmDensity + epsilon) / (googleDensity + epsilon);
+            
+            const alpha = 0.5;
+            gapMultiplier = 1 + alpha * Math.log1p(gapRatio);
+            gapMultiplier = Math.min(Math.max(gapMultiplier, 0.5), 3.0);
+
+            debugMath = { osmMatches, cellAreaKm2, osmDensity, googleDensity, gapRatio };
+        }
 
         return {
             queryText: `${context.family.concept} in cella ${cell.geoCellId}`,
@@ -118,8 +115,7 @@ export class GeoCellStrategy implements ExtractionStrategy {
             estimatedApiCost: BudgetControllerService.estimateQueryCost(this.type),
             estimatedOperationalCost: 0.2,
             gapMultiplier: gapMultiplier,
-            debugMath: { osmMatches, cellAreaKm2, osmDensity, googleDensity, gapRatio }
+            debugMath
         };
     }
 }
-
