@@ -64,7 +64,7 @@ export default function DashboardClient() {
                 fetch(`/api/scrape/v2/jobs/${jobId}/queries?page=${qPage}&pageSize=15&sortBy=${qSortBy}&sortDir=${qSortDir}&strategy=${qFilterStrategy}&status=${qFilterStatus}`)
             ]);
 
-            if (resJob.ok) setJob((await resJob.json()).data);
+            if (resJob.ok) { const d = (await resJob.json()).data; setJob({ ...d.job, totalNewContacts: d.newContacts, totalDuplicates: d.duplicateContacts, pendingQueries: d.pendingQueries, yieldUltime5: d.yieldUltime5?.avgYield, newContactsUltime5: d.yieldUltime5?.newContacts }); }
             if (resPlanner.ok) setPlannerNext((await resPlanner.json()).data);
             if (resEvents.ok) setEvents((await resEvents.json()).data);
             
@@ -364,6 +364,7 @@ export default function DashboardClient() {
         </div>
     );
 }
+
 
 
 
