@@ -65,11 +65,11 @@ export async function GET(
       data: {
           strategyStats: enrichedStats,
           jobCalibration: {
-              avgEstimatedYield: jobAggregates?._avg?.estimatedYield || 0,
-              avgActualYield: jobAggregates?._avg?.actualYield || 0,
-              avgNewResults: jobAggregates?._avg?.newResultCount || 0,
-              avgConfidence: jobAggregates?._avg?.confidence || 0,
-              estimatedVsActualError: Math.abs((jobAggregates?._avg?.estimatedYield || 0) - (jobAggregates?._avg?.actualYield || 0))
+              avgEstimatedYield: jobAggregates?._avg?.estimatedYield ?? null,
+              avgActualYield: jobAggregates?._avg?.actualYield ?? null,
+              avgNewResults: jobAggregates?._avg?.newResultCount ?? null,
+              avgConfidence: jobAggregates?._avg?.confidence ?? null,
+              estimatedVsActualError: (jobAggregates?._avg?.estimatedYield != null && jobAggregates?._avg?.actualYield != null) ? Math.abs(jobAggregates._avg.estimatedYield - jobAggregates._avg.actualYield) : null
           }
       }
     });
@@ -77,6 +77,7 @@ export async function GET(
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+
 
 
 

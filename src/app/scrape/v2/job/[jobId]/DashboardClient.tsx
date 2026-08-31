@@ -28,6 +28,11 @@ type CalibrationData = {
 };
 
 import { useParams } from 'next/navigation';
+function formatNum(value: number | null | undefined, decimals = 2, mult = 1): string {
+    if (value === null || value === undefined) return '-';
+    return (value * mult).toFixed(decimals);
+}
+
 export default function DashboardClient() {
     const params = useParams();
     const jobId = params.jobId as string;
@@ -158,7 +163,7 @@ export default function DashboardClient() {
                 </div>
                 <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
                     <div className="text-gray-400 text-sm">Costo</div>
-                    <div className="text-2xl font-bold text-white">${job.currentCost.toFixed(3)}</div>
+                    <div className="text-2xl font-bold text-white">`${formatNum(job.currentCost, 3)}</div>
                 </div>
                 <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
                     <div className="text-gray-400 text-sm">Query Completate</div>
@@ -170,7 +175,7 @@ export default function DashboardClient() {
                         <div className="flex justify-between items-center">
                             <div>
                                 <div className="text-xs text-gray-500">Exp. Yield vs Actual</div>
-                                <div className="text-lg font-bold text-blue-300">{(calibration.avgEstimatedYield*100).toFixed(1)}% vs {(calibration.avgActualYield*100).toFixed(1)}%</div>
+                                <div className="text-lg font-bold text-blue-300">{formatNum(calibration?.avgEstimatedYield, 1, 100)}% vs {formatNum(calibration?.avgActualYield, 1, 100)}%</div>
                             </div>
                             <div className="text-right">
                                 <div className="text-xs text-gray-500">Stato Apprendimento</div>
@@ -209,10 +214,10 @@ export default function DashboardClient() {
                                     <td className="p-3 text-right text-gray-300">{s.totalResults}</td>
                                     <td className="p-3 text-right text-green-400">{s.totalNewResults}</td>
                                     <td className="p-3 text-right text-yellow-500">{s.totalDuplicates}</td>
-                                    <td className="p-3 text-right font-mono text-gray-300">{(s.avgActualYield * 100).toFixed(1)}%</td>
-                                    <td className="p-3 text-right font-mono text-gray-300">{s.avgNewResultsPerQuery.toFixed(1)}</td>
-                                    <td className="p-3 text-right font-mono text-gray-300">{s.confidence.toFixed(2)}</td>
-                                    <td className="p-3 text-right text-red-300">${s.executionCost.toFixed(3)}</td>
+                                    <td className="p-3 text-right font-mono text-gray-300">{formatNum(s.avgActualYield, 1, 100)}%</td>
+                                    <td className="p-3 text-right font-mono text-gray-300">{formatNum(s.avgNewResultsPerQuery, 1)}</td>
+                                    <td className="p-3 text-right font-mono text-gray-300">{formatNum(s.confidence, 2)}</td>
+                                    <td className="p-3 text-right text-red-300">`${formatNum(s.executionCost, 3)}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -291,12 +296,12 @@ export default function DashboardClient() {
                                                 </div>
                                             </td>
                                             <td className={`p-3 ${statusColors[q.status] || 'text-gray-400'}`}>{q.status}</td>
-                                            <td className="p-3 text-right font-mono text-purple-400">{q.priority?.toFixed(2) || '-'}</td>
+                                            <td className="p-3 text-right font-mono text-purple-400">{formatNum(q.priority, 2)}</td>
                                             <td className="p-3 text-right font-mono text-gray-300">
                                                 <span className="text-green-400">{q.newResultCount ?? '-'}</span> / {q.resultCount ?? '-'}
                                             </td>
-                                            <td className="p-3 text-right font-mono text-gray-300">{q.actualYield !== null && q.actualYield !== undefined ? (q.actualYield*100).toFixed(1)+'%' : '-'}</td>
-                                            <td className="p-3 text-right text-gray-400">{q.executionCost ? '$'+q.executionCost.toFixed(3) : '-'}</td>
+                                            <td className="p-3 text-right font-mono text-gray-300">{formatNum(q.actualYield, 1, 100) + (q.actualYield != null ? "%" : "")}</td>
+                                            <td className="p-3 text-right text-gray-400">{q.executionCost ? "$" + formatNum(q.executionCost, 3) : "-"}</td>
                                             <td className="p-3 text-center text-gray-500">{isExpanded ? '▲' : '▼'}</td>
                                         </tr>
                                         {isExpanded && (
@@ -359,6 +364,8 @@ export default function DashboardClient() {
         </div>
     );
 }
+
+
 
 
 
