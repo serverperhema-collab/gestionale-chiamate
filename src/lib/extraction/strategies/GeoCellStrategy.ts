@@ -6,7 +6,7 @@ import crypto from 'crypto';
 
 export class GeoCellStrategy implements ExtractionStrategy {
     readonly type: StrategyType = 'GEO_CELL';
-    private readonly MAX_GEO_DEPTH = 1; // TEST TEMPORANEO: disattiva ricorsione profonda
+    private readonly MAX_GEO_DEPTH = 3; 
 
     private getCapRootBounds(cap: string) {
         return {
@@ -26,8 +26,13 @@ export class GeoCellStrategy implements ExtractionStrategy {
 
         const generatedIds = new Set(existingQueries.map(q => q.geoCellId).filter(Boolean));
 
+        const bounds = this.getCapRootBounds(context.job.cap);
+        const rootBbox = `${bounds.minLat},${bounds.minLng},${bounds.maxLat},${bounds.maxLng}`;
+        const rootQueryHash = crypto.createHash('sha256').update(`${context.family.concept}_${rootBbox}_v1`).digest('hex');
+        const rootCache = await prisma.osmQueryCache.findUnique({ where: { queryHash: rootQueryHash } });
+        const allOsmPois = (rootCache?.resultData as any[]) || [];
+
         if (existingQueries.length === 0) {
-            const bounds = this.getCapRootBounds(context.job.cap);
             const rootCell = GeoEngine.createCell(
                 bounds.minLat, bounds.maxLat, 
                 bounds.minLng, bounds.maxLng, 
@@ -35,7 +40,7 @@ export class GeoCellStrategy implements ExtractionStrategy {
             );
 
             if (!generatedIds.has(rootCell.geoCellId)) {
-                candidates.push(await this.mapCellToCandidate(rootCell, context, null));
+                candidates.push(await this.mapCellToCandidate(rootCell, context, null, allOsmPois));
             }
             return candidates;
         }
@@ -59,7 +64,7 @@ export class GeoCellStrategy implements ExtractionStrategy {
                 
                 for (const child of children) {
                     if (!generatedIds.has(child.geoCellId)) {
-                        candidates.push(await this.mapCellToCandidate(child, context, parentCell.geoCellId));
+                        candidates.push(await this.mapCellToCandidate(child, context, parentCell.geoCellId, allOsmPois));
                         generatedIds.add(child.geoCellId); 
                     }
                 }
@@ -69,23 +74,17 @@ export class GeoCellStrategy implements ExtractionStrategy {
         return candidates;
     }
 
-    private async mapCellToCandidate(cell: GeoCell, context: PlannerContext, parentId: string | null): Promise<CandidateQuery> {
-        // Density Math (OSM vs Google)
-        const bbox = `${cell.cellMinLat},${cell.cellMinLng},${cell.cellMaxLat},${cell.cellMaxLng}`;
-        const queryHash = crypto.createHash('sha256').update(`${context.family.concept}_${bbox}_v1`).digest('hex');
-
-        // OSM Density
-        const cachedOsm = await prisma.osmQueryCache.findUnique({ where: { queryHash } });
-        let osmMatches = cachedOsm ? cachedOsm.resultCount : 0;
-        
-        // Se non abbiamo ancora eseguito OSM su QUESTA sotto-cella, possiamo provare a dedurla dalla root cell? 
-        // Per test: se non c'e cache esatta, osmMatches = 0 
+    private async mapCellToCandidate(cell: GeoCell, context: PlannerContext, parentId: string | null, allOsmPois: any[]): Promise<CandidateQuery> {
+        // Conta quanti POI OSM cadono ESATTAMENTE dentro questa specifica sotto-cella (Bounding Box check)
+        const osmMatches = allOsmPois.filter(poi => 
+            poi.lat >= cell.cellMinLat && poi.lat <= cell.cellMaxLat &&
+            poi.lng >= cell.cellMinLng && poi.lng <= cell.cellMaxLng
+        ).length;
 
         // Google Density (Gia trovati da altre strategie?)
-        // Per semplificare in questo scope: usiamo sempre 0 per googleMatches inizialmente
         let googleMatches = 0;
 
-        // Area in Km2 (Approssimativa usando bounding box)
+        // Area in Km2
         const latDiffKm = (cell.cellMaxLat - cell.cellMinLat) * 111.0;
         const lngDiffKm = (cell.cellMaxLng - cell.cellMinLng) * 111.0 * Math.cos(cell.searchCenterLat * Math.PI / 180);
         const cellAreaKm2 = Math.max(latDiffKm * lngDiffKm, 0.01);
@@ -96,11 +95,9 @@ export class GeoCellStrategy implements ExtractionStrategy {
         const epsilon = 0.1;
         const gapRatio = (osmDensity + epsilon) / (googleDensity + epsilon);
         
-        // Log1p math
         const alpha = 0.5;
         let gapMultiplier = 1 + alpha * Math.log1p(gapRatio);
         
-        // Clamp tra 0.5 e 3.0
         gapMultiplier = Math.min(Math.max(gapMultiplier, 0.5), 3.0);
 
         return {
@@ -121,10 +118,7 @@ export class GeoCellStrategy implements ExtractionStrategy {
             estimatedApiCost: BudgetControllerService.estimateQueryCost(this.type),
             estimatedOperationalCost: 0.2,
             gapMultiplier: gapMultiplier,
-            debugMath: { osmDensity, googleDensity, gapRatio }
+            debugMath: { osmMatches, cellAreaKm2, osmDensity, googleDensity, gapRatio }
         };
     }
 }
-
-
-
