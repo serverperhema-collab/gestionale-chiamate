@@ -26,14 +26,15 @@ export class ExecutionEngine {
             
             case 'GEO_CELL':
                 // In futuro: GooglePlacesAdapter.nearbySearchDiscovery(...)
-                return await GooglePlacesAdapter.nearbySearchDiscovery(query, GOOGLE_API_KEY);
+                return await GooglePlacesAdapter.nearbySearchDiscovery(query.familyId.substring(6), query, GOOGLE_API_KEY);
 
             case 'OSM_SEED':
-                return await OsmAdapter.overpassSearch(query.familyId.split('_')[1], query.cellMinLat!, query.cellMaxLat!, query.cellMinLng!, query.cellMaxLng!);
+                return await OsmAdapter.overpassSearch(query.familyId.substring(6), query.cellMinLat!, query.cellMaxLat!, query.cellMinLng!, query.cellMaxLng!);
 
             default:
                 return { success: false, rawContacts: [], executionCost: 0, error: 'Strategia sconosciuta' };
         }
     }
 }
+
 

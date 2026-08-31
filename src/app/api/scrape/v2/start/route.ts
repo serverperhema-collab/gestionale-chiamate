@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession, DefaultSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 
+export const maxDuration = 60; // Diamo tempo alla lambda su Vercel
+
 export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
@@ -19,29 +21,31 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: "Missing cap or sectors" }, { status: 400 });
         }
 
-        // 1. Create ScrapingJob
         const job = await prisma.scrapingJob.create({
             data: {
                 cap,
-                maxEstimatedCost: 5.0, // Default for now
-                maxQueries: 200, // Default for now
+                maxEstimatedCost: 5.0,
+                maxQueries: 200, 
                 currentCost: 0,
                 queriesExecuted: 0,
                 status: 'RUNNING'
             }
         });
 
-        // 2. Upsert QueryFamily for each sector
-        for (const sector of sectors) {
-            const familyId = `${cap}_${sector}`;
-            await prisma.queryFamily.upsert({
-                where: { id: familyId },
-                create: {
-                    id: familyId,
-                    concept: sector,
-                    scope: cap
-                },
-                update: {} }); await QueryPlannerService.selectNextAction(job.id, familyId); }
+        // Parallelizzazione a blocchi (chunk) per evitare strozzature sul DB e velocizzare
+        const chunkSize = 5;
+        for (let i = 0; i < sectors.length; i += chunkSize) {
+            const chunk = sectors.slice(i, i + chunkSize);
+            await Promise.all(chunk.map(async (sector) => {
+                const familyId = `${cap}_${sector}`;
+                await prisma.queryFamily.upsert({
+                    where: { id: familyId },
+                    create: { id: familyId, concept: sector, scope: cap },
+                    update: {} 
+                });
+                await QueryPlannerService.selectNextAction(job.id, familyId);
+            }));
+        }
 
         return NextResponse.json({ success: true, data: { jobId: job.id } });
     } catch (e: any) {
@@ -49,4 +53,3 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
-
