@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
         const { newContacts, duplicateCount } = await DedupeService.deduplicate(execResult.rawContacts);
 
         // 5. Salvataggio su DB dei contatti validi
+        if (query.strategy !== 'OSM_SEED') {
         for (const contact of newContacts) {
             await prisma.contact.create({
                 data: {
@@ -64,6 +65,7 @@ export async function POST(req: NextRequest) {
                     sector: family?.concept || 'Generico'
                 }
             });
+        }
         }
 
         // 6. Completamento Atomico (Actual -> Knowledge Base -> Budget)
