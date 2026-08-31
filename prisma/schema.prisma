@@ -109,7 +109,7 @@ model Contact {
 
   // --- EXTRACTION ENGINE V2 ---
   source           ExtractionSource @default(GOOGLE)
-  sourceId         String
+  sourceId         String           @default(uuid())
   rawName          String           @default("")
   rawAddress       String?
   normalizedName   String?
@@ -623,5 +623,6 @@ model ScrapingJobEvent {
   message   String
   metadata  Json?
 }
+
 
 
