@@ -8,7 +8,7 @@ export async function GET(
   { params }: any
 ) {
   try {
-    const { jobId } = params;
+    const { jobId } = await params;
 
     // Recuperiamo tutte le query del job che appartengono al Quadtree (hanno un geoCellId)
     const cells = await prisma.scrapingQuery.findMany({
@@ -50,4 +50,6 @@ export async function GET(
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+
+
 
