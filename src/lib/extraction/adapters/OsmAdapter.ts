@@ -92,9 +92,11 @@ export class OsmAdapter {
                 try {
                     response = await fetch('https://overpass-api.de/api/interpreter', {
                         method: 'POST',
-                        body: query,
+                        body: 'data=' + encodeURIComponent(query),
                         headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'Accept': 'application/json',
+                            'User-Agent': 'GestionaleEstrazioni/2.0'
                         }
                     });
 
@@ -198,4 +200,5 @@ export class OsmAdapter {
         }
     }
 }
+
 
