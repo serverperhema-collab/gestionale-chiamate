@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 
 // === Tipi di Dati ===
 type JobData = {
-    id: string; status: string; cap: string; createdAt: string; maxEstimatedCost: number; currentCost: number; maxQueries: number; queriesExecuted: number;
+    id: string; status: string; cap: string; createdAt: string; updatedAt: string; maxEstimatedCost: number; currentCost: number; maxQueries: number; queriesExecuted: number;
     _count?: { queries: number }; googleContacts: number; osmContacts: number; totalNewContacts: number; totalDuplicates: number;
     pendingQueries: number; yieldUltime5: number; newContactsUltime5: number;
 };
@@ -15,7 +15,7 @@ type PlannerAction = {
 };
 type JobEvent = { id: string; timestamp: string; type: string; message: string; };
 type ScrapingQuery = {
-    id: string; createdAt: string; strategy: string; queryText: string; geoCellId?: string; geoDepth?: number;
+    id: string; createdAt: string; updatedAt: string; strategy: string; queryText: string; geoCellId?: string; geoDepth?: number;
     status: string; resultCount?: number; newResultCount?: number; actualYield?: number; executionCost?: number;
     priority?: number; plannerReason?: string;
 };
@@ -123,7 +123,7 @@ export default function DashboardClient() {
     if (!job) return <div className="text-gray-400 p-8">Caricamento console motore...</div>;
 
     const tempoTrascorso = (() => {
-        const diff = Date.now() - new Date(job.createdAt).getTime();
+        const end = job.status === "COMPLETED" ? new Date(job.updatedAt).getTime() : Date.now(); const diff = end - new Date(job.createdAt).getTime();
         const m = Math.floor(diff / 60000);
         const s = Math.floor((diff % 60000) / 1000);
         return `${m}m ${s}s`;
@@ -131,6 +131,7 @@ export default function DashboardClient() {
     
     const isRunning = job.status === 'RUNNING';
     const isPaused = job.status === 'PAUSED';
+    const isCompleted = job.status === 'COMPLETED';
     const handleAction = async (action: 'pause' | 'resume' | 'stop') => {
         await fetch(`/api/scrape/v2/jobs/${jobId}/${action}`, { method: 'POST' });
         fetchDashboardData();
@@ -144,7 +145,7 @@ export default function DashboardClient() {
                 <div>
                     <h1 className="text-3xl font-bold text-white mb-2">Estrazione {job.cap}</h1>
                     <div className="flex gap-4 text-sm">
-                        <span className={`px-2 py-1 rounded font-bold ${isRunning ? 'bg-green-900 text-green-300' : isPaused ? 'bg-yellow-900 text-yellow-300' : 'bg-gray-700 text-gray-300'}`}>{job.status}</span>
+                        <span className={`px-2 py-1 rounded font-bold ${isRunning ? 'bg-green-900 text-green-300' : isPaused ? 'bg-yellow-900 text-yellow-300' : isCompleted ? 'bg-blue-900 text-blue-300' : 'bg-gray-700 text-gray-300'}`}>{job.status}</span>
                         <span className="text-gray-400">Avvio: {new Date(job.createdAt).toLocaleTimeString()}</span>
                         <span className="text-gray-400">Tempo: {tempoTrascorso}</span>
                     </div>
@@ -175,7 +176,7 @@ export default function DashboardClient() {
                         <div className="flex justify-between items-center">
                             <div>
                                 <div className="text-xs text-gray-500">Exp. Yield vs Actual</div>
-                                <div className="text-lg font-bold text-blue-300">{formatNum(calibration?.avgEstimatedYield, 1, 100)}% vs {formatNum(calibration?.avgActualYield, 1, 100)}%</div>
+                                <div className="text-lg font-bold text-blue-300">{formatNum(calibration?.avgEstimatedYield, 1, 1)} vs {formatNum(calibration?.avgActualYield, 1, 100)}%</div>
                             </div>
                             <div className="text-right">
                                 <div className="text-xs text-gray-500">Stato Apprendimento</div>
@@ -364,6 +365,10 @@ export default function DashboardClient() {
         </div>
     );
 }
+
+
+
+
 
 
 

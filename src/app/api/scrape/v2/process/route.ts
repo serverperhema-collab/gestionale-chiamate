@@ -88,6 +88,18 @@ export async function POST(req: NextRequest) {
         // 7. Pianificazione Automatica Prossima Mossa
         await QueryPlannerService.selectNextAction(jobId, query.familyId);
 
+        // 8. Controllo Completamento Job
+        const activeQueries = await prisma.scrapingQuery.count({
+            where: { jobId, status: { in: ['PENDING', 'RUNNING'] } }
+        });
+
+        if (activeQueries === 0) {
+            await prisma.scrapingJob.update({
+                where: { id: jobId },
+                data: { status: 'COMPLETED' }
+            });
+        }
+
         return NextResponse.json({
             status: 'COMPLETED',
             queryId: query.id,
@@ -101,5 +113,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }
+
 
 
