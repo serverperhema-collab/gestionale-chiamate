@@ -27,7 +27,10 @@ type CalibrationData = {
     avgEstimatedYield: number; avgActualYield: number; avgNewResults: number; avgConfidence: number; estimatedVsActualError: number;
 };
 
-export default function DashboardClient({ jobId }: { jobId: string }) {
+import { useParams } from 'next/navigation';
+export default function DashboardClient() {
+    const params = useParams();
+    const jobId = params.jobId as string;
     const [job, setJob] = useState<JobData | null>(null);
     const [plannerNext, setPlannerNext] = useState<PlannerAction | null>(null);
     const [events, setEvents] = useState<JobEvent[]>([]);
@@ -356,6 +359,7 @@ export default function DashboardClient({ jobId }: { jobId: string }) {
         </div>
     );
 }
+
 
 
 

@@ -12,7 +12,8 @@ export default async function ScrapeV2JobPage({ params }: { params: { jobId: str
 
     return (
         <div className="min-h-screen bg-gray-900 text-gray-100 p-6 font-sans">
-            <DashboardClient jobId={params.jobId} />
+            <DashboardClient />
         </div>
     );
 }
+
