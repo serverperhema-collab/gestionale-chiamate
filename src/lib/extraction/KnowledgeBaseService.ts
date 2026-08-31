@@ -1,3 +1,4 @@
+import { prisma } from '@/lib/prisma';
 import { PrismaClient, ScrapingQuery } from '@prisma/client';
 
 export interface StrategyContext {
@@ -141,3 +142,4 @@ export class KnowledgeBaseService {
         }
     }
 }
+
