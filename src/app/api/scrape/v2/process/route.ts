@@ -43,7 +43,13 @@ export async function POST(req: NextRequest) {
         }
 
         // 4. Deduplica e Normalizzazione
-        const { newContacts, duplicateCount } = await DedupeService.deduplicate(execResult.rawContacts);
+        let newContacts = execResult.rawContacts;
+        let duplicateCount = 0;
+        if (query.strategy !== 'OSM_SEED') {
+            const dedupeResult = await DedupeService.deduplicate(execResult.rawContacts);
+            newContacts = dedupeResult.newContacts;
+            duplicateCount = dedupeResult.duplicateCount;
+        }
 
         // 5. Salvataggio su DB dei contatti validi
         if (query.strategy !== 'OSM_SEED') {
@@ -115,6 +121,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }
+
 
 
 
