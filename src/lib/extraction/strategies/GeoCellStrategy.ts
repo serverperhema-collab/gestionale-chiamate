@@ -122,3 +122,4 @@ export class GeoCellStrategy implements ExtractionStrategy {
         };
     }
 }
+
