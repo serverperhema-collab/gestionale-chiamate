@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 
 // === Tipi di Dati ===
 type JobData = {
-    id: string; status: string; cap: string; startedAt: string; maxEstimatedCost: number; currentCost: number; maxQueries: number;
+    id: string; status: string; cap: string; createdAt: string; maxEstimatedCost: number; currentCost: number; maxQueries: number;
     _count?: { queries: number }; googleContacts: number; osmContacts: number; totalNewContacts: number; totalDuplicates: number;
     pendingQueries: number; yieldUltime5: number; newContactsUltime5: number;
 };
@@ -123,7 +123,7 @@ export default function DashboardClient() {
     if (!job) return <div className="text-gray-400 p-8">Caricamento console motore...</div>;
 
     const tempoTrascorso = (() => {
-        const diff = Date.now() - new Date(job.startedAt).getTime();
+        const diff = Date.now() - new Date(job.createdAt).getTime();
         const m = Math.floor(diff / 60000);
         const s = Math.floor((diff % 60000) / 1000);
         return `${m}m ${s}s`;
@@ -145,7 +145,7 @@ export default function DashboardClient() {
                     <h1 className="text-3xl font-bold text-white mb-2">Estrazione {job.cap}</h1>
                     <div className="flex gap-4 text-sm">
                         <span className={`px-2 py-1 rounded font-bold ${isRunning ? 'bg-green-900 text-green-300' : isPaused ? 'bg-yellow-900 text-yellow-300' : 'bg-gray-700 text-gray-300'}`}>{job.status}</span>
-                        <span className="text-gray-400">Avvio: {new Date(job.startedAt).toLocaleTimeString()}</span>
+                        <span className="text-gray-400">Avvio: {new Date(job.createdAt).toLocaleTimeString()}</span>
                         <span className="text-gray-400">Tempo: {tempoTrascorso}</span>
                     </div>
                 </div>
@@ -163,7 +163,7 @@ export default function DashboardClient() {
                 </div>
                 <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
                     <div className="text-gray-400 text-sm">Costo</div>
-                    <div className="text-2xl font-bold text-white">`${formatNum(job.currentCost, 3)}</div>
+                    <div className="text-2xl font-bold text-white">${formatNum(job.currentCost, 3)}</div>
                 </div>
                 <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
                     <div className="text-gray-400 text-sm">Query Completate</div>
@@ -364,6 +364,8 @@ export default function DashboardClient() {
         </div>
     );
 }
+
+
 
 
 
