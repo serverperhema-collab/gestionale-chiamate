@@ -16,8 +16,10 @@ export class SynonymStrategy implements ExtractionStrategy {
         return synonyms.map(syn => ({
             queryText: `${syn} in CAP ${context.job.cap}, Italia`,
             strategy: this.type,
-            estimatedCost: BudgetControllerService.estimateQueryCost(this.type),
+            estimatedApiCost: BudgetControllerService.estimateQueryCost(this.type),
+            estimatedOperationalCost: 0.1,
             gapMultiplier: 1.0 
         }));
     }
 }
+

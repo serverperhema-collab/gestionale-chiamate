@@ -1,6 +1,7 @@
 import { ScrapingQuery } from '@prisma/client';
 import { GooglePlacesAdapter } from './adapters/GooglePlacesAdapter';
 import { ExecutionEngineResult } from './adapters/ExecutionInterfaces';
+import { OsmAdapter } from './adapters/OsmAdapter';
 
 export class ExecutionEngine {
     
@@ -28,11 +29,11 @@ export class ExecutionEngine {
                 return await GooglePlacesAdapter.nearbySearchDiscovery(query, GOOGLE_API_KEY);
 
             case 'OSM_SEED':
-                // In futuro: OsmAdapter.overpassSearch(...)
-                return { success: false, rawContacts: [], executionCost: 0, error: 'OSM_SEED non ancora supportato' };
+                return await OsmAdapter.overpassSearch(query.familyId.split('_')[1], query.cellMinLat!, query.cellMaxLat!, query.cellMinLng!, query.cellMaxLng!);
 
             default:
                 return { success: false, rawContacts: [], executionCost: 0, error: 'Strategia sconosciuta' };
         }
     }
 }
+

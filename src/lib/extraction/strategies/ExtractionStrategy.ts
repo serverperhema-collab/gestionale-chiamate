@@ -29,8 +29,10 @@ export interface CandidateQuery {
     searchRadius?: number;
 
     // Fattori base di costo/gap (forniti dalla Strategy o calcolati dal Planner)
-    estimatedCost: number;
+    estimatedApiCost: number;
+    estimatedOperationalCost: number;
     gapMultiplier: number;
+    debugMath?: any;
 }
 
 /**
@@ -44,3 +46,5 @@ export interface ExtractionStrategy {
      */
     generateCandidates(context: PlannerContext): Promise<CandidateQuery[]>;
 }
+
+

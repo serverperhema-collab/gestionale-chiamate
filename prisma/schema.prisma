@@ -630,3 +630,21 @@ model ScrapingJobEvent {
 
 
 // Trigger Vercel Deploy
+
+model OsmQueryCache {
+  queryHash   String   @id
+  concept     String
+  bbox        String
+  status      String
+  resultCount Int
+  resultData  Json?
+  completedAt DateTime @default(now())
+  expiresAt   DateTime
+}
+
+model SystemLock {
+  key       String   @id
+  lockedAt  DateTime @default(now())
+  expiresAt DateTime
+}
+

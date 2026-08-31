@@ -10,8 +10,10 @@ export class BaseStrategy implements ExtractionStrategy {
         return [{
             queryText,
             strategy: this.type,
-            estimatedCost: BudgetControllerService.estimateQueryCost(this.type),
+            estimatedApiCost: BudgetControllerService.estimateQueryCost(this.type),
+            estimatedOperationalCost: 0.1,
             gapMultiplier: 1.0 
         }];
     }
 }
+

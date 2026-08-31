@@ -11,7 +11,8 @@ export class QueryPlannerService {
     private static strategies: ExtractionStrategy[] = [
         new BaseStrategy(),
         new SynonymStrategy(),
-        new GeoCellStrategy()
+        new GeoCellStrategy(),
+        new OsmSeedStrategy()
     ];
 
     /**
@@ -69,23 +70,24 @@ export class QueryPlannerService {
                 geoCellId: candidate.geoCellId
             });
             
-            const cost = candidate.estimatedCost > 0 ? candidate.estimatedCost : 0.032;
+            const effectiveCost = candidate.estimatedApiCost + (candidate.estimatedOperationalCost * 0.05);
+            const apiCostToSave = candidate.estimatedApiCost;
 
             // C. Calcolo Priority finale
-            const priority = (stats.estimatedYield * stats.confidence * candidate.gapMultiplier * stats.explorationMultiplier) / cost;
+            const priority = (stats.estimatedYield * stats.confidence * candidate.gapMultiplier * stats.explorationMultiplier) / effectiveCost;
 
             if (priority > highestPriority) {
                 highestPriority = priority;
                 bestCandidate = candidate;
                 
-                const reason = `Strategy: ${candidate.strategy} (Cold:${stats.isColdStart}). Yield:${stats.estimatedYield.toFixed(2)} * Conf:${stats.confidence.toFixed(2)} * Gap:${candidate.gapMultiplier.toFixed(2)} * Expl:${stats.explorationMultiplier.toFixed(2)} / Cost:${cost} = Prio:${priority.toFixed(2)}`;
+                const reason = `Strategy: ${candidate.strategy} (Cold:${stats.isColdStart}). Yield:${stats.estimatedYield.toFixed(2)} * Conf:${stats.confidence.toFixed(2)} * Gap:${candidate.gapMultiplier.toFixed(2)} * Expl:${stats.explorationMultiplier.toFixed(2)} / EffCost:${effectiveCost.toFixed(3)} = Prio:${priority.toFixed(2)}`;
                 
                 bestSnapshot = {
                     estimatedYield: stats.estimatedYield,
                     confidence: stats.confidence,
                     gapMultiplier: candidate.gapMultiplier,
                     explorationMult: stats.explorationMultiplier,
-                    estimatedCost: cost,
+                    estimatedCost: apiCostToSave,
                     priority,
                     plannerReason: reason
                 };
@@ -129,5 +131,7 @@ export class QueryPlannerService {
         return nextQuery;
     }
 }
+
+
 
 
