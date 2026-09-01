@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -14,7 +14,7 @@ export async function GET(req: Request) {
     const userId = searchParams.get("userId");
     const contactId = searchParams.get("contactId");
     
-    const whereClause: any = {};
+    const whereClause: any = { action: { not: "CONTACT_EXTRACTED" } };
     if (userId) whereClause.userId = userId;
     if (contactId) whereClause.contactId = contactId;
 
@@ -34,3 +34,4 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Server Error" }, { status: 500 });
   }
 }
+

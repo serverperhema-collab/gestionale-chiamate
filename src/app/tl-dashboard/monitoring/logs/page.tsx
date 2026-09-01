@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
-import { Activity, Search, User, Phone, ArrowLeft, Calendar, FileText, Snowflake, Download } from "lucide-react";
+import { Activity, Search, User, Phone, ArrowLeft, Calendar, FileText, Snowflake, Download, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { exportToExcel } from "@/lib/exportUtils";
@@ -15,7 +15,28 @@ export default function LogsPage() {
   
   // Dati dettagliati
   const [contactData, setContactData] = useState<any>(null);
-  const [operatorLogs, setOperatorLogs] = useState<any[]>([]);
+    const [operatorLogs, setOperatorLogs] = useState<any[]>([]);
+  const [detailModalContent, setDetailModalContent] = useState<{ action: string, details: string, contactInfo?: string, date?: string } | null>(null);
+
+  const viewContactHistory = async (contactId: string) => {
+    setFilterType("CONTACT");
+    setFilterValue(contactId);
+    setLoading(true);
+    setContactData(null);
+    try {
+      const res = await fetch("/api/logs/contact/" + contactId);
+      const data = await res.json();
+      if (res.ok) {
+        setContactData(data.contact);
+      } else {
+        toast.error(data.error || "Contatto non trovato");
+      }
+    } catch (e) {
+      toast.error("Errore di rete");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchLogs = async () => {
     setLoading(true);
@@ -227,8 +248,15 @@ export default function LogsPage() {
                            </span>
                         ) : "-"}
                       </td>
-                      <td className="p-4 text-gray-400 max-w-xs truncate" title={log.details || ""}>
-                        {log.details || "-"}
+                                            <td className="p-4 text-gray-400 max-w-xs">
+                        <div className="flex items-center justify-between">
+                            <span className="truncate mr-2">{log.details || "-"}</span>
+                            {log.details && (
+                                <button onClick={() => setDetailModalContent({ action: log.action, details: log.details, contactInfo: log.contact?.originalPhone || log.contact?.name, date: new Date(log.createdAt).toLocaleString() })} className="text-gray-400 hover:text-white px-2 py-1 bg-gray-700/50 hover:bg-gray-700 rounded text-xs transition whitespace-nowrap">
+                                    Vedi Info
+                                </button>
+                            )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -344,8 +372,15 @@ export default function LogsPage() {
                       <td className="p-4 text-gray-300">
                         {log.contact?.name || "-"}
                       </td>
-                      <td className="p-4 text-gray-400 max-w-xs truncate" title={log.details || ""}>
-                        {log.details || "-"}
+                                            <td className="p-4 text-gray-400 max-w-xs">
+                        <div className="flex items-center justify-between">
+                            <span className="truncate mr-2">{log.details || "-"}</span>
+                            {log.details && (
+                                <button onClick={() => setDetailModalContent({ action: log.action, details: log.details, contactInfo: log.contact?.originalPhone || log.contact?.name, date: new Date(log.createdAt).toLocaleString() })} className="text-gray-400 hover:text-white px-2 py-1 bg-gray-700/50 hover:bg-gray-700 rounded text-xs transition whitespace-nowrap">
+                                    Vedi Info
+                                </button>
+                            )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -358,6 +393,51 @@ export default function LogsPage() {
           )}
         </>
       )}
+      {/* MODAL DETTAGLI AZIONE */}
+      {detailModalContent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
+            <div className="flex justify-between items-center p-4 border-b border-gray-700 bg-gray-800">
+              <h3 className="text-lg font-semibold text-white flex items-center">
+                <FileText className="w-5 h-5 mr-2 text-blue-400" />
+                Dettaglio Azione
+              </h3>
+              <button onClick={() => setDetailModalContent(null)} className="text-gray-400 hover:text-white">
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Azione</span>
+                <div className="mt-1 font-mono text-emerald-400 bg-gray-950 p-2 rounded border border-gray-800">{detailModalContent.action}</div>
+              </div>
+              {detailModalContent.contactInfo && (
+                <div>
+                  <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Contatto Coinvolto</span>
+                  <div className="mt-1 text-gray-300 font-medium">{detailModalContent.contactInfo}</div>
+                </div>
+              )}
+              <div>
+                <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Data e Ora</span>
+                <div className="mt-1 text-gray-300">{detailModalContent.date}</div>
+              </div>
+              <div>
+                <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Descrizione Completa</span>
+                <div className="mt-1 text-gray-200 bg-gray-800 p-3 rounded-lg border border-gray-700 whitespace-pre-wrap text-sm leading-relaxed max-h-64 overflow-y-auto">
+                  {detailModalContent.details}
+                </div>
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-700 bg-gray-800 text-right">
+              <button onClick={() => setDetailModalContent(null)} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded font-medium transition">
+                Chiudi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+
