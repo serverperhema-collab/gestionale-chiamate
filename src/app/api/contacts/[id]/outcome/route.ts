@@ -116,6 +116,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         }
       }));
 
+      // 1.b Crea l'ActivityLog per farlo apparire nella vista Globale del TL
+      // (Escludiamo TRASH_REQUEST perche' lo crea gia' sotto come CONTACT_REVIEW_REQUESTED)
+      if (outcome !== "TRASH_REQUEST") {
+        transaction.push(prisma.activityLog.create({
+          data: {
+            userId,
+            contactId: id,
+            action: "OUTCOME_" + outcome,
+            details: notes || "Nessuna nota"
+          }
+        }));
+      }
+
       // 2. Aggiorna lo stato del contatto in base all'esito
       // Rimuove automaticamente dalla coda TL se era in revisione (deroga lavorata)
       const contactUpdateData: any = { assignedToId: null, reviewRequestedAt: null, reviewNote: null };
