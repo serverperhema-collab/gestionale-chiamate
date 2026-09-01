@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from "next/server";
+﻿import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -44,10 +44,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       updateData.isPersonalCallback = isPersonalCallback;
     }
 
+    // Track changes for detailed logging
+    const changedFields: string[] = [];
+
     // Check changes and identify if they are destructive (overwriting an existing non-empty value)
-    if (originalPhone !== undefined) {
+    if (originalPhone !== undefined && contact.originalPhone !== originalPhone) {
       updateData.originalPhone = originalPhone;
-      if (contact.originalPhone && contact.originalPhone.trim() !== "" && contact.originalPhone !== originalPhone) isDestructive = true;
+      const oldVal = contact.originalPhone || "(vuoto)";
+      changedFields.push(`Telefono 1: da '${oldVal}' a '${originalPhone}'`);
+      if (contact.originalPhone && contact.originalPhone.trim() !== "") isDestructive = true;
     }
     
     // Gestione N2 (primo numero nella relazione phones)
@@ -61,6 +66,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
               data: { phone: n2Phone }
             }
           };
+          const oldVal = existingN2.phone || "(vuoto)";
+          changedFields.push(`Telefono 2: da '${oldVal}' a '${n2Phone}'`);
           if (existingN2.phone.trim() !== "") isDestructive = true;
         }
       } else if (n2Phone.trim() !== "") {
@@ -70,20 +77,28 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
             label: "N2"
           }
         };
+        changedFields.push(`Telefono 2: aggiunto '${n2Phone}'`);
       }
     }
 
-    if (email !== undefined) {
+    if (email !== undefined && contact.email !== email) {
       updateData.email = email;
+      const oldVal = contact.email || "(vuoto)";
+      changedFields.push(`Email: da '${oldVal}' a '${email}'`);
     }
-    if (referentName !== undefined) {
+    if (referentName !== undefined && contact.referentName !== referentName) {
       updateData.referentName = referentName;
+      const oldVal = contact.referentName || "(vuoto)";
+      changedFields.push(`Referente: da '${oldVal}' a '${referentName}'`);
     }
-    if (website !== undefined) {
+    if (website !== undefined && contact.website !== website) {
       updateData.website = website;
+      const oldVal = contact.website || "(vuoto)";
+      changedFields.push(`Sito Web: da '${oldVal}' a '${website}'`);
     }
-    if (notes !== undefined) {
+    if (notes !== undefined && contact.notes !== notes) {
       updateData.notes = notes;
+      changedFields.push(`Note: aggiornate`);
     }
 
     let willLock = false;
@@ -138,12 +153,23 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       }));
     }
 
+    const baseReason = isDestructive 
+      ? `Sostituzione dato esistente (contatore giornaliero: ${newModCount})` 
+      : "Aggiunta dati mancanti";
+      
+    const changeSummary = changedFields.length > 0 
+      ? `
+
+Dettagli Modifica:
+- ${changedFields.join('\n- ')}`
+      : "";
+
     transaction.push(prisma.activityLog.create({
       data: {
         userId,
         contactId: id,
-        action: isDestructive ? "MODIFIED_EXISTING_DATA" : "CONTACT_ENRICHED",
-        details: isDestructive ? `Modifica distruttiva: modifiche giornaliere a ${newModCount}` : "Aggiunta dati mancanti"
+        action: isDestructive ? "DATA_OVERWRITE" : "CONTACT_ENRICHED",
+        details: baseReason + changeSummary
       }
     }));
 
@@ -163,3 +189,4 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Errore interno del server" }, { status: 500 });
   }
 }
+

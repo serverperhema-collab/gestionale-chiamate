@@ -6,6 +6,44 @@ import toast from "react-hot-toast";
 import Link from "next/link";
 import { exportToExcel } from "@/lib/exportUtils";
 
+const actionTranslations: Record<string, string> = {
+  'LOGIN': 'Accesso',
+  'LOGOUT': 'Uscita (Logout)',
+  'AUTO_LOGOUT': 'Logout Automatico',
+  'FORCE_LOGOUT': 'Scollegamento Forzato',
+  'TIME_ADJUSTMENT': 'Correzione Tempi',
+  'CONTACT_EXTRACTED': 'Contatto Estratto',
+  'CONTACT_SKIPPED': 'Contatto Saltato',
+  'CONTACT_STOLEN': 'Contatto Sottratto',
+  'CONTACT_MANUALLY_ASSIGNED': 'Assegnato Manualmente',
+  'CONTACT_MANUALLY_CREATED': 'Contatto Creato a Mano',
+  'FORCE_UNASSIGN': 'Rimozione Assegnazione',
+  'MANUAL_FORCE_ASSIGNMENT': 'Assegnazione Forzata',
+  'CLOSE_ASSIGN': 'Contatto Chiuso/Assegnato',
+  'DATA_OVERWRITE': 'Sostituzione Dati',
+  'MODIFIED_EXISTING_DATA': 'Sostituzione Dati',
+  'CONTACT_ENRICHED': 'Arricchimento Dati',
+  'UPDATE_NOTES': 'Note Aggiornate',
+  'CONTACT_REVIEW_REQUESTED': 'Richiesta Revisione/Blacklist',
+  'CONTACT_REVIEW_RESOLVED': 'Revisione Risolta',
+  'CONTACT_REVIEW_BLACKLISTED': 'Aggiunto a Blacklist',
+  'TL_APPOINTMENT_ACTION': 'Azione Appuntamento (TL)',
+  'TL_CREATED_APPOINTMENT': 'Appuntamento Fissato (TL)',
+  'TL_AGENDA_ACTION': 'Modifica Agenda (TL)',
+  'TL_KO_APPROVED': 'KO Approvato (TL)',
+  'TL_KO_REJECTED': 'KO Rifiutato (TL)',
+  'TL_UNBLOCK': 'Sblocco Operatore (TL)',
+  'TL_CHANGED_OPERATOR': 'Cambio Operatore (TL)',
+  'TL_ASSIGNED_RECALL': 'Assegnato Ricontatto (TL)',
+  'COMMERCIALE_OUTCOME_SAVED': 'Esito Commerciale',
+  'APPROVE': 'Approvato',
+  'RESTORE': 'Ripristinato',
+  'ABANDON': 'Abbandonato',
+  'NEGOTIATION_REJECTED': 'Trattativa Rifiutata',
+};
+
+const formatAction = (action: string) => actionTranslations[action] || action;
+
 export default function LogsPage() {
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -111,7 +149,7 @@ export default function LogsPage() {
               const exportData = logs.map(l => ({
                 Data: new Date(l.createdAt).toLocaleString(),
                 Operatore: l.user?.name || "Sistema",
-                Azione: l.action,
+                Azione: formatAction(l.action),
                 ContattoID: l.contact?.id || "",
                 Telefono: l.contact?.originalPhone || "",
                 Dettagli: l.details || ""
@@ -120,7 +158,7 @@ export default function LogsPage() {
             } else if (filterType === "USER" && operatorLogs && operatorLogs.length > 0) {
               const exportData = operatorLogs.map(l => ({
                 Ora: new Date(l.createdAt).toLocaleTimeString(),
-                Azione: l.action,
+                Azione: formatAction(l.action),
                 Azienda: l.contact?.name || "",
                 Dettagli: l.details || ""
               }));
@@ -237,7 +275,7 @@ export default function LogsPage() {
                       </td>
                       <td className="p-4">
                         <span className="px-2 py-1 bg-gray-700 text-gray-300 rounded font-mono text-xs">
-                          {log.action}
+                          {formatAction(log.action)}
                         </span>
                       </td>
                       <td className="p-4 text-gray-400 font-mono text-xs">
@@ -295,7 +333,7 @@ export default function LogsPage() {
                           <span className="font-medium text-blue-400">{log.user?.name || "Sistema"}</span>
                           <span className="text-xs text-gray-500">{new Date(log.createdAt).toLocaleString()}</span>
                         </div>
-                        <div className="text-white font-mono text-xs mb-1">{log.action}</div>
+                        <div className="text-white font-mono text-xs mb-1">{formatAction(log.action)}</div>
                         {log.details && <div className="text-gray-400 text-xs">{log.details}</div>}
                       </div>
                     ))}
@@ -366,7 +404,7 @@ export default function LogsPage() {
                       </td>
                       <td className="p-4">
                         <span className="px-2 py-1 bg-gray-700 text-emerald-300 rounded font-mono text-xs">
-                          {log.action}
+                          {formatAction(log.action)}
                         </span>
                       </td>
                       <td className="p-4 text-gray-300">
@@ -409,7 +447,7 @@ export default function LogsPage() {
             <div className="p-6 space-y-4">
               <div>
                 <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Azione</span>
-                <div className="mt-1 font-mono text-emerald-400 bg-gray-950 p-2 rounded border border-gray-800">{detailModalContent.action}</div>
+                <div className="mt-1 font-mono text-emerald-400 bg-gray-950 p-2 rounded border border-gray-800">{formatAction(detailModalContent.action)}</div>
               </div>
               {detailModalContent.contactInfo && (
                 <div>
@@ -439,5 +477,6 @@ export default function LogsPage() {
     </div>
   );
 }
+
 
 
