@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { X, Calendar as CalendarIcon, Clock, AlertTriangle } from "lucide-react";
@@ -28,9 +28,9 @@ export default function AppointmentModal({
   const [loadingAgendas, setLoadingAgendas] = useState(true);
 
   const [selectedAgenda, setSelectedAgenda] = useState<any>(null);
-  const [slots, setSlots] = useState<{ time: string, date: string }[]>([]);
+  const [slots, setSlots] = useState<{ time: string, year: number, month: number, day: number, hour: number, minute: number }[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<{ time: string, date: string } | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<{ time: string, year: number, month: number, day: number, hour: number, minute: number } | null>(null);
 
   const [isDeroga, setIsDeroga] = useState(false);
   const [derogaTime, setDerogaTime] = useState("");
@@ -121,7 +121,7 @@ export default function AppointmentModal({
       if (res.ok) {
         setSlots(data.slots);
       } else {
-        toast.error(data.error || "Nessuna disponibilità");
+        toast.error(data.error || "Nessuna disponibilitÃ ");
       }
     } catch (e) {
       toast.error("Errore di rete");
@@ -133,20 +133,24 @@ export default function AppointmentModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    let finalDate = "";
+        let finalDate = "";
     
     if (isDeroga) {
       if (!derogaTime || !derogaDate) {
         toast.error("Specifica data e orario per la deroga");
         return;
       }
-      finalDate = `${derogaDate}T${derogaTime}:00`;
+      const [yearStr, monthStr, dayStr] = derogaDate.split("-");
+      const [hourStr, minStr] = derogaTime.split(":");
+      // Costruiamo una data locale nel browser (che è già nel fuso orario giusto) e prendiamo l'ISO string
+      finalDate = new Date(parseInt(yearStr), parseInt(monthStr) - 1, parseInt(dayStr), parseInt(hourStr), parseInt(minStr), 0).toISOString();
     } else {
       if (!selectedSlot) {
         toast.error("Seleziona uno slot orario");
         return;
       }
-      finalDate = selectedSlot.date;
+      // Costruiamo la data locale dallo slot
+      finalDate = new Date(selectedSlot.year, selectedSlot.month - 1, selectedSlot.day, selectedSlot.hour, selectedSlot.minute, 0).toISOString();
     }
 
     setSubmitting(true);
@@ -268,7 +272,7 @@ export default function AppointmentModal({
                   </h3>
                   
                   {loadingSlots ? (
-                    <div className="text-center py-4 text-gray-500 text-sm">Ricerca disponibilità...</div>
+                    <div className="text-center py-4 text-gray-500 text-sm">Ricerca disponibilitÃ ...</div>
                   ) : slots.length === 0 ? (
                     <div className="text-center py-4">
                       <p className="text-red-400 text-sm font-medium">Tutti gli slot per questa giornata sono occupati o bloccati.</p>
@@ -325,7 +329,7 @@ export default function AppointmentModal({
                   
                   {derogaStats?.remainingDeroghe === 0 ? (
                     <div className="bg-red-900/40 p-3 rounded border border-red-600 text-red-200 text-sm font-medium mb-3">
-                      Non puoi più inserire appuntamenti in deroga. Hai raggiunto il limite massimo. Attendi o contatta il tuo Team Leader.
+                      Non puoi piÃ¹ inserire appuntamenti in deroga. Hai raggiunto il limite massimo. Attendi o contatta il tuo Team Leader.
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-3">
@@ -503,3 +507,4 @@ export default function AppointmentModal({
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -22,16 +22,20 @@ export async function GET(req: Request) {
     });
 
     if (!agenda) {
-      return NextResponse.json({ slots: [] }); // Nessuna agenda aperta
+      return NextResponse.json({ slots: [] });
     }
 
-    const targetDate = new Date(agenda.date);
-
-    const startOfTargetDay = new Date(targetDate);
-    startOfTargetDay.setHours(0, 0, 0, 0);
-    
-    const endOfTargetDay = new Date(targetDate);
-    endOfTargetDay.setHours(23, 59, 59, 999);
+    // Estrarre l'anno, mese e giorno dell'agenda (formattati in Rome time)
+    const formatter = new Intl.DateTimeFormat('en-CA', { 
+      timeZone: 'Europe/Rome', 
+      year: 'numeric', month: '2-digit', day: '2-digit' 
+    });
+    // Formatter restituisce YYYY-MM-DD
+    const agendaDateStr = formatter.format(agenda.date);
+    const [yearStr, monthStr, dayStr] = agendaDateStr.split('-');
+    const year = parseInt(yearStr);
+    const month = parseInt(monthStr);
+    const day = parseInt(dayStr);
 
     const existingAppointments = await prisma.appointment.findMany({
       where: {
@@ -40,38 +44,51 @@ export async function GET(req: Request) {
       }
     });
 
+    // Funzione helper per ottenere i minuti totali della giornata (0-1440) per un Date object in fuso orario di Roma
+    const getRomeMinutes = (dateObj: Date) => {
+      const timeFormatter = new Intl.DateTimeFormat('it-IT', { 
+        timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' 
+      });
+      const [h, m] = timeFormatter.format(dateObj).split(':').map(Number);
+      return h * 60 + m;
+    };
+
+    const existingApptsMinutes = existingAppointments.map(a => getRomeMinutes(a.date));
+
     const startWorkHour = 9; // 09:00
     const endWorkHour = 18; // 18:00
     const intervalMinutes = 15;
     const bufferMinutes = 45;
 
     let availableSlots: any[] = [];
-    let currentSlot = new Date(targetDate);
-    currentSlot.setHours(startWorkHour, 0, 0, 0);
 
-    const endOfDay = new Date(targetDate);
-    endOfDay.setHours(endWorkHour, 0, 0, 0);
+    for (let h = startWorkHour; h <= endWorkHour; h++) {
+        for (let m = 0; m < 60; m += intervalMinutes) {
+            if (h === endWorkHour && m > 0) continue;
 
-    // Generiamo gli slot ed escludiamo quelli che distano meno di 45 min da appuntamenti esistenti
-    while (currentSlot <= endOfDay) {
-      let isBlocked = false;
+            const currentSlotMinutes = h * 60 + m;
+            let isBlocked = false;
 
-      for (const appt of existingAppointments) {
-        const diffMinutes = Math.abs(currentSlot.getTime() - appt.date.getTime()) / (1000 * 60);
-        if (diffMinutes < bufferMinutes) {
-          isBlocked = true;
-          break;
+            for (const apptMins of existingApptsMinutes) {
+                if (Math.abs(currentSlotMinutes - apptMins) < bufferMinutes) {
+                    isBlocked = true;
+                    break;
+                }
+            }
+
+            if (!isBlocked) {
+                const hh = h.toString().padStart(2, '0');
+                const mm = m.toString().padStart(2, '0');
+                availableSlots.push({
+                    time: `${hh}:${mm}`,
+                    year,
+                    month,
+                    day,
+                    hour: h,
+                    minute: m
+                });
+            }
         }
-      }
-
-      if (!isBlocked) {
-        availableSlots.push({
-          time: currentSlot.toLocaleTimeString("it-IT", { hour: '2-digit', minute: '2-digit' }),
-          date: currentSlot.toISOString(),
-        });
-      }
-      
-      currentSlot.setMinutes(currentSlot.getMinutes() + intervalMinutes);
     }
 
     return NextResponse.json({ slots: availableSlots });

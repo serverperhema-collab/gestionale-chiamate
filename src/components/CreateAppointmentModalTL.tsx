@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { X, Calendar, Search, UserPlus } from "lucide-react";
@@ -90,9 +90,11 @@ export default function CreateAppointmentModalTL({
       return;
     }
 
-    setLoading(true);
-    try {
-      const dateTime = `${formData.date}T${formData.time}:00`;
+          setLoading(true);
+      try {
+        const [yearStr, monthStr, dayStr] = formData.date.split("-");
+        const [hourStr, minStr] = formData.time.split(":");
+        const dateTime = new Date(parseInt(yearStr), parseInt(monthStr) - 1, parseInt(dayStr), parseInt(hourStr), parseInt(minStr), 0).toISOString();
       
       const res = await fetch("/api/tl/appointments/create", {
         method: "POST",
@@ -238,7 +240,7 @@ export default function CreateAppointmentModalTL({
                   <input required value={newContactData.address} onChange={e => setNewContactData({...newContactData, address: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white" />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Città *</label>
+                  <label className="block text-sm text-gray-400 mb-1">CittÃ  *</label>
                   <input required value={newContactData.city} onChange={e => setNewContactData({...newContactData, city: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white" />
                 </div>
                 <div>
@@ -307,3 +309,4 @@ export default function CreateAppointmentModalTL({
     </div>
   );
 }
+
