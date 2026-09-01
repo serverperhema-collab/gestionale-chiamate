@@ -13,7 +13,6 @@ export async function GET() {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    // Fetch all active operators with their assigned contacts and today's logs
     const operators = await prisma.user.findMany({
       where: { role: "OPERATORE", isActive: true },
       select: {
@@ -24,12 +23,7 @@ export async function GET() {
         skipCount: true,
         assignedContacts: {
           where: { isKo: false },
-          select: {
-            id: true,
-            name: true,
-            cap: true,
-            assignedToId: true
-          }
+          select: { id: true, name: true, cap: true, assignedToId: true }
         },
         callLogs: {
           where: { createdAt: { gte: todayStart } },
@@ -37,39 +31,106 @@ export async function GET() {
         },
         activityLogs: {
           where: { createdAt: { gte: todayStart } },
+          orderBy: { createdAt: "desc" },
           select: { action: true, createdAt: true, details: true }
         }
       }
     });
 
-    const now = new Date().getTime();
+    const now = new Date();
+    const nowMs = now.getTime();
+    
+    // Calcoliamo i timestamp assoluti per i confini di turno di oggi
+    const shift1End = new Date(); shift1End.setHours(13, 5, 0, 0);
+    const shift2End = new Date(); shift2End.setHours(17, 5, 0, 0);
 
-    // Calculate idle status and stats
-    const liveOperators = operators.map(op => {
+    const liveOperators = await Promise.all(operators.map(async op => {
       let idleMinutes = 0;
       let isIdle = false;
+      let isDisconnected = false;
       
-      if (op.lastActivityAt) {
+      let autoLogoutReason: string | null = null;
+      let latestLogAction = op.activityLogs.length > 0 ? op.activityLogs[0].action : null;
+      
+      // Troviamo l'ultimo LOGIN di oggi
+      const lastLoginLog = op.activityLogs.find(l => l.action === "LOGIN");
+      const sessionStartMs = lastLoginLog ? new Date(lastLoginLog.createdAt).getTime() : todayStart.getTime();
+
+      // Stato attuale disconnesso se l'ultima azione è un logout
+      if (latestLogAction && ["FORCE_LOGOUT", "AUTO_LOGOUT", "LOGOUT"].includes(latestLogAction)) {
+          isDisconnected = true;
+      } else if (!op.lastActivityAt || new Date(op.lastActivityAt).getTime() < todayStart.getTime()) {
+          // Mai loggato oggi o loggato da ieri e nessuna attività odierna
+          isDisconnected = true;
+      }
+
+      if (op.lastActivityAt && !isDisconnected) {
         const lastActivityMs = new Date(op.lastActivityAt).getTime();
-        idleMinutes = Math.floor((now - lastActivityMs) / 60000);
+        idleMinutes = Math.floor((nowMs - lastActivityMs) / 60000);
+        
         if (idleMinutes >= op.maxIdleTimeMins) {
           isIdle = true;
         }
+
+        // Valutazione Regole di AUTO_LOGOUT (solo se attualmente connesso)
+        
+        // 1. Inattività (30 minuti)
+        if (idleMinutes > 30) {
+          autoLogoutReason = "INACTIVITY";
+        } 
+        else {
+          // 2. Fine Turno Mattina (13:05)
+          if (nowMs >= shift1End.getTime() && sessionStartMs < shift1End.getTime()) {
+             autoLogoutReason = "SHIFT_END";
+          }
+          // 3. Fine Turno Pomeriggio (17:05)
+          else if (nowMs >= shift2End.getTime() && sessionStartMs < shift2End.getTime()) {
+             autoLogoutReason = "SHIFT_END";
+          }
+        }
       }
 
-      // Calculate Stats
-      let skip = 0;
-      let noAnswer = 0;
-      let notAvailable = 0;
-      let nonInteressato = 0;
-      let noInfo = 0;
-      let trashRequest = 0;
-      let reviewRequest = 0;
-      let negotiation = 0;
-      let appt = 0;
-      let enrichment = 0;
-      let logins = 0;
-      let minutesOn = 0;
+      // Esecuzione ATOMICA Idempotente AUTO_LOGOUT tramite transazione con lock
+      if (autoLogoutReason && !isDisconnected) {
+        try {
+          await prisma.$transaction(async (tx) => {
+            // Lock sulla riga dell'utente per serializzare richieste concorrenti
+            await tx.$executeRaw`SELECT id FROM "User" WHERE id = ${op.id} FOR UPDATE`;
+            
+            // Ricontrollo atomico: qual è l'ultimissimo log reale nel DB?
+            const dbLatestLog = await tx.activityLog.findFirst({
+              where: { userId: op.id, createdAt: { gte: new Date(sessionStartMs) } },
+              orderBy: { createdAt: "desc" }
+            });
+            
+            // Inserisco l'AUTO_LOGOUT solo se la sessione non è già terminata
+            if (!dbLatestLog || !["FORCE_LOGOUT", "AUTO_LOGOUT", "LOGOUT"].includes(dbLatestLog.action)) {
+              await tx.activityLog.create({
+                data: {
+                  userId: op.id,
+                  action: "AUTO_LOGOUT",
+                  details: autoLogoutReason
+                }
+              });
+            }
+          });
+          isDisconnected = true;
+          isIdle = false;
+          idleMinutes = 0;
+        } catch (e) {
+          console.error(`Errore transazione atomic AUTO_LOGOUT per operatore ${op.id}:`, e);
+        }
+      }
+
+      if (isDisconnected) {
+          isIdle = false;
+          idleMinutes = 0;
+      }
+
+      // Calcolo Statistiche Frontend
+      let skip = 0; let noAnswer = 0; let notAvailable = 0; let nonInteressato = 0;
+      let noInfo = 0; let trashRequest = 0; let reviewRequest = 0; let negotiation = 0;
+      let appt = 0; let enrichment = 0; let logins = 0; let minutesOn = 0;
 
       op.callLogs.forEach(log => {
         if (log.outcome === "SKIP") skip++;
@@ -88,8 +149,6 @@ export async function GET() {
         if (log.action === "CONTACT_ENRICHED" || log.action === "MODIFIED_EXISTING_DATA") enrichment++;
       });
 
-      // Calculate minutesOn: from first action today to lastActivityAt
-      // Find the earliest log time
       let firstLogMs: number | null = null;
       let timeAdjustment = 0;
 
@@ -100,31 +159,25 @@ export async function GET() {
       op.activityLogs.forEach(log => {
         const t = new Date(log.createdAt).getTime();
         if (!firstLogMs || t < firstLogMs) firstLogMs = t;
-        
         if (log.action === "TIME_ADJUSTMENT") {
           timeAdjustment += parseInt(log.details || "0") || 0;
         }
       });
 
       if (firstLogMs && op.lastActivityAt) {
-        const lastMs = new Date(op.lastActivityAt).getTime();
+        let lastMs = new Date(op.lastActivityAt).getTime();
+        
+        if (isDisconnected && op.activityLogs.length > 0) {
+            const mostRecentLog = op.activityLogs[0];
+            if (["FORCE_LOGOUT", "AUTO_LOGOUT", "LOGOUT"].includes(mostRecentLog.action)) {
+                lastMs = new Date(mostRecentLog.createdAt).getTime();
+            }
+        }
+        
         minutesOn = Math.max(0, Math.floor((lastMs - firstLogMs) / 60000));
       }
       
       minutesOn = Math.max(0, minutesOn + timeAdjustment);
-      
-      // Check if last activity log is a logout
-      let isDisconnected = false;
-      if (op.activityLogs.length > 0) {
-        // Find the log with the latest createdAt
-        const latestLog = op.activityLogs.reduce((latest, current) => {
-          return new Date(current.createdAt).getTime() > new Date(latest.createdAt).getTime() ? current : latest;
-        }, op.activityLogs[0]);
-        
-        if (["FORCE_LOGOUT", "AUTO_LOGOUT", "LOGOUT"].includes(latestLog.action)) {
-          isDisconnected = true;
-        }
-      }
 
       return {
         id: op.id,
@@ -137,14 +190,11 @@ export async function GET() {
         currentContact: op.assignedContacts.length > 0 ? op.assignedContacts[0] : null,
         stats: { skip, noAnswer, notAvailable, nonInteressato, noInfo, trashRequest, reviewRequest, negotiation, appt, enrichment, logins, minutesOn }
       };
-    });
+    }));
 
-    // We no longer filter out only the idle ones. We return ALL active operators for the leaderboard.
     return NextResponse.json({ operators: liveOperators });
   } catch (error) {
     console.error("Live monitor API error:", error);
     return NextResponse.json({ error: "Errore interno del server" }, { status: 500 });
   }
 }
-
-

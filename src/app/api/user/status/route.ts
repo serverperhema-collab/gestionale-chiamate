@@ -14,16 +14,15 @@ export async function GET() {
 
     const userId = (session.user as any).id;
 
-    // Fetch the most recent login or force_logout event
     const latestLog = await prisma.activityLog.findFirst({
       where: {
         userId,
-        action: { in: ["LOGIN", "FORCE_LOGOUT"] }
+        action: { in: ["LOGIN", "FORCE_LOGOUT", "AUTO_LOGOUT", "LOGOUT"] }
       },
       orderBy: { createdAt: "desc" }
     });
 
-    const isForcedLogout = latestLog?.action === "FORCE_LOGOUT";
+    const isForcedLogout = latestLog?.action === "FORCE_LOGOUT" || latestLog?.action === "AUTO_LOGOUT" || latestLog?.action === "LOGOUT";
 
     return NextResponse.json({ forceLogout: isForcedLogout });
   } catch (err) {
