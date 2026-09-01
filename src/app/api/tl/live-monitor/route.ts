@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -74,19 +74,17 @@ export async function GET() {
 
         // Valutazione Regole di AUTO_LOGOUT (solo se attualmente connesso)
         
-        // 1. Inattivita' (30 minuti)
-        if (idleMinutes > 30) {
+                // Priorità 1: Fine Turno Mattina (13:05)
+        if (nowMs >= shift1End.getTime() && sessionStartMs < shift1End.getTime()) {
+           autoLogoutReason = "SHIFT_END";
+        }
+        // Priorità 2: Fine Turno Pomeriggio (17:05)
+        else if (nowMs >= shift2End.getTime() && sessionStartMs < shift2End.getTime()) {
+           autoLogoutReason = "SHIFT_END";
+        }
+        // Priorità 3: Inattivita' (30 minuti)
+        else if (idleMinutes > 30) {
           autoLogoutReason = "INACTIVITY";
-        } 
-        else {
-          // 2. Fine Turno Mattina (13:05)
-          if (nowMs >= shift1End.getTime() && sessionStartMs < shift1End.getTime()) {
-             autoLogoutReason = "SHIFT_END";
-          }
-          // 3. Fine Turno Pomeriggio (17:05)
-          else if (nowMs >= shift2End.getTime() && sessionStartMs < shift2End.getTime()) {
-             autoLogoutReason = "SHIFT_END";
-          }
         }
       }
 
@@ -169,7 +167,7 @@ export async function GET() {
         
         if (isDisconnected && op.activityLogs.length > 0) {
             const mostRecentLog = op.activityLogs[0];
-            if (["FORCE_LOGOUT", "AUTO_LOGOUT", "LOGOUT"].includes(mostRecentLog.action)) {
+            if (["FORCE_LOGOUT", "LOGOUT"].includes(mostRecentLog.action)) {
                 lastMs = new Date(mostRecentLog.createdAt).getTime();
             }
         }
@@ -198,3 +196,4 @@ export async function GET() {
     return NextResponse.json({ error: "Errore interno del server" }, { status: 500 });
   }
 }
+
