@@ -56,11 +56,11 @@ export async function GET() {
       const lastLoginLog = op.activityLogs.find(l => l.action === "LOGIN");
       const sessionStartMs = lastLoginLog ? new Date(lastLoginLog.createdAt).getTime() : todayStart.getTime();
 
-      // Stato attuale disconnesso se l'ultima azione è un logout
+      // Stato attuale disconnesso se l'ultima azione e' un logout
       if (latestLogAction && ["FORCE_LOGOUT", "AUTO_LOGOUT", "LOGOUT"].includes(latestLogAction)) {
           isDisconnected = true;
       } else if (!op.lastActivityAt || new Date(op.lastActivityAt).getTime() < todayStart.getTime()) {
-          // Mai loggato oggi o loggato da ieri e nessuna attività odierna
+          // Mai loggato oggi o loggato da ieri e nessuna attivita' odierna
           isDisconnected = true;
       }
 
@@ -74,7 +74,7 @@ export async function GET() {
 
         // Valutazione Regole di AUTO_LOGOUT (solo se attualmente connesso)
         
-        // 1. Inattività (30 minuti)
+        // 1. Inattivita' (30 minuti)
         if (idleMinutes > 30) {
           autoLogoutReason = "INACTIVITY";
         } 
@@ -97,13 +97,13 @@ export async function GET() {
             // Lock sulla riga dell'utente per serializzare richieste concorrenti
             await tx.$executeRaw`SELECT id FROM "User" WHERE id = ${op.id} FOR UPDATE`;
             
-            // Ricontrollo atomico: qual è l'ultimissimo log reale nel DB?
+            // Ricontrollo atomico: qual e' l'ultimissimo log reale nel DB?
             const dbLatestLog = await tx.activityLog.findFirst({
               where: { userId: op.id, createdAt: { gte: new Date(sessionStartMs) } },
               orderBy: { createdAt: "desc" }
             });
             
-            // Inserisco l'AUTO_LOGOUT solo se la sessione non è già terminata
+            // Inserisco l'AUTO_LOGOUT solo se la sessione non e' gia' terminata
             if (!dbLatestLog || !["FORCE_LOGOUT", "AUTO_LOGOUT", "LOGOUT"].includes(dbLatestLog.action)) {
               await tx.activityLog.create({
                 data: {

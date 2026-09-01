@@ -61,7 +61,7 @@ export async function GET() {
             });
             results.push(`Operatore ${op.name}: aggiunto adjustment di ${diff}m (era ${currentTotal}m)`);
         } else {
-            results.push(`Operatore ${op.name}: già a 60m`);
+            results.push(`Operatore ${op.name}: gia' a 60m`);
         }
     }
 
