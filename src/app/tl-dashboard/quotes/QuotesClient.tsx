@@ -7,8 +7,9 @@ import Link from "next/link";
 
 type TabType = "RECEIVED" | "REQUESTS";
 
-export default function QuotesClient() {
-  const [activeTab, setActiveTab] = useState<TabType>("REQUESTS");
+export default function QuotesClient({ externalTab }: { externalTab?: "REQUESTS" | "RECEIVED" }) {
+  const [activeTab, setActiveTab] = useState<TabType>(externalTab || "REQUESTS");
+  useEffect(() => { if (externalTab) setActiveTab(externalTab); }, [externalTab]);
   const [statusFilter, setStatusFilter] = useState("PENDING");
   
   const [data, setData] = useState<any[]>([]);
@@ -129,9 +130,10 @@ export default function QuotesClient() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-950">
+    <div className={`flex bg-gray-950 ${externalTab ? "h-full" : "h-screen"}`}>
       
       {/* Sidebar */}
+{!externalTab && (
       <div className="w-64 bg-gray-900 border-r border-gray-800 flex flex-col">
         <div className="p-4 border-b border-gray-800">
           <Link href="/tl-dashboard" className="text-gray-400 hover:text-white text-sm flex items-center mb-4 transition">
@@ -159,7 +161,8 @@ export default function QuotesClient() {
         </div>
       </div>
 
-      {/* Main Content */}
+      )}
+{/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         
         {/* Top Filter Bar */}

@@ -132,11 +132,7 @@ export default async function TLDashboardPage() {
           </div>
         </div>
 
-        <div className="mb-8">
-          <div className="h-64">
-            <TlTasksWidget />
-          </div>
-        </div>
+
 
         {/* Navigation Sections */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -192,18 +188,12 @@ export default async function TLDashboardPage() {
           <Link href="/tl-dashboard/outcomes" className="group">
             <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-blue-500 transition h-full">
               <CheckCircle className="w-8 h-8 text-blue-400 mb-4" />
-              <h2 className="text-lg font-semibold text-white">Appuntamenti</h2>
-              <p className="text-sm text-gray-400 mt-2">Gestisci lo storico degli appuntamenti, gli esiti delle visite e i pregressi.</p>
+              <h2 className="text-lg font-semibold text-white">Appuntamenti e Preventivi</h2>
+              <p className="text-sm text-gray-400 mt-2">Gestisci lo storico degli appuntamenti, gli esiti e sviluppa i preventivi richiesti.</p>
             </div>
           </Link>
 
-          <Link href="/tl-dashboard/quotes" className="group">
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-pink-500 transition h-full">
-              <FileText className="w-8 h-8 text-pink-400 mb-4" />
-              <h2 className="text-lg font-semibold text-white">Preventivi</h2>
-              <p className="text-sm text-gray-400 mt-2">Sviluppa i preventivi richiesti dai commerciali.</p>
-            </div>
-          </Link>
+          
 
           <Link href="/tl-dashboard/settings" className="group">
             <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-amber-500 transition h-full">
@@ -213,6 +203,12 @@ export default async function TLDashboardPage() {
             </div>
           </Link>
 
+        </div>
+
+        <div className="mt-8 mb-8">
+          <div className="h-64">
+            <TlTasksWidget />
+          </div>
         </div>
       </main>
     </div>

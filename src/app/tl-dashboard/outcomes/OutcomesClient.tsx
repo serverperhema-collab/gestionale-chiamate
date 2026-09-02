@@ -1,13 +1,14 @@
 ﻿"use client";
 
 import { useState, useEffect } from "react";
-import { Search, Filter, Phone, MapPin, RefreshCw, FileText, Calendar, CheckCircle } from "lucide-react";
+import { Search, Filter, Phone, MapPin, RefreshCw, FileText, Calendar, CheckCircle, AlertCircle } from "lucide-react";
+import QuotesClient from "../quotes/QuotesClient";
 import toast from "react-hot-toast";
 
 export default function OutcomesClient() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"DA_SVOLGERE" | "SVOLTI" | "FUTURI">("SVOLTI");
+  const [activeTab, setActiveTab] = useState<"DA_SVOLGERE" | "SVOLTI" | "FUTURI" | "QUOTES_REQUESTS" | "QUOTES_RECEIVED">("SVOLTI");
   const [commerciali, setCommerciali] = useState<any[]>([]);
   const [selectedCommerciale, setSelectedCommerciale] = useState("");
 
@@ -81,7 +82,7 @@ export default function OutcomesClient() {
     <div className="p-6 max-w-[1600px] w-full mx-auto h-[calc(100vh-4rem)] flex flex-col">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-2">Appuntamenti</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">Appuntamenti & Preventivi</h1>
           <p className="text-gray-400">Monitora gli appuntamenti e gli esiti dei commerciali.</p>
         </div>
       </div>
@@ -90,11 +91,12 @@ export default function OutcomesClient() {
         
         {/* Menu Laterale */}
         <div className="w-64 shrink-0 flex flex-col gap-2">
+          <span className="text-sm font-bold text-white uppercase tracking-wider mb-1 block px-1">Area Appuntamenti</span>
           <button 
             onClick={() => setActiveTab("DA_SVOLGERE")}
             className={`w-full text-left px-4 py-4 rounded-xl border transition flex flex-col ${activeTab === "DA_SVOLGERE" ? 'bg-orange-600/20 border-orange-500 text-orange-400' : 'bg-gray-900 border-gray-800 text-gray-400 hover:bg-gray-800'}`}
           >
-            <span className="font-bold text-lg mb-1">Da Svolgere</span>
+            <span className="font-bold text-lg mb-1">Da Esitare</span>
             <span className="text-xs opacity-80">Svolti SENZA Esito ({daSvolgere.length})</span>
           </button>
           
@@ -102,7 +104,7 @@ export default function OutcomesClient() {
             onClick={() => setActiveTab("SVOLTI")}
             className={`w-full text-left px-4 py-4 rounded-xl border transition flex flex-col ${activeTab === "SVOLTI" ? 'bg-blue-600/20 border-blue-500 text-blue-400' : 'bg-gray-900 border-gray-800 text-gray-400 hover:bg-gray-800'}`}
           >
-            <span className="font-bold text-lg mb-1">Svolti</span>
+            <span className="font-bold text-lg mb-1">Esitati</span>
             <span className="text-xs opacity-80">Svolti CON Esito ({svolti.length})</span>
           </button>
           
@@ -113,10 +115,33 @@ export default function OutcomesClient() {
             <span className="font-bold text-lg mb-1">In Agenda</span>
             <span className="text-xs opacity-80">Futuri / Oggi ({futuri.length})</span>
           </button>
+          
+          <div className="mt-4 pt-4 border-t border-gray-800">
+            <span className="text-sm font-bold text-white uppercase tracking-wider mb-3 block px-1">Area Preventivi</span>
+            <button 
+              onClick={() => setActiveTab("QUOTES_REQUESTS")}
+              className={`w-full text-left px-4 py-4 rounded-xl border transition flex flex-col mb-2 ${activeTab === "QUOTES_REQUESTS" ? 'bg-purple-600/20 border-purple-500 text-purple-400' : 'bg-gray-900 border-gray-800 text-gray-400 hover:bg-gray-800'}`}
+            >
+              <span className="font-bold text-lg mb-1">In Attesa</span>
+              <span className="text-xs opacity-80">Richieste da gestire</span>
+            </button>
+            
+            <button 
+              onClick={() => setActiveTab("QUOTES_RECEIVED")}
+              className={`w-full text-left px-4 py-4 rounded-xl border transition flex flex-col ${activeTab === "QUOTES_RECEIVED" ? 'bg-pink-600/20 border-pink-500 text-pink-400' : 'bg-gray-900 border-gray-800 text-gray-400 hover:bg-gray-800'}`}
+            >
+              <span className="font-bold text-lg mb-1">Inviati</span>
+              <span className="text-xs opacity-80">Caricati dal commerciale</span>
+            </button>
+          </div>
         </div>
 
         {/* Main Content */}
         <div className="flex-1 bg-gray-900 rounded-2xl border border-gray-800 flex flex-col overflow-hidden">
+{(activeTab === "QUOTES_REQUESTS" || activeTab === "QUOTES_RECEIVED") ? (
+  <QuotesClient externalTab={activeTab === "QUOTES_REQUESTS" ? "REQUESTS" : "RECEIVED"} />
+) : (
+  <div className="flex-1 flex flex-col overflow-hidden">
         
         {/* Filters */}
         <div className="p-4 border-b border-gray-800 flex flex-wrap gap-4 items-center bg-gray-900/50 shrink-0">
@@ -233,7 +258,8 @@ export default function OutcomesClient() {
              </div>
           )}
         </div>
-
+      </div>
+      )}
       </div>
     </div>
     </div>
