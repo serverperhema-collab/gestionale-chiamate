@@ -1,11 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import HistoricalApptModal from "@/components/HistoricalApptModal";
+
 import { Database, Search, Filter, History, X, ChevronLeft, ChevronRight, User, Phone, PhoneOff, Calendar, AlertCircle, ArrowRightCircle } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function GlobalContactsPage() {
   const [contacts, setContacts] = useState<any[]>([]);
+  const [showHistModal, setShowHistModal] = useState(false);
+  const [histContact, setHistContact] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   
   // Pagination
@@ -476,6 +480,14 @@ export default function GlobalContactsPage() {
         </div>
       )}
 
+      {showHistModal && histContact && (
+        <HistoricalApptModal
+          contactId={histContact.id}
+          contactName={histContact.name}
+          onClose={() => { setShowHistModal(false); setHistContact(null); }}
+          onSuccess={() => { setShowHistModal(false); setHistContact(null); fetchContacts(); }}
+        />
+      )}
     </div>
   );
 }

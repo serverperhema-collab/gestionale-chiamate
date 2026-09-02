@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import HistoricalApptModal from "@/components/HistoricalApptModal";
+
 import { CheckCircle, XCircle, AlertTriangle, RefreshCw, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -8,6 +10,8 @@ export default function ReviewsPage() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [showHistModal, setShowHistModal] = useState(false);
+  const [histContact, setHistContact] = useState<{id: string, name: string} | null>(null);
 
   const fetchReviews = async () => {
     setLoading(true);
@@ -134,6 +138,14 @@ export default function ReviewsPage() {
             </div>
           ))}
         </div>
+      )}
+      {showHistModal && histContact && (
+        <HistoricalApptModal
+          contactId={histContact.id}
+          contactName={histContact.name}
+          onClose={() => { setShowHistModal(false); setHistContact(null); }}
+          onSuccess={() => { setShowHistModal(false); setHistContact(null); fetchReviews(); }}
+        />
       )}
     </div>
   );
