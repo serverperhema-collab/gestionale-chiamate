@@ -132,6 +132,13 @@ export default function TLReviewAlertModal({ alert, onClose }: { alert: any, onC
                     {actionType === 'RESTORE' && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
                   </div>
                   <span className="text-sm font-medium">Ignora e Ripristina nel Calderone</span>
+                  </label>
+                  <label className={`cursor-pointer rounded-lg border p-3 flex items-center transition ${actionType === 'HISTORICAL' ? 'bg-blue-600/20 border-blue-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'}`}>
+                    <input type="radio" name="actionType" className="hidden" checked={actionType === 'HISTORICAL'} onChange={() => setActionType('HISTORICAL')} />
+                    <div className="w-4 h-4 rounded-full border border-current mr-3 flex-shrink-0 flex items-center justify-center">
+                      {actionType === 'HISTORICAL' && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                    </div>
+                    <span className="text-sm font-medium">App. Già Svolto (Storico)</span>
                 </label>
               </>
             ) : (
