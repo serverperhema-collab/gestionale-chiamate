@@ -541,6 +541,12 @@ export default function OperatorTerminal() {
                     <span className="font-bold">RICHIEDI REVISIONE TL</span>
                     <span className="text-xs italic opacity-85 font-normal">contatto già gestito o anomalo</span>
                   </button>
+                    {!contact.isGestioneSeparata && (
+                      <button disabled={noAnswerLocked} onClick={() => { setGestioneSeparataNotes(""); setGestioneSeparataModalOpen(true); }} className="px-6 py-3 bg-teal-900/30 text-teal-400 hover:bg-teal-800 hover:text-white border border-teal-700/50 rounded-lg transition shadow-sm disabled:opacity-50 flex flex-col items-center justify-center gap-1">
+                        <span className="font-bold">GESTIONE SEPARATA</span>
+                        <span className="text-xs italic opacity-85 font-normal">invia alla società di pulizie</span>
+                      </button>
+                    )}
                 </div>
                 <div className="mt-6 flex flex-col items-end gap-2">
                   <button 
