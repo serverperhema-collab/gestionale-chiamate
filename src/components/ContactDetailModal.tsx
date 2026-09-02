@@ -45,7 +45,7 @@ const translateAction = (action: string) => {
 };
 
   return (
-    <div className="fixed inset-0 bg-black/70 z-50 flex justify-center items-center p-4 print:bg-white print:p-0">
+    <div className="fixed inset-0 bg-black/70 z-50 flex justify-center items-center p-4 print:static print:inset-auto print:bg-white print:p-0">
       <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden print:hidden">
         
         {/* Header */}
@@ -165,7 +165,7 @@ const translateAction = (action: string) => {
 
       {/* PRINT LAYOUT */}
       {data && (
-        <div className="hidden print:block absolute top-0 left-0 w-full min-h-screen bg-white text-black p-8 font-sans">
+        <div className="hidden print:block w-full min-h-screen bg-white text-black p-8 font-sans">
           {/* Header */}
           <div className="flex justify-between items-start mb-8 border-b-2 border-amber-500 pb-4">
             <div className="flex items-center">
