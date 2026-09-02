@@ -4,73 +4,114 @@ path = 'src/app/tl-dashboard/outcomes/OutcomesClient.tsx'
 with open(path, 'r', encoding='utf-8') as f:
     code = f.read()
 
-# Remove max-w-7xl and make it wider
-code = code.replace('className="p-6 max-w-7xl mx-auto h-[calc(100vh-4rem)] flex flex-col"', 'className="p-6 max-w-[1600px] w-full mx-auto h-[calc(100vh-4rem)] flex flex-col"')
+# 1. State for Date Filter
+state_target = 'const [selectedCommerciale, setSelectedCommerciale] = useState("");'
+state_replacement = 'const [selectedCommerciale, setSelectedCommerciale] = useState("");\n  const [dateFilter, setDateFilter] = useState("ALL");\n  const [customStart, setCustomStart] = useState("");\n  const [customEnd, setCustomEnd] = useState("");'
+code = code.replace(state_target, state_replacement)
 
-# Replace the horizontal tabs with a layout having left sidebar
-old_tabs = """      {/* Tabs */}
-      <div className="flex space-x-2 bg-gray-900 p-1 rounded-xl border border-gray-800 mb-6 shrink-0 overflow-x-auto">
-        <button 
-          onClick={() => setActiveTab("DA_SVOLGERE")}
-          className={`px-4 py-2 text-sm font-bold rounded-lg transition whitespace-nowrap ${activeTab === "DA_SVOLGERE" ? 'bg-orange-600 text-white shadow' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
-        >
-          Svolti SENZA Esito (Da Svolgere) ({daSvolgere.length})
-        </button>
-        <button 
-          onClick={() => setActiveTab("SVOLTI")}
-          className={`px-4 py-2 text-sm font-bold rounded-lg transition whitespace-nowrap ${activeTab === "SVOLTI" ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
-        >
-          Svolti CON Esito ({svolti.length})
-        </button>
-        <button 
-          onClick={() => setActiveTab("FUTURI")}
-          className={`px-4 py-2 text-sm font-bold rounded-lg transition whitespace-nowrap ${activeTab === "FUTURI" ? 'bg-teal-600 text-white shadow' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
-        >
-          In Agenda (Futuri / Oggi) ({futuri.length})
-        </button>
-      </div>
+# 2. Modify fetchData to include dates
+fetch_target = 'const url = selectedCommerciale ? `/api/tl/outcomes?commercialeId=${selectedCommerciale}` : `/api/tl/outcomes`;'
+fetch_replacement = """    let url = `/api/tl/outcomes?`;
+    if (selectedCommerciale) url += `commercialeId=${selectedCommerciale}&`;
+    
+    if (dateFilter === "WEEK") {
+      const d = new Date();
+      d.setDate(d.getDate() - 7);
+      url += `startDate=${d.toISOString()}&`;
+    } else if (dateFilter === "MONTH") {
+      const d = new Date();
+      d.setMonth(d.getMonth() - 1);
+      url += `startDate=${d.toISOString()}&`;
+    } else if (dateFilter === "CUSTOM" && customStart) {
+      url += `startDate=${new Date(customStart).toISOString()}&`;
+      if (customEnd) url += `endDate=${new Date(customEnd).toISOString()}&`;
+    }"""
+code = code.replace(fetch_target, fetch_replacement)
 
-      <div className="flex-1 bg-gray-900 rounded-2xl border border-gray-800 flex flex-col overflow-hidden">"""
+# 3. Add useEffect to refetch when dateFilter or custom dates change
+use_effect_target = 'useEffect(() => {\n    fetchData();\n  }, [selectedCommerciale]);'
+use_effect_replacement = 'useEffect(() => {\n    if (dateFilter !== "CUSTOM" || (dateFilter === "CUSTOM" && customStart && customEnd)) {\n      fetchData();\n    }\n  }, [selectedCommerciale, dateFilter, customStart, customEnd]);'
+code = code.replace(use_effect_target, use_effect_replacement)
 
-new_tabs = """      <div className="flex flex-1 gap-6 min-h-0 overflow-hidden">
-        
-        {/* Menu Laterale */}
-        <div className="w-64 shrink-0 flex flex-col gap-2">
+# 4. Add the UI in the header
+ui_target = """        <div className="flex justify-between items-center bg-gray-900 border-b border-gray-800 p-4 shrink-0">
+          <div className="flex items-center space-x-4">
+            <Filter className="w-5 h-5 text-gray-400" />
+            <select 
+              value={selectedCommerciale} 
+              onChange={(e) => setSelectedCommerciale(e.target.value)}
+              className="bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500 transition text-sm"
+            >
+              <option value="">Tutti i Commerciali</option>
+              {commerciali.map((c: any) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
           <button 
-            onClick={() => setActiveTab("DA_SVOLGERE")}
-            className={`w-full text-left px-4 py-4 rounded-xl border transition flex flex-col ${activeTab === "DA_SVOLGERE" ? 'bg-orange-600/20 border-orange-500 text-orange-400' : 'bg-gray-900 border-gray-800 text-gray-400 hover:bg-gray-800'}`}
+            onClick={fetchData}
+            disabled={loading}
+            className="flex items-center px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition text-sm disabled:opacity-50"
           >
-            <span className="font-bold text-lg mb-1">Da Svolgere</span>
-            <span className="text-xs opacity-80">Svolti SENZA Esito ({daSvolgere.length})</span>
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Aggiorna
           </button>
-          
+        </div>"""
+
+ui_replacement = """        <div className="flex justify-between items-center bg-gray-900 border-b border-gray-800 p-4 shrink-0 flex-wrap gap-4">
+          <div className="flex items-center space-x-4 flex-wrap gap-y-2">
+            <Filter className="w-5 h-5 text-gray-400" />
+            <select 
+              value={selectedCommerciale} 
+              onChange={(e) => setSelectedCommerciale(e.target.value)}
+              className="bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500 transition text-sm"
+            >
+              <option value="">Tutti i Commerciali</option>
+              {commerciali.map((c: any) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            
+            <select 
+              value={dateFilter} 
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500 transition text-sm"
+            >
+              <option value="ALL">Sempre</option>
+              <option value="WEEK">Ultima Settimana</option>
+              <option value="MONTH">Ultimo Mese</option>
+              <option value="CUSTOM">Intervallo Personalizzato</option>
+            </select>
+
+            {dateFilter === "CUSTOM" && (
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="date" 
+                  value={customStart} 
+                  onChange={(e) => setCustomStart(e.target.value)} 
+                  className="bg-gray-800 border border-gray-700 text-white rounded-lg px-2 py-1.5 text-sm focus:outline-none" 
+                />
+                <span className="text-gray-400">a</span>
+                <input 
+                  type="date" 
+                  value={customEnd} 
+                  onChange={(e) => setCustomEnd(e.target.value)} 
+                  className="bg-gray-800 border border-gray-700 text-white rounded-lg px-2 py-1.5 text-sm focus:outline-none" 
+                />
+              </div>
+            )}
+          </div>
           <button 
-            onClick={() => setActiveTab("SVOLTI")}
-            className={`w-full text-left px-4 py-4 rounded-xl border transition flex flex-col ${activeTab === "SVOLTI" ? 'bg-blue-600/20 border-blue-500 text-blue-400' : 'bg-gray-900 border-gray-800 text-gray-400 hover:bg-gray-800'}`}
+            onClick={fetchData}
+            disabled={loading}
+            className="flex items-center px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition text-sm disabled:opacity-50 ml-auto"
           >
-            <span className="font-bold text-lg mb-1">Svolti</span>
-            <span className="text-xs opacity-80">Svolti CON Esito ({svolti.length})</span>
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Aggiorna
           </button>
-          
-          <button 
-            onClick={() => setActiveTab("FUTURI")}
-            className={`w-full text-left px-4 py-4 rounded-xl border transition flex flex-col ${activeTab === "FUTURI" ? 'bg-teal-600/20 border-teal-500 text-teal-400' : 'bg-gray-900 border-gray-800 text-gray-400 hover:bg-gray-800'}`}
-          >
-            <span className="font-bold text-lg mb-1">In Agenda</span>
-            <span className="text-xs opacity-80">Futuri / Oggi ({futuri.length})</span>
-          </button>
-        </div>
+        </div>"""
 
-        {/* Main Content */}
-        <div className="flex-1 bg-gray-900 rounded-2xl border border-gray-800 flex flex-col overflow-hidden">"""
-        
-code = code.replace(old_tabs, new_tabs)
-
-# Remove max-w-4xl from the list so it takes full width
-code = code.replace('className="space-y-4 max-w-4xl mx-auto"', 'className="space-y-4 w-full"')
-
-# Close the new flex wrapper at the end
-code = code.replace('    </div>\n  );\n}', '      </div>\n    </div>\n    </div>\n  );\n}')
+code = code.replace(ui_target, ui_replacement)
 
 with open(path, 'w', encoding='utf-8') as f:
     f.write(code)

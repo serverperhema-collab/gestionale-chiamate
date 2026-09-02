@@ -14,6 +14,9 @@ export default function OutcomesClient() {
   const [activeTab, setActiveTab] = useState<"DA_SVOLGERE" | "SVOLTI" | "FUTURI" | "QUOTES_REQUESTS" | "QUOTES_RECEIVED">("SVOLTI");
   const [commerciali, setCommerciali] = useState<any[]>([]);
   const [selectedCommerciale, setSelectedCommerciale] = useState("");
+  const [dateFilter, setDateFilter] = useState("ALL");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
   const [detailModalContactId, setDetailModalContactId] = useState<string | null>(null);
   const [editModalAppt, setEditModalAppt] = useState<any | null>(null);
   const updateAppointmentStatus = async (id: string, newStatus: string) => {

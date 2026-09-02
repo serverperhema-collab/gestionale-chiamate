@@ -13,9 +13,22 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const commercialeId = searchParams.get("commercialeId");
     
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+    
     let whereClause: any = {
       status: { notIn: ["CANCELLED"] }
     };
+    
+    if (startDate || endDate) {
+      whereClause.date = {};
+      if (startDate) whereClause.date.gte = new Date(startDate);
+      if (endDate) {
+        const ed = new Date(endDate);
+        ed.setUTCHours(23, 59, 59, 999);
+        whereClause.date.lte = ed;
+      }
+    }
     
     if (commercialeId) {
       whereClause.commercialeId = commercialeId;
