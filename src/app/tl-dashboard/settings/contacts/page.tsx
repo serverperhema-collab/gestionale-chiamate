@@ -292,6 +292,12 @@ export default function GlobalContactsPage() {
                       >
                         <History className="w-4 h-4 mr-1.5" />
                         Cronologia
+                        </button>
+                        <button
+                          onClick={() => { setHistContact(c); setShowHistModal(true); }}
+                          className="inline-flex items-center px-3 py-1.5 bg-blue-900/40 hover:bg-blue-900/60 text-blue-400 rounded border border-blue-800 transition"
+                        >
+                          App. Storico
                       </button>
                     </div>
                   </td>

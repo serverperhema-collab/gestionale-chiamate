@@ -133,6 +133,13 @@ export default function ReviewsPage() {
                   className="flex-1 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 hover:text-red-300 border border-red-500/20 rounded transition text-sm font-semibold flex items-center justify-center gap-1.5 disabled:opacity-50"
                 >
                   <Trash2 className="w-4 h-4 mr-1.5" /> Sposta in Cestino Permanente
+                  </button>
+                  <button
+                    onClick={() => { setHistContact({id: rev.contact.id, name: rev.contact.name}); setShowHistModal(true); }}
+                    disabled={processingId === rev.id}
+                    className="flex-1 py-2 bg-blue-900/20 hover:bg-blue-900/40 text-blue-400 hover:text-blue-300 border border-blue-500/20 rounded transition text-sm font-semibold flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  >
+                    App. Storico
                 </button>
               </div>
             </div>
