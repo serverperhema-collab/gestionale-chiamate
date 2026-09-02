@@ -16,8 +16,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-
+    
     const body = await req.json();
+    
+    let existingNegotiation = null;
+    if (body.outcome && body.outcome !== "SKIP") {
+      existingNegotiation = await prisma.negotiation.findFirst({
+        where: { contactId: id, operatorId: userId, isAbandoned: false }
+      });
+    }
     const { outcome, notes, recallDate, delayHours, targetCompany } = body;
     // Check note obbligatorie
     if (["NOT_AVAILABLE", "NEGOTIATION", "NON_INTERESSATO"].includes(outcome)) {
@@ -201,19 +208,30 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         // "butta in un angolo per 24 ore"
         contactUpdateData.hiddenUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
       } else if (outcome === "NEGOTIATION") {
-        contactUpdateData.hiddenUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 anno
-        transaction.push(prisma.negotiation.create({
-          data: {
-            contactId: id,
-            operatorId: userId,
-            reason: notes,
-            recallDate: new Date(recallDate),
-            isApproved: true // Auto-approved recall
-          }
-        }));
+        contactUpdateData.hiddenUntil = new Date(Date.now() + 3650 * 24 * 60 * 60 * 1000); // 10 anni (Invisibile al calderone)
+        
+        if (existingNegotiation) {
+          transaction.push(prisma.negotiation.update({
+            where: { id: existingNegotiation.id },
+            data: {
+              recallDate: new Date(recallDate),
+              reason: existingNegotiation.reason + "\n---\nAggiornamento (" + new Date().toLocaleString("it-IT") + "): " + notes
+            }
+          }));
+        } else {
+          transaction.push(prisma.negotiation.create({
+            data: {
+              contactId: id,
+              operatorId: userId,
+              reason: notes,
+              recallDate: new Date(recallDate),
+              isApproved: true // Auto-approved recall
+            }
+          }));
+        }
       } else if (outcome === "APPOINTMENT") {
         // Nascondiamo il contatto dal calderone, è in lavorazione o fissato
-        contactUpdateData.hiddenUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 anno
+        contactUpdateData.hiddenUntil = new Date(Date.now() + 3650 * 24 * 60 * 60 * 1000); // 10 anni (Invisibile al calderone)
       } else if (outcome === "TRASH_REQUEST") {
         contactUpdateData.hiddenUntil = new Date(Date.now() + 3650 * 24 * 60 * 60 * 1000); // 10 anni (per sempre finché TL non sblocca)
         contactUpdateData.reviewRequestedAt = new Date();

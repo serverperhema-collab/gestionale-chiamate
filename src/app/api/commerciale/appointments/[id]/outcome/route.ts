@@ -148,6 +148,24 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           where: { id: appointment.contactId },
           data: { hiddenUntil: new Date(nextActionDate), assignedToId: null }
         });
+        
+        // FIX: Crea un nuovo record Appuntamento in stato DA_GESTIRE_COMMERCIALE
+        // in modo che appaia nella tab "Da Gestire" del Commerciale!
+        await tx.appointment.create({
+          data: {
+            contactId: appointment.contactId,
+            operatorId: appointment.operatorId,
+            commercialeId: commercialeId,
+            date: new Date(nextActionDate),
+            status: "DA_GESTIRE_COMMERCIALE",
+            commercialStatus: "ASSEGNATO",
+            tlNotes: "Richiamo Personale generato da precedente esito.",
+          referentName: appointment.referentName || "",
+          referentRole: appointment.referentRole || "",
+          phone: appointment.phone || "",
+          clientNeeds: appointment.clientNeeds || "Richiamo"
+          }
+        });
       }
 
       // Log
