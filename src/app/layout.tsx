@@ -43,7 +43,7 @@ export default function RootLayout({
           <ExtractionProvider>
             <SessionEnforcer />
             <PwaRegister />
-            <Toaster position="top-right" />
+            <Toaster position="bottom-right" />
             {children}
           </ExtractionProvider>
         </AuthProvider>
