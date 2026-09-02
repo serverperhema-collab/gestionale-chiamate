@@ -27,7 +27,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         },
         activityLogs: {
           where: {
-            action: { not: "PESCATO DAL CALDERONE" }
+            action: { notIn: ["PESCATO DAL CALDERONE", "CONTACT_EXTRACTED"] }
           },
           include: { user: { select: { name: true } } },
           orderBy: { createdAt: 'desc' },

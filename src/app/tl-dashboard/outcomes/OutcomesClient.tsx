@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { Search, Filter, Phone, MapPin, RefreshCw, FileText, Calendar, CheckCircle, AlertCircle } from "lucide-react";
 import QuotesClient from "../quotes/QuotesClient";
 import ContactDetailModal from "@/components/ContactDetailModal";
+import EditAppointmentModal from "@/components/EditAppointmentModal";
+import { Edit2 } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function OutcomesClient() {
@@ -13,6 +15,7 @@ export default function OutcomesClient() {
   const [commerciali, setCommerciali] = useState<any[]>([]);
   const [selectedCommerciale, setSelectedCommerciale] = useState("");
   const [detailModalContactId, setDetailModalContactId] = useState<string | null>(null);
+  const [editModalAppt, setEditModalAppt] = useState<any | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -196,6 +199,9 @@ export default function OutcomesClient() {
                         </div>
                         
                         <div className="flex items-center space-x-3">
+                             <button onClick={() => setEditModalAppt(appt)} className="p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white border border-gray-600 rounded-lg transition shadow-sm" title="Modifica Appuntamento">
+                               <Edit2 className="w-4 h-4" />
+                             </button>
                              <button onClick={() => setDetailModalContactId(appt.contactId)} className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 border border-blue-500/30 rounded-lg text-sm font-bold transition shadow-sm">Apri Scheda</button>
                              {outcome ? (
                               <span className={`text-xs px-2 py-0.5 rounded font-bold uppercase tracking-wider border ${
@@ -271,6 +277,9 @@ export default function OutcomesClient() {
 
       {detailModalContactId && (
         <ContactDetailModal contactId={detailModalContactId} onClose={() => setDetailModalContactId(null)} />
+      )}
+      {editModalAppt && (
+        <EditAppointmentModal appt={editModalAppt} onClose={() => setEditModalAppt(null)} onSaved={() => { setEditModalAppt(null); fetchData(); }} />
       )}
 
     </div>
