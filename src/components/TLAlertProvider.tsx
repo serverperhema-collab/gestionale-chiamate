@@ -89,7 +89,8 @@ export default function TLAlertProvider() {
           
           if (!alertedLocksRef.current.has(alertKey)) {
             alertedLocksRef.current.add(alertKey);
-            if (!isMuted) {
+            const currentlyMuted = localStorage.getItem("tl_alerts_muted") === "true";
+            if (!currentlyMuted) {
               setActiveModalAlert(alert);
               playAlertSound();
             }
