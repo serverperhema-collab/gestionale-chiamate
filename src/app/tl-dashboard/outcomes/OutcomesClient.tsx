@@ -177,10 +177,13 @@ export default function OutcomesClient() {
              <div className="space-y-4 w-full">
                {displayedData.map((appt: any) => {
                  const outcome = appt.outcomes?.[0]; // Get the first outcome if it exists
-                 return (
-                   <div key={appt.id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden shadow-lg">
+                 const isOverdue = new Date(appt.date) < new Date() && appt.status !== "DONE";
+                   const isDone = appt.status === "DONE";
+                   const borderColor = isDone ? "border-emerald-500" : isOverdue ? "border-red-500" : "border-blue-500";
+                   return (
+                     <div key={appt.id} className={`bg-gray-800 border border-gray-700 border-l-4 ${borderColor} rounded-xl overflow-hidden shadow-md hover:shadow-xl hover:border-gray-500 transition`}>
                      
-                     <div className="px-5 py-3 border-b border-gray-800 flex justify-between items-center bg-gray-900/50">
+                     <div className="px-5 py-3 border-b border-gray-700/50 flex flex-wrap justify-between items-center bg-gray-900/40 gap-3">
                         <div className="flex items-center space-x-3">
                            <span className={`text-sm font-medium ${new Date(appt.date) < today && activeTab === "DA_SVOLGERE" ? 'text-red-400' : 'text-gray-400'}`}>
                              <Calendar className="w-4 h-4 inline mr-1" />
@@ -192,8 +195,9 @@ export default function OutcomesClient() {
                            </span>
                         </div>
                         
-                        <div className="flex items-center space-x-2">
-                           {outcome ? (
+                        <div className="flex items-center space-x-3">
+                             <button onClick={() => setDetailModalContactId(appt.contactId)} className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 border border-blue-500/30 rounded-lg text-sm font-bold transition shadow-sm">Apri Scheda</button>
+                             {outcome ? (
                               <span className={`text-xs px-2 py-0.5 rounded font-bold uppercase tracking-wider border ${
                                 outcome.outcomeFinal === "VENDUTO" ? 'bg-emerald-900/50 text-emerald-400 border-emerald-700/50' : 
                                 outcome.outcomeFinal === "KO" ? 'bg-red-900/50 text-red-400 border-red-700/50' :
