@@ -152,7 +152,15 @@ const translateAction = (action: string) => {
                           <span className="font-medium text-gray-400">{log.user?.name}</span>
                         </div>
                         <p className="font-bold text-white mb-1">{translateAction(log.action)}</p>
-                        {log.details && <p className="text-gray-400 text-xs italic">{log.details}</p>}
+                        {log.details && (
+                          <p className="text-gray-400 text-xs italic">
+                            {log.details
+                              .replace(/sull'appuntamento\s+c[a-z0-9]+\b/i, "sull'appuntamento")
+                              .replace(/all'appuntamento\s+c[a-z0-9]+\b/i, "all'appuntamento")
+                              .replace(/ID:\s*c[a-z0-9]+\b/g, "")
+                              .replace(/\s+c[a-z0-9]{20,}\b/g, "")}
+                          </p>
+                        )}
                       </div>
                     ))}
                   </div>
