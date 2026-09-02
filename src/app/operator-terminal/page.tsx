@@ -38,6 +38,7 @@ export default function OperatorTerminal() {
   const [trashModalOpen, setTrashModalOpen] = useState(false);
   const [trashNotes, setTrashNotes] = useState("");
 
+
   const [outcomeModalOpen, setOutcomeModalOpen] = useState(false);
   const [outcomeType, setOutcomeType] = useState("");
   const [outcomeNotes, setOutcomeNotes] = useState("");
