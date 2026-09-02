@@ -128,7 +128,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
           operatorId: operatorId !== undefined ? operatorId : appointment.operatorId,
           isPhoneAppt: isPhoneAppt !== undefined ? isPhoneAppt : appointment.isPhoneAppt,
           isDeroga: newIsDeroga,
-          isApproved: newIsApproved
+          isApproved: newIsApproved,
+          status: status !== undefined ? (status as any) : appointment.status
         }
       });
 
