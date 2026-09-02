@@ -1,3 +1,4 @@
+ï»¿# -*- coding: utf-8 -*-
 import sys
 
 path = 'src/app/tl-dashboard/settings/contacts/page.tsx'
@@ -8,7 +9,7 @@ target = """    const getStatusBadge = (c: any) => {
       if (c.isKo) return <span className="px-2 py-1 bg-red-900/50 text-red-400 rounded text-xs font-semibold">KO</span>;"""
 
 replacement = """    const removeGestioneSeparata = async (id: string) => {
-      if (!confirm("Sei sicuro di voler rimuovere questo contatto dalla Gestione Separata (Pulizie)? Tornerà nel calderone principale.")) return;
+      if (!confirm("Sei sicuro di voler rimuovere questo contatto dalla Gestione Separata (Pulizie)? Tornera nel calderone principale.")) return;
       try {
         const res = await fetch(`/api/contacts/${id}/gestione-separata`, { method: "PATCH" });
         if (res.ok) {
@@ -27,8 +28,6 @@ replacement = """    const removeGestioneSeparata = async (id: string) => {
       if (c.isKo) return <span className="px-2 py-1 bg-red-900/50 text-red-400 rounded text-xs font-semibold">KO</span>;"""
 
 code = code.replace(target, replacement)
-
-# Add isGestioneSeparata to the select query in the API? Wait, this is `page.tsx` that fetches from `/api/contacts/search`. Let's verify `page.tsx` fetching logic.
 
 with open(path, 'w', encoding='utf-8') as f:
     f.write(code)

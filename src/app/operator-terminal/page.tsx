@@ -55,6 +55,8 @@ export default function OperatorTerminal() {
   
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [reviewNotes, setReviewNotes] = useState("");
+  const [gestioneSeparataModalOpen, setGestioneSeparataModalOpen] = useState(false);
+  const [gestioneSeparataNotes, setGestioneSeparataNotes] = useState("");
 
   const [searchModalOpen, setSearchModalOpen] = useState(false);
 

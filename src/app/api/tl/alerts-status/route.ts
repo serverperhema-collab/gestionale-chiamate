@@ -106,6 +106,25 @@ export async function GET() {
       }
     });
 
+    const gestioneSeparataRequests = await prisma.gestioneSeparataRequest.findMany({
+      where: { isResolved: false },
+      include: {
+        contact: { select: { name: true } },
+      }
+    });
+
+    gestioneSeparataRequests.forEach(req => {
+      activeAlerts.push({
+        type: 'GESTIONE_SEPARATA_REQUEST',
+        requestId: req.id,
+        contactId: req.contactId,
+        contactName: req.contact?.name || "Sconosciuto",
+        operatorId: req.operatorId,
+        reason: req.reason,
+        requestedAt: req.createdAt
+      });
+    });
+
     derogaApps.forEach(app => {
       activeAlerts.push({
         type: 'DEROGA_APP_REQUEST',

@@ -108,7 +108,13 @@ export async function GET(req: Request) {
       cap: { in: caps }
     };
 
-    // Note: Campaign filtering by sector is omitted until sectors are mapped to campaigns
+    // Campaign filtering based on isGestioneSeparata
+    if (assignment.campaign === "PULIZIE") {
+      whereCondition.isGestioneSeparata = true;
+    } else if (assignment.campaign === "PERSONALE_HEMA") {
+      whereCondition.isGestioneSeparata = false;
+    }
+    // "ENTRAMBI" leaves it unfiltered
 
     // 1. Find the minimum noAnswerCount available
     const minAgg = await prisma.contact.aggregate({

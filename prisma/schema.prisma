@@ -32,16 +32,19 @@ model User {
   suspendedUntil DateTime?
 
   // Settings/Thresholds
-  maxNoAnswer         Int @default(20)
-  maxNoAnswerMins     Int @default(30)
-  maxSkip             Int @default(15)
-  maxSkipMins         Int @default(30)
-  maxNotAvailable     Int @default(15)
-  maxNotAvailableMins Int @default(30)
+  maxNoAnswer             Int @default(20)
+  maxNoAnswerMins         Int @default(30)
+  maxSkip                 Int @default(15)
+  maxSkipMins             Int @default(30)
+  maxNotAvailable         Int @default(15)
+  maxNotAvailableMins     Int @default(30)
+  maxGestioneSeparata     Int @default(5)
+  maxGestioneSeparataMins Int @default(60)
 
-  noAnswerLockTime     Int @default(10)
-  skipLockTime         Int @default(10)
-  notAvailableLockTime Int @default(10)
+  noAnswerLockTime         Int @default(10)
+  skipLockTime             Int @default(10)
+  notAvailableLockTime     Int @default(10)
+  gestioneSeparataLockTime Int @default(10)
 
   maxDeroghe      Int @default(3)
   maxDerogheHours Int @default(24)
@@ -141,6 +144,7 @@ model Contact {
   assignedTo         User?     @relation("AssignedContacts", fields: [assignedToId], references: [id])
   isKo               Boolean   @default(false)
   isPersonalCallback Boolean   @default(false)
+  isGestioneSeparata Boolean   @default(false)
 
   // Nuovi Campi per il Piano di Sviluppo
   blacklisted       Boolean   @default(false)
@@ -154,12 +158,13 @@ model Contact {
   targetCompany     String?
 
   // Relations
-  phones       ContactPhone[]
-  callLogs     CallLog[]
-  activityLogs ActivityLog[]
-  negotiations Negotiation[]
-  appointments Appointment[]
-  koRecords    KoRecord[]
+  phones                  ContactPhone[]
+  callLogs                CallLog[]
+  activityLogs            ActivityLog[]
+  negotiations            Negotiation[]
+  appointments            Appointment[]
+  koRecords               KoRecord[]
+  gestioneSeparataRequest GestioneSeparataRequest?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -624,11 +629,6 @@ model ScrapingJobEvent {
   metadata  Json?
 }
 
-
-
-
-
-
 // Trigger Vercel Deploy
 
 model OsmQueryCache {
@@ -648,3 +648,15 @@ model SystemLock {
   expiresAt DateTime
 }
 
+model GestioneSeparataRequest {
+  id         String   @id @default(cuid())
+  contactId  String   @unique
+  contact    Contact  @relation(fields: [contactId], references: [id])
+  operatorId String
+  reason     String
+  isResolved Boolean  @default(false)
+  isApproved Boolean?
+
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+}
