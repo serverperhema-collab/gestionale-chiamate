@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Search, Filter, Phone, MapPin, RefreshCw, FileText, Calendar, CheckCircle, AlertCircle } from "lucide-react";
 import QuotesClient from "../quotes/QuotesClient";
+import ContactDetailModal from "@/components/ContactDetailModal";
 import toast from "react-hot-toast";
 
 export default function OutcomesClient() {
@@ -11,6 +12,7 @@ export default function OutcomesClient() {
   const [activeTab, setActiveTab] = useState<"DA_SVOLGERE" | "SVOLTI" | "FUTURI" | "QUOTES_REQUESTS" | "QUOTES_RECEIVED">("SVOLTI");
   const [commerciali, setCommerciali] = useState<any[]>([]);
   const [selectedCommerciale, setSelectedCommerciale] = useState("");
+  const [detailModalContactId, setDetailModalContactId] = useState<string | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -262,6 +264,11 @@ export default function OutcomesClient() {
       )}
       </div>
     </div>
+
+      {detailModalContactId && (
+        <ContactDetailModal contactId={detailModalContactId} onClose={() => setDetailModalContactId(null)} />
+      )}
+
     </div>
   );
 }
