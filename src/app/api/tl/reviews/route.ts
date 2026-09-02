@@ -10,7 +10,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const reviews = await prisma.contact.findMany({
+    const standardReviews = await prisma.contact.findMany({
       where: {
         reviewRequestedAt: { not: null }
       },
@@ -22,13 +22,39 @@ export async function GET(req: Request) {
         address: true,
         reviewRequestedAt: true,
         reviewNote: true
-      },
-      orderBy: {
-        reviewRequestedAt: "asc"
       }
     });
 
-    return NextResponse.json({ reviews });
+    const gestioneSeparata = await prisma.gestioneSeparataRequest.findMany({
+      where: {
+        isResolved: false
+      },
+      include: {
+        contact: {
+          select: { name: true, cap: true, originalPhone: true, address: true }
+        }
+      }
+    });
+
+    const combined = [
+      ...standardReviews.map(r => ({ ...r, type: 'REVIEW', date: r.reviewRequestedAt })),
+      ...gestioneSeparata.map(g => ({
+        id: g.id,
+        contactId: g.contactId,
+        name: g.contact?.name || "Sconosciuto",
+        cap: g.contact?.cap,
+        originalPhone: g.contact?.originalPhone,
+        address: g.contact?.address,
+        reviewRequestedAt: g.createdAt,
+        reviewNote: g.reason,
+        type: 'GESTIONE_SEPARATA',
+        date: g.createdAt
+      }))
+    ];
+
+    combined.sort((a, b) => new Date(a.date || new Date()).getTime() - new Date(b.date || new Date()).getTime());
+
+    return NextResponse.json({ reviews: combined });
   } catch (error) {
     console.error("GET tl reviews error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
