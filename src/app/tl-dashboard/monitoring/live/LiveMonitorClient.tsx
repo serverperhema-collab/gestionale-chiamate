@@ -210,6 +210,7 @@ export default function LiveMonitorClient() {
                 <th className="px-2 py-3 text-center text-gray-400">No Info</th>
                 <th className="px-2 py-3 text-center text-red-600">Non Int.</th>
                 <th className="px-2 py-3 text-center text-rose-500">Cestino</th>
+                  <th className="px-2 py-3 text-center text-teal-400">Pulizie</th>
                 <th className="px-2 py-3 text-center text-amber-500">Sblocco</th>
                 <th className="px-2 py-3 text-center text-yellow-400">Trattative</th>
                 <th className="px-2 py-3 text-center text-green-400">Appunt.</th>

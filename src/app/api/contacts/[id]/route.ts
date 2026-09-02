@@ -19,7 +19,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     // Se l'operatore è bloccato per le modifiche, rifiuta
-    if (user.role === "OPERATORE" && user.modLockedUntil && user.modLockedUntil > new Date()) {
+    if (!user.isTrusted && user.role === "OPERATORE" && user.modLockedUntil && user.modLockedUntil > new Date()) {
       return NextResponse.json({ 
         error: "Sei bloccato per troppe modifiche. Attendi o chiedi lo sblocco al TL." 
       }, { status: 403 });

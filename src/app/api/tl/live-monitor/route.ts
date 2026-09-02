@@ -128,7 +128,7 @@ export async function GET() {
       // Calcolo Statistiche Frontend
       let skip = 0; let noAnswer = 0; let notAvailable = 0; let nonInteressato = 0;
       let noInfo = 0; let trashRequest = 0; let reviewRequest = 0; let negotiation = 0;
-      let appt = 0; let enrichment = 0; let logins = 0; let minutesOn = 0;
+      let appt = 0; let enrichment = 0; let logins = 0; let minutesOn = 0; let gestioneSeparata = 0;
 
       op.callLogs.forEach(log => {
         if (log.outcome === "SKIP") skip++;
@@ -145,6 +145,7 @@ export async function GET() {
       op.activityLogs.forEach(log => {
         if (log.action === "LOGIN") logins++;
         if (log.action === "CONTACT_ENRICHED" || log.action === "MODIFIED_EXISTING_DATA") enrichment++;
+        if (log.action === "GESTIONE_SEPARATA_REQUESTED") gestioneSeparata++;
       });
 
       let firstLogMs: number | null = null;

@@ -40,6 +40,9 @@ model User {
   maxNotAvailableMins     Int @default(30)
   maxGestioneSeparata     Int @default(5)
   maxGestioneSeparataMins Int @default(60)
+  
+  // Operatore Fidato
+  isTrusted Boolean @default(false)
 
   noAnswerLockTime         Int @default(10)
   skipLockTime             Int @default(10)

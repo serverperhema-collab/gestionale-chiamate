@@ -29,7 +29,7 @@ export async function GET(req: Request) {
       const report = [];
 
       // Fetch all aggregate stats in bulk
-      const [activityStats, apptStats, skipStats, noAnswerStats] = await Promise.all([
+      const [activityStats, apptStats, skipStats, noAnswerStats, gestioneSeparataStats] = await Promise.all([
         prisma.activityLog.groupBy({
           by: ['userId'],
           where: { createdAt: { gte, lt }, contactId: { not: null } },
@@ -49,6 +49,11 @@ export async function GET(req: Request) {
           by: ['userId'],
           where: { createdAt: { gte, lt }, outcome: "NO_ANSWER" },
           _count: { id: true }
+        }),
+        prisma.activityLog.groupBy({
+          by: ['userId'],
+          where: { createdAt: { gte, lt }, action: "GESTIONE_SEPARATA_REQUESTED" },
+          _count: { id: true }
         })
       ]);
 
@@ -56,12 +61,14 @@ export async function GET(req: Request) {
       const getApptCount = (id: string) => apptStats.find(s => s.operatorId === id)?._count.id || 0;
       const getSkipCount = (id: string) => skipStats.find(s => s.userId === id)?._count.id || 0;
       const getNoAnswerCount = (id: string) => noAnswerStats.find(s => s.userId === id)?._count.id || 0;
+      const getGestioneSeparataCount = (id: string) => gestioneSeparataStats.find(s => s.userId === id)?._count.id || 0;
 
       for (const op of operators) {
         const actionsCount = getActivityCount(op.id);
         const apptsCount = getApptCount(op.id);
         const skipCount = getSkipCount(op.id);
         const noAnswerCount = getNoAnswerCount(op.id);
+        const gestioneSeparataCount = getGestioneSeparataCount(op.id);
 
         const conversion = actionsCount > 0 ? ((apptsCount / actionsCount) * 100).toFixed(2) + "%" : "0%";
 
@@ -71,6 +78,7 @@ export async function GET(req: Request) {
           "Skip Effettuati": skipCount,
           "Non Risponde": noAnswerCount,
           "Appuntamenti Fissati": apptsCount,
+          "Gestione Separata (Pulizie)": gestioneSeparataCount,
           "Conversion Rate": conversion
         });
       }

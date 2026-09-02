@@ -44,6 +44,28 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Hai raggiunto il limite massimo giornaliero di 20 richieste." }, { status: 429 });
     }
 
+    if (user.isTrusted) {
+      await prisma.contact.update({
+        where: { id: contactId },
+        data: {
+          isGestioneSeparata: true,
+          assignedToId: null,
+          hiddenUntil: null
+        }
+      });
+
+      await prisma.activityLog.create({
+        data: {
+          userId,
+          contactId,
+          action: "GESTIONE_SEPARATA_APPROVED",
+          details: `[AUTO-APPROVATO FIDATO] Motivo: ${reason}`
+        }
+      });
+
+      return NextResponse.json({ success: true, autoApproved: true });
+    }
+
     // Ensure it doesn't already exist
     const existing = await prisma.gestioneSeparataRequest.findUnique({ where: { contactId } });
     if (existing && !existing.isResolved) {
