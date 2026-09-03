@@ -68,7 +68,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       date,
       zoneAgendaId,
       operatorId,
-      isPhoneAppt
+      isPhoneAppt,
+      status,
+      contactAction,
+      blockDays
     } = body;
 
     const appointment = await prisma.appointment.findUnique({
@@ -104,13 +107,24 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     await prisma.$transaction(async (tx) => {
       // 1. Update Contact
+      const contactUpdateData: any = {
+        name: companyName !== undefined ? companyName : appointment.contact.name,
+        address: address !== undefined ? address : appointment.contact.address,
+        cap: cap !== undefined ? cap : appointment.contact.cap,
+      };
+
+      if (status === "CANCELLED" && contactAction) {
+        contactUpdateData.assignedToId = null;
+        if (contactAction === "RESTORE") {
+          contactUpdateData.hiddenUntil = null;
+        } else if (contactAction === "BLOCK" && blockDays) {
+          contactUpdateData.hiddenUntil = new Date(Date.now() + blockDays * 24 * 60 * 60 * 1000);
+        }
+      }
+
       await tx.contact.update({
         where: { id: appointment.contactId },
-        data: {
-          name: companyName !== undefined ? companyName : appointment.contact.name,
-          address: address !== undefined ? address : appointment.contact.address,
-          cap: cap !== undefined ? cap : appointment.contact.cap,
-        }
+        data: contactUpdateData
       });
 
       // 2. Update Appointment

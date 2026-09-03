@@ -16,9 +16,7 @@ export async function GET(req: Request) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
     
-    let whereClause: any = {
-      status: { notIn: ["CANCELLED"] }
-    };
+    let whereClause: any = {};
     
     if (startDate || endDate) {
       whereClause.date = {};

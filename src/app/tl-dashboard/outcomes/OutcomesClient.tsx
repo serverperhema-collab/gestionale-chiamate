@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useState, useEffect } from "react";
-import { Search, Filter, Phone, MapPin, RefreshCw, FileText, Calendar, CheckCircle, AlertCircle } from "lucide-react";
+import { Search, Filter, Phone, MapPin, RefreshCw, FileText, Calendar, CheckCircle, AlertCircle, Trash2 } from "lucide-react";
 import QuotesClient from "../quotes/QuotesClient";
 import ContactDetailModal from "@/components/ContactDetailModal";
 import EditAppointmentModal from "@/components/EditAppointmentModal";
@@ -11,7 +11,10 @@ import toast from "react-hot-toast";
 export default function OutcomesClient() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"DA_SVOLGERE" | "SVOLTI" | "FUTURI" | "QUOTES_REQUESTS" | "QUOTES_RECEIVED">("SVOLTI");
+  const [activeTab, setActiveTab] = useState<"DA_SVOLGERE" | "SVOLTI" | "FUTURI" | "CESTINO" | "QUOTES_REQUESTS" | "QUOTES_RECEIVED">("SVOLTI");
+  const [deleteModalApptId, setDeleteModalApptId] = useState<string | null>(null);
+  const [deleteAction, setDeleteAction] = useState<"RESTORE" | "BLOCK">("RESTORE");
+  const [blockDays, setBlockDays] = useState(30);
   const [commerciali, setCommerciali] = useState<any[]>([]);
   const [selectedCommerciale, setSelectedCommerciale] = useState("");
   const [dateFilter, setDateFilter] = useState("ALL");
@@ -31,6 +34,26 @@ export default function OutcomesClient() {
         fetchData();
       } else {
         toast.error("Errore aggiornamento");
+      }
+    } catch (e) {
+      toast.error("Errore di rete");
+    }
+  };
+
+  const handleDeleteAppointment = async () => {
+    if (!deleteModalApptId) return;
+    try {
+      const res = await fetch(`/api/tl/appointments/${deleteModalApptId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "CANCELLED", contactAction: deleteAction, blockDays })
+      });
+      if (res.ok) {
+        toast.success("Appuntamento eliminato e spostato nel cestino!");
+        setDeleteModalApptId(null);
+        fetchData();
+      } else {
+        toast.error("Errore durante l'eliminazione");
       }
     } catch (e) {
       toast.error("Errore di rete");
@@ -79,7 +102,10 @@ export default function OutcomesClient() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  const cestino = data.filter(a => a.status === "CANCELLED");
+
   const daSvolgere = data.filter(a => {
+    if (a.status === "CANCELLED") return false;
     if (a.status === "DONE" || (a.outcomes && a.outcomes.length > 0)) return false;
     const date = new Date(a.date);
     date.setHours(0,0,0,0);
@@ -87,17 +113,19 @@ export default function OutcomesClient() {
   });
 
   const futuri = data.filter(a => {
+    if (a.status === "CANCELLED") return false;
     if (a.status === "DONE" || (a.outcomes && a.outcomes.length > 0)) return false;
     const date = new Date(a.date);
     date.setHours(0,0,0,0);
     return date >= today;
   });
 
-  const svolti = data.filter(a => a.status === "DONE" || (a.outcomes && a.outcomes.length > 0));
+  const svolti = data.filter(a => (a.status === "DONE" || (a.outcomes && a.outcomes.length > 0)) && a.status !== "CANCELLED");
 
   const getDisplayedData = () => {
     if (activeTab === "DA_SVOLGERE") return daSvolgere;
     if (activeTab === "FUTURI") return futuri;
+    if (activeTab === "CESTINO") return cestino;
     return svolti;
   };
 
@@ -139,6 +167,14 @@ export default function OutcomesClient() {
           >
             <span className="font-bold text-lg mb-1">In Agenda</span>
             <span className="text-xs opacity-80">Futuri / Oggi ({futuri.length})</span>
+          </button>
+
+          <button 
+            onClick={() => setActiveTab("CESTINO")}
+            className={`w-full text-left px-4 py-4 rounded-xl border transition flex flex-col ${activeTab === "CESTINO" ? 'bg-red-600/20 border-red-500 text-red-400' : 'bg-gray-900 border-gray-800 text-gray-400 hover:bg-gray-800'}`}
+          >
+            <span className="font-bold text-lg mb-1">Cestino</span>
+            <span className="text-xs opacity-80">Eliminati ({cestino.length})</span>
           </button>
           
           <div className="mt-4 pt-4 border-t border-gray-800">
@@ -305,6 +341,51 @@ export default function OutcomesClient() {
       {detailModalContactId && (
         <ContactDetailModal contactId={detailModalContactId} onClose={() => setDetailModalContactId(null)} />
       )}
+      {deleteModalApptId && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-red-500/30 rounded-xl w-full max-w-md shadow-2xl p-6">
+            <h3 className="text-xl font-bold text-red-400 mb-4 flex items-center">
+              <Trash2 className="w-6 h-6 mr-2" /> Elimina Appuntamento
+            </h3>
+            <p className="text-gray-300 text-sm mb-4">
+              Come gestiamo il contatto associato a questo appuntamento?
+            </p>
+            
+            <div className="space-y-3 mb-6">
+              <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition ${deleteAction === 'RESTORE' ? 'bg-indigo-900/20 border-indigo-500' : 'bg-gray-800 border-gray-700 hover:bg-gray-700'}`}>
+                <input type="radio" checked={deleteAction === 'RESTORE'} onChange={() => setDeleteAction('RESTORE')} className="mt-1" />
+                <div>
+                  <div className="font-bold text-white">Ripristina nel Calderone</div>
+                  <div className="text-xs text-gray-400">Torna immediatamente disponibile per essere richiamato.</div>
+                </div>
+              </label>
+
+              <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition ${deleteAction === 'BLOCK' ? 'bg-orange-900/20 border-orange-500' : 'bg-gray-800 border-gray-700 hover:bg-gray-700'}`}>
+                <input type="radio" checked={deleteAction === 'BLOCK'} onChange={() => setDeleteAction('BLOCK')} className="mt-1" />
+                <div className="w-full">
+                  <div className="font-bold text-white">Blocca Temporaneamente</div>
+                  <div className="text-xs text-gray-400 mb-2">Nascondi dal calderone per un po' di tempo.</div>
+                  {deleteAction === 'BLOCK' && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-sm text-gray-400">Blocca per</span>
+                      <input type="number" min="1" value={blockDays} onChange={(e) => setBlockDays(parseInt(e.target.value)||1)} className="w-16 bg-gray-950 border border-gray-700 rounded px-2 py-1 text-center text-white" />
+                      <span className="text-sm text-gray-400">giorni</span>
+                    </div>
+                  )}
+                </div>
+              </label>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setDeleteModalApptId(null)} className="px-4 py-2 text-gray-400 hover:text-white">Annulla</button>
+              <button onClick={handleDeleteAppointment} className="px-5 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg transition shadow-lg shadow-red-900/50">
+                Conferma Eliminazione
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {editModalAppt && (
         <EditAppointmentModal appt={editModalAppt} onClose={() => setEditModalAppt(null)} onSaved={() => { setEditModalAppt(null); fetchData(); }} />
       )}

@@ -20,7 +20,8 @@ export async function GET() {
         name: true,
         lastActivityAt: true,
         maxIdleTimeMins: true,
-        skipCount: true,
+        maxSkip: true,
+        maxSkipMins: true,
         assignedContacts: {
           where: { isKo: false },
           select: { id: true, name: true, cap: true, assignedToId: true }
@@ -178,6 +179,14 @@ export async function GET() {
       
       minutesOn = Math.max(0, minutesOn + timeAdjustment);
 
+      const timeWindowStartSkip = new Date(nowMs - (op.maxSkipMins || 60) * 60 * 1000);
+      let recentSkips = 0;
+      for (const log of op.activityLogs) {
+        if (log.action === "OUTCOME_SKIP" && new Date(log.createdAt).getTime() >= timeWindowStartSkip.getTime()) {
+          recentSkips++;
+        }
+      }
+
       return {
         id: op.id,
         name: op.name,
@@ -185,7 +194,8 @@ export async function GET() {
         maxIdleTimeMins: op.maxIdleTimeMins,
         isIdle,
         isDisconnected,
-        skipCount: op.skipCount,
+        recentSkips,
+        maxSkip: op.maxSkip || 5,
         currentContact: op.assignedContacts.length > 0 ? op.assignedContacts[0] : null,
         stats: { skip, noAnswer, notAvailable, nonInteressato, noInfo, trashRequest, reviewRequest, negotiation, appt, enrichment, logins, minutesOn }
       };
