@@ -19,7 +19,7 @@ export default function OutcomeModal({ appointmentId, onClose, onSuccess }: Outc
   const [saltatoAction, setSaltatoAction] = useState<"DA_RIFISSARE" | "KO_RICHIESTO" | "">("");
   
   // If Svolto
-  const [outcomeFinal, setOutcomeFinal] = useState<"VENDUTO" | "NON_VENDUTO" | "RIPENSARCI" | "FOLLOWUP" | "KO" | "">("");
+  const [outcomeFinal, setOutcomeFinal] = useState<"VENDUTO" | "NON_VENDUTO" | "RIPENSARCI" | "STANDBY" | "FOLLOWUP" | "KO" | "">("");
   
   // Preventivo (Svolto)
   const [quoteOption, setQuoteOption] = useState<"NONE" | "ATTACH" | "REQUEST_TL">("NONE");
@@ -29,7 +29,7 @@ export default function OutcomeModal({ appointmentId, onClose, onSuccess }: Outc
 
   // Azione Successiva (Svolto)
   const [nextActionType, setNextActionType] = useState<"RICHIAMO" | "FISSA_NUOVO_APP" | "">("");
-  const [nextActionTarget, setNextActionTarget] = useState<"COMMERCIALE" | "OPERATORE" | "">("");
+  const [nextActionTarget, setNextActionTarget] = useState<"COMMERCIALE" | "OPERATORE" | "TEAM_LEADER" | "">("");
   const [nextActionDate, setNextActionDate] = useState("");
   const [nextActionTime, setNextActionTime] = useState("");
   

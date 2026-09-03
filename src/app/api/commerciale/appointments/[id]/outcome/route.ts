@@ -146,6 +146,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           where: { id: appointment.contactId },
           data: { assignedToId: appointment.operatorId, hiddenUntil: new Date(nextActionDate) }
         });
+      } else if (nextActionType === "RICHIAMO" && nextActionTarget === "TEAM_LEADER") {
+        await tx.contact.update({
+          where: { id: appointment.contactId },
+          data: {
+            assignedToId: null,
+            hiddenUntil: null,
+            reviewRequestedAt: new Date(),
+            reviewNote: `Richiamo richiesto dal Commerciale. Data: ${nextActionDate ? new Date(nextActionDate).toLocaleDateString() : 'N/D'}. Note: ${notes}`
+          }
+        });
       } else if (nextActionType === "RICHIAMO" && nextActionTarget === "COMMERCIALE") {
         await tx.contact.update({
           where: { id: appointment.contactId },

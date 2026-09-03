@@ -328,6 +328,7 @@ enum SkipReason {
 enum NextActionTarget {
   COMMERCIALE
   OPERATORE
+  TEAM_LEADER
 }
 
 enum NextActionType {
@@ -339,6 +340,7 @@ enum OutcomeFinal {
   VENDUTO
   NON_VENDUTO
   RIPENSARCI
+  STANDBY
   FOLLOWUP
   KO
 }

@@ -1,4 +1,8 @@
-"use client";
+﻿# -*- coding: utf-8 -*-
+import sys
+
+path = 'src/app/commercial-app/CommercialeAgendaClient.tsx'
+content = """"use client";
 
 import { useState, useEffect } from "react";
 import { Clock, MapPin, Phone, User, FileText, CheckCircle, AlertTriangle, Printer, PhoneCall, RefreshCw, Handshake, XCircle, PauseCircle, PhoneForwarded } from "lucide-react";
@@ -326,3 +330,7 @@ function TabButton({ id, label, count, active, setActive, color }: { id: TabType
     </button>
   );
 }
+"""
+
+with open(path, 'w', encoding='utf-8') as f:
+    f.write(content)
