@@ -289,20 +289,26 @@ export default function OutcomeModal({ appointmentId, onClose, onSuccess }: Outc
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Esito Finale Visita *</label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {["VENDUTO", "NON_VENDUTO", "RIPENSARCI", "FOLLOWUP", "KO"].map(out => (
-                      <button
-                        key={out}
-                        type="button"
-                        onClick={() => setOutcomeFinal(out as any)}
-                        className={`p-2 rounded border text-sm font-bold transition-all ${
-                          outcomeFinal === out 
-                            ? (out === "VENDUTO" ? 'bg-emerald-900/50 border-emerald-500 text-emerald-400' : out === "KO" ? 'bg-red-900/50 border-red-500 text-red-400' : 'bg-blue-900/50 border-blue-500 text-blue-400')
-                            : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-500'
-                        }`}
-                      >
-                        {out.replace("_", " ")}
-                      </button>
-                    ))}
+                    {[
+                        { val: "VENDUTO", label: "VENDUTO" },
+                        { val: "NON_VENDUTO", label: "NON VENDUTO" },
+                        { val: "STANDBY", label: "STANDBY" },
+                        { val: "FOLLOWUP", label: "TRATTATIVA IN CORSO" },
+                        { val: "KO", label: "KO" }
+                      ].map(out => (
+                        <button
+                          key={out.val}
+                          type="button"
+                          onClick={() => setOutcomeFinal(out.val as any)}
+                          className={`p-2 rounded border text-sm font-bold transition-all ${
+                            outcomeFinal === out.val 
+                              ? (out.val === "VENDUTO" ? 'bg-emerald-900/50 border-emerald-500 text-emerald-400' : out.val === "KO" ? 'bg-red-900/50 border-red-500 text-red-400' : 'bg-blue-900/50 border-blue-500 text-blue-400')
+                              : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-500'
+                          }`}
+                        >
+                          {out.label}
+                        </button>
+                      ))}
                   </div>
                 </div>
 
