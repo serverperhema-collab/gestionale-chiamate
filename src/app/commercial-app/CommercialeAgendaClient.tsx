@@ -346,6 +346,7 @@ export default function CommercialeAgendaClient() {
           cap={fixApptContactInfo.cap}
           initialReferentName={fixApptContactInfo.referentName}
           initialPhone={fixApptContactInfo.phone}
+          isSecondAppt={true}
           onClose={() => setFixApptContactInfo(null)}
           onSuccess={() => { setFixApptContactInfo(null); fetchAppointments(); }}
         />

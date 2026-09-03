@@ -56,7 +56,7 @@ export default function OutcomeModal({ appointmentId, onClose, onSuccess }: Outc
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSvolto === null) { toast.error("Seleziona se svolto."); return; }
-    if (!notes.trim()) { toast.error("Le note sono obbligatorie."); return; }
+    if (!notes.trim() && outcomeFinal !== "VENDUTO") { toast.error("Le note sono obbligatorie."); return; }
 
     const payload: Record<string, unknown> = { notes };
 
@@ -256,8 +256,10 @@ export default function OutcomeModal({ appointmentId, onClose, onSuccess }: Outc
 
             {isSvolto !== null && (
               <div className="border-t border-gray-700 pt-6">
-                <label className="block text-sm font-bold text-gray-300 mb-2">Resoconto / Note (obbligatorie) *</label>
-                <textarea required value={notes} onChange={e => setNotes(e.target.value)}
+                <label className="block text-sm font-bold text-gray-300 mb-2">
+                  {outcomeFinal === "VENDUTO" ? "Note (opzionali)" : "Resoconto / Note (obbligatorie) *"}
+                </label>
+                <textarea required={outcomeFinal !== "VENDUTO"} value={notes} onChange={e => setNotes(e.target.value)}
                   className="w-full h-28 bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 resize-none"
                   placeholder={isSvolto ? "Riassumi cosa vi siete detti..." : "Dettaglia il motivo per cui e saltato..."} />
               </div>

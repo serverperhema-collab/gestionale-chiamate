@@ -10,6 +10,7 @@ interface AppointmentModalProps {
   initialReferentName?: string;
   initialPhone?: string;
   initialEmail?: string;
+  isSecondAppt?: boolean;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -20,6 +21,7 @@ export default function AppointmentModal({
   initialReferentName = "",
   initialPhone = "",
   initialEmail = "",
+  isSecondAppt = false,
   onClose, 
   onSuccess 
 }: AppointmentModalProps) {

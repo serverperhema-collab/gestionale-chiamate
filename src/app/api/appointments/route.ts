@@ -24,7 +24,8 @@ export async function POST(req: Request) {
       phone, 
       email, 
       clientNeeds,
-      zoneAgendaId
+      zoneAgendaId,
+      isSecondAppt
     } = body;
 
     if (!contactId || !date || !referentName || !referentRole || !phone || !clientNeeds) {
@@ -32,7 +33,16 @@ export async function POST(req: Request) {
     }
 
     // 1. Controlla se il contatto esiste ed è disponibile
-    const contact = await prisma.contact.findUnique({ where: { id: contactId }, include: { assignedTo: true } });
+    const contact = await prisma.contact.findUnique({ 
+      where: { id: contactId }, 
+      include: { 
+        assignedTo: true,
+        appointments: {
+          orderBy: { createdAt: 'asc' },
+          take: 1
+        }
+      } 
+    });
     if (!contact) {
       return NextResponse.json({ error: "Contatto non trovato" }, { status: 404 });
     }
@@ -68,7 +78,7 @@ export async function POST(req: Request) {
       const appt = await tx.appointment.create({
         data: {
           contactId,
-          operatorId: role === "OPERATORE" ? userId : undefined,
+          operatorId: role === "OPERATORE" ? userId : (contact.appointments[0]?.operatorId || userId),
           commercialeId: role === "COMMERCIALE" ? userId : assignedCommercialeId,
           zoneAgendaId, // ID esplicito dell'agenda
           date: new Date(date),
@@ -78,7 +88,8 @@ export async function POST(req: Request) {
           referentRole,
           phone,
           email,
-          clientNeeds
+          clientNeeds,
+          isSecondAppt: isSecondAppt || false
         }
       });
 
