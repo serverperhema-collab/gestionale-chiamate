@@ -19,7 +19,7 @@ export default function OutcomeModal({ appointmentId, onClose, onSuccess }: Outc
   const [saltatoAction, setSaltatoAction] = useState<"DA_RIFISSARE" | "KO_RICHIESTO" | "">("");
   
   // If Svolto
-  const [outcomeFinal, setOutcomeFinal] = useState<"VENDUTO" | "NON_VENDUTO" | "RIPENSARCI" | "STANDBY" | "FOLLOWUP" | "KO" | "">("");
+  const [outcomeFinal, setOutcomeFinal] = useState<"VENDUTO" | "NON_VENDUTO" | "RIPENSARCI" | "STANDBY" | "FOLLOWUP" | "TRATTATIVA_IN_CORSO" | "KO" | "">("");
   
   // Preventivo (Svolto)
   const [quoteOption, setQuoteOption] = useState<"NONE" | "ATTACH" | "REQUEST_TL">("NONE");
@@ -290,11 +290,10 @@ export default function OutcomeModal({ appointmentId, onClose, onSuccess }: Outc
                   <label className="block text-sm font-medium text-gray-300 mb-2">Esito Finale Visita *</label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {[
-                        { val: "VENDUTO", label: "VENDUTO" },
-                        { val: "NON_VENDUTO", label: "NON VENDUTO" },
+                        { val: "TRATTATIVA_IN_CORSO", label: "TRATTATIVA IN CORSO" },
+                        { val: "KO", label: "KO" },
                         { val: "STANDBY", label: "STANDBY" },
-                        { val: "FOLLOWUP", label: "TRATTATIVA IN CORSO" },
-                        { val: "KO", label: "KO" }
+                        { val: "VENDUTO", label: "CONTRATTO FIRMATO" }
                       ].map(out => (
                         <button
                           key={out.val}

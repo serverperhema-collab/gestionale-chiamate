@@ -1,25 +1,24 @@
 ﻿# -*- coding: utf-8 -*-
 import sys
+import re
 
 path = 'src/app/api/commerciale/appointments/[id]/outcome/route.ts'
 with open(path, 'r', encoding='utf-8') as f:
     code = f.read()
 
-target = """      } else if (nextActionType === "RICHIAMO" && nextActionTarget === "COMMERCIALE") {"""
+target = r'''        \} else if \(quoteRequested \|\| quoteAttached\) \{
+          nextStatus = "PREVENTIVO_IN_CORSO";
+        \} else if \(nextActionType\) \{
+          nextStatus = "FOLLOW_UP";
+        \} else \{'''
 
-replacement = """      } else if (nextActionType === "RICHIAMO" && nextActionTarget === "TEAM_LEADER") {
-        await tx.contact.update({
-          where: { id: appointment.contactId },
-          data: {
-            assignedToId: null,
-            hiddenUntil: null,
-            reviewRequestedAt: new Date(),
-            reviewNote: `Richiamo richiesto dal Commerciale. Data: ${nextActionDate ? new Date(nextActionDate).toLocaleDateString() : 'N/D'}. Note: ${notes}`
-          }
-        });
-      } else if (nextActionType === "RICHIAMO" && nextActionTarget === "COMMERCIALE") {"""
+replacement = '''        } else if (quoteRequested || quoteAttached) {
+          nextStatus = "PREVENTIVO_IN_CORSO";
+        } else if (nextActionType || outcomeFinal === "TRATTATIVA_IN_CORSO" || outcomeFinal === "FOLLOWUP") {
+          nextStatus = "FOLLOW_UP";
+        } else {'''
 
-code = code.replace(target, replacement)
+code = re.sub(target, replacement, code)
 
 with open(path, 'w', encoding='utf-8') as f:
     f.write(code)

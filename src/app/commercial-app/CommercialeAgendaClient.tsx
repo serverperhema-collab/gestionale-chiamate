@@ -15,7 +15,8 @@ type TabType =
   | "RICHIAMI_TL"
   | "TRATTATIVE_CORSO"
   | "TRATTATIVE_KO"
-  | "STANDBY";
+  | "STANDBY"
+  | "CONTRATTI_FIRMATI";
 
 export default function CommercialeAgendaClient() {
   const [appointments, setAppointments] = useState<any[]>([]);
@@ -110,6 +111,12 @@ export default function CommercialeAgendaClient() {
     return o && o.outcomeFinal === "STANDBY";
   });
 
+  // 10. Contratti Firmati
+  const contrattiFirmati = appointments.filter(a => {
+    const o = getLatestOutcome(a);
+    return o && o.outcomeFinal === "VENDUTO"; // Mappato internamente su VENDUTO
+  });
+
 
   const getDisplayedAppts = () => {
     switch (activeTab) {
@@ -122,6 +129,7 @@ export default function CommercialeAgendaClient() {
       case "TRATTATIVE_CORSO": return trattativeCorso;
       case "TRATTATIVE_KO": return trattativeKO;
       case "STANDBY": return standby;
+      case "CONTRATTI_FIRMATI": return contrattiFirmati;
       default: return [];
     }
   };
@@ -154,6 +162,11 @@ export default function CommercialeAgendaClient() {
           <TabButton id="TRATTATIVE_CORSO" label="In Corso (FollowUp)" count={trattativeCorso.length} active={activeTab} setActive={setActiveTab} color="bg-cyan-600/20 text-cyan-400 border-cyan-500/50" />
           <TabButton id="STANDBY" label="In Standby" count={standby.length} active={activeTab} setActive={setActiveTab} color="bg-orange-600/20 text-orange-400 border-orange-500/50" />
           <TabButton id="TRATTATIVE_KO" label="Trattative KO" count={trattativeKO.length} active={activeTab} setActive={setActiveTab} color="bg-red-600/20 text-red-400 border-red-500/50" />
+        </div>
+
+        <div className="space-y-1 mt-4">
+          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block px-2">Contratti</span>
+          <TabButton id="CONTRATTI_FIRMATI" label="Contratti Firmati" count={contrattiFirmati.length} active={activeTab} setActive={setActiveTab} color="bg-emerald-600/20 text-emerald-400 border-emerald-500/50" />
         </div>
       </div>
 

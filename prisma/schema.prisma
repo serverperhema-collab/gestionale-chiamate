@@ -342,6 +342,7 @@ enum OutcomeFinal {
   RIPENSARCI
   STANDBY
   FOLLOWUP
+  TRATTATIVA_IN_CORSO
   KO
 }
 

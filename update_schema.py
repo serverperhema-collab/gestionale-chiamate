@@ -1,19 +1,23 @@
+﻿# -*- coding: utf-8 -*-
 import sys
+import re
 
 path = 'prisma/schema.prisma'
 with open(path, 'r', encoding='utf-8') as f:
     code = f.read()
 
-target = """  maxGestioneSeparata Int @default(5)
-  maxGestioneSeparataMins Int @default(60)"""
+target = r'enum OutcomeFinal \{\n  VENDUTO\n  NON_VENDUTO\n  RIPENSARCI\n  STANDBY\n  FOLLOWUP\n  KO\n\}'
+replacement = '''enum OutcomeFinal {
+  VENDUTO
+  NON_VENDUTO
+  RIPENSARCI
+  STANDBY
+  FOLLOWUP
+  TRATTATIVA_IN_CORSO
+  KO
+}'''
 
-replacement = """  maxGestioneSeparata Int @default(5)
-  maxGestioneSeparataMins Int @default(60)
-  
-  // Operatore Fidato
-  isTrusted Boolean @default(false)"""
-
-code = code.replace(target, replacement)
+new_code = re.sub(target, replacement, code)
 
 with open(path, 'w', encoding='utf-8') as f:
-    f.write(code)
+    f.write(new_code)

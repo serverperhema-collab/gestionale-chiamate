@@ -6,32 +6,13 @@ path = 'src/components/OutcomeModal.tsx'
 with open(path, 'r', encoding='utf-8') as f:
     code = f.read()
 
-target = r'\{\["VENDUTO", "NON_VENDUTO", "RIPENSARCI", "FOLLOWUP", "KO"\].map\(out => \(.*?</button>\s*\)\)\}'
-replacement = '''{[
-                        { val: "VENDUTO", label: "VENDUTO" },
-                        { val: "NON_VENDUTO", label: "NON VENDUTO" },
-                        { val: "STANDBY", label: "STANDBY" },
-                        { val: "FOLLOWUP", label: "TRATTATIVA IN CORSO" },
-                        { val: "KO", label: "KO" }
-                      ].map(out => (
-                        <button
-                          key={out.val}
-                          type="button"
-                          onClick={() => setOutcomeFinal(out.val as any)}
-                          className={`p-2 rounded border text-sm font-bold transition-all ${
-                            outcomeFinal === out.val 
-                              ? (out.val === "VENDUTO" ? 'bg-emerald-900/50 border-emerald-500 text-emerald-400' : out.val === "KO" ? 'bg-red-900/50 border-red-500 text-red-400' : 'bg-blue-900/50 border-blue-500 text-blue-400')
-                              : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-500'
-                          }`}
-                        >
-                          {out.label}
-                        </button>
-                      ))}'''
+target1 = r'const \[outcomeFinal, setOutcomeFinal\] = useState<"VENDUTO" \| "NON_VENDUTO" \| "RIPENSARCI" \| "STANDBY" \| "FOLLOWUP" \| "KO" \| "">\(""\);'
+replacement1 = '''const [outcomeFinal, setOutcomeFinal] = useState<"VENDUTO" | "NON_VENDUTO" | "RIPENSARCI" | "STANDBY" | "FOLLOWUP" | "TRATTATIVA_IN_CORSO" | "KO" | "">("");'''
+code = re.sub(target1, replacement1, code)
 
-new_code = re.sub(target, replacement, code, flags=re.DOTALL)
-if new_code == code:
-    print("FAILED")
-else:
-    print("SUCCESS")
-    with open(path, 'w', encoding='utf-8') as f:
-        f.write(new_code)
+target2 = r'\{ val: "FOLLOWUP", label: "TRATTATIVA IN CORSO" \},'
+replacement2 = '''{ val: "TRATTATIVA_IN_CORSO", label: "TRATTATIVA IN CORSO" },'''
+code = re.sub(target2, replacement2, code)
+
+with open(path, 'w', encoding='utf-8') as f:
+    f.write(code)
