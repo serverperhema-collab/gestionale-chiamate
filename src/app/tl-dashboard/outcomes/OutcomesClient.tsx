@@ -5,6 +5,7 @@ import { Search, Filter, Phone, MapPin, RefreshCw, FileText, Calendar, CheckCirc
 import QuotesClient from "../quotes/QuotesClient";
 import ContactDetailModal from "@/components/ContactDetailModal";
 import EditAppointmentModal from "@/components/EditAppointmentModal";
+import OutcomeModal from "@/components/OutcomeModal";
 import { Edit2 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -14,6 +15,7 @@ export default function OutcomesClient() {
   const [activeTab, setActiveTab] = useState<"DA_SVOLGERE" | "SVOLTI" | "FUTURI" | "CESTINO" | "QUOTES_REQUESTS" | "QUOTES_RECEIVED">("SVOLTI");
   const [deleteModalApptId, setDeleteModalApptId] = useState<string | null>(null);
   const [deleteAction, setDeleteAction] = useState<"RESTORE" | "BLOCK">("RESTORE");
+  const [outcomeModalApptId, setOutcomeModalApptId] = useState<string | null>(null);
   const [blockDays, setBlockDays] = useState(30);
   const [commerciali, setCommerciali] = useState<any[]>([]);
   const [selectedCommerciale, setSelectedCommerciale] = useState("");
@@ -384,6 +386,17 @@ export default function OutcomesClient() {
             </div>
           </div>
         </div>
+      )}
+
+      {outcomeModalApptId && (
+        <OutcomeModal
+          appointmentId={outcomeModalApptId}
+          onClose={() => setOutcomeModalApptId(null)}
+          onSuccess={() => {
+            setOutcomeModalApptId(null);
+            fetchData();
+          }}
+        />
       )}
 
       {editModalAppt && (

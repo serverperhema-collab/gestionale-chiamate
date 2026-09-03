@@ -9,11 +9,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   try {
     const id = (await params).id;
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "COMMERCIALE") {
+    const user = session?.user as any;
+    if (!user || (user.role !== "COMMERCIALE" && user.role !== "TEAM_LEADER")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const commercialeId = (session.user as any).id;
+    const userId = user.id;
+    const isTL = user.role === "TEAM_LEADER";
     const body = await req.json();
     const { 
       notes, 
@@ -34,9 +36,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (!appointment) {
       return NextResponse.json({ error: "Appuntamento non trovato" }, { status: 404 });
     }
-    if (appointment.commercialeId !== commercialeId) {
+    if (!isTL && appointment.commercialeId !== userId) {
       return NextResponse.json({ error: "Non sei autorizzato a modificare questo appuntamento" }, { status: 403 });
     }
+    const targetCommercialeId = appointment.commercialeId || userId;
 
     // Determine target CommercialStatus
     let nextStatus: CommercialStatus;
@@ -100,12 +103,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         await tx.quoteRequest.upsert({
           where: { appointmentId: id },
           update: {
-            commercialeId,
+            commercialeId: targetCommercialeId,
             notes: quoteNotes
           },
           create: {
             appointmentId: id,
-            commercialeId,
+            commercialeId: targetCommercialeId,
             notes: quoteNotes
           }
         });
@@ -155,7 +158,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           data: {
             contactId: appointment.contactId,
             operatorId: appointment.operatorId,
-            commercialeId: commercialeId,
+            commercialeId: targetCommercialeId,
             date: new Date(nextActionDate),
             status: "DA_GESTIRE_COMMERCIALE",
             commercialStatus: "ASSEGNATO",
@@ -171,10 +174,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       // Log
       await tx.activityLog.create({
         data: {
-          userId: commercialeId,
+          userId: userId,
           contactId: appointment.contactId,
-          action: "COMMERCIALE_OUTCOME_SAVED",
-          details: `Esito registrato. Nuovo stato: ${nextStatus}`
+          action: isTL ? "TL_MODIFIED_OUTCOME" : "COMMERCIALE_OUTCOME_SAVED",
+          details: isTL ? `Il TL ha registrato/modificato l'esito. Nuovo stato: ${nextStatus}` : `Esito registrato dal commerciale. Nuovo stato: ${nextStatus}`
         }
       });
     });
