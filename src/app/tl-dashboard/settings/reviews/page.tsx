@@ -60,6 +60,31 @@ export default function ReviewsPage() {
     }
   };
 
+  const [rescheduleData, setRescheduleData] = useState<{id: string, date: string, time: string} | null>(null);
+
+  const handleDerogaAction = async (id: string, action: "DEROGA_ACCEPT" | "DEROGA_REJECT" | "DEROGA_RESCHEDULE", newDate?: string) => {
+    setProcessingId(id);
+    try {
+      const res = await fetch("/api/tl/reviews", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, action, newDate })
+      });
+      if (res.ok) {
+        toast.success(action === "DEROGA_ACCEPT" ? "Approvato!" : action === "DEROGA_REJECT" ? "Rifiutato!" : "Spostato e approvato!");
+        setReviews(reviews.filter(r => r.id !== id));
+        if (action === "DEROGA_RESCHEDULE") setRescheduleData(null);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Errore");
+      }
+    } catch (e) {
+      toast.error("Errore di rete");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   const handleAction = async (id: string, action: "RESTORE" | "BLACKLIST") => {
     setProcessingId(id);
     try {

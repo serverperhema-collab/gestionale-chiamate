@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Clock, MapPin, Phone, User, FileText, CheckCircle, AlertTriangle, Printer, PhoneCall, RefreshCw, Handshake, XCircle, PauseCircle, PhoneForwarded } from "lucide-react";
 import toast from "react-hot-toast";
 import OutcomeModal from "@/components/OutcomeModal";
+import AppointmentModal from "@/components/AppointmentModal";
 import { exportAgendaToPDF } from "@/lib/exportUtils";
 
 type TabType = 
@@ -22,6 +23,7 @@ export default function CommercialeAgendaClient() {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedApptId, setSelectedApptId] = useState<string | null>(null);
+  const [fixApptContactInfo, setFixApptContactInfo] = useState<{contactId: string, cap: string, referentName?: string, phone?: string} | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("DA_SVOLGERE");
 
   const fetchAppointments = async () => {

@@ -25,6 +25,21 @@ export async function GET(req: Request) {
       }
     });
 
+    const deroghe = await prisma.appointment.findMany({
+      where: {
+        isDeroga: true,
+        isApproved: false,
+        status: "PENDING"
+      },
+      include: {
+        contact: {
+          select: { name: true, cap: true, originalPhone: true, address: true }
+        },
+        commerciale: { select: { name: true } },
+        operator: { select: { name: true } }
+      }
+    });
+
     const gestioneSeparata = await prisma.gestioneSeparataRequest.findMany({
       where: {
         isResolved: false
@@ -38,6 +53,18 @@ export async function GET(req: Request) {
 
     const combined = [
       ...standardReviews.map(r => ({ ...r, type: 'REVIEW', date: r.reviewRequestedAt })),
+      ...deroghe.map(d => ({
+        id: d.id,
+        contactId: d.contactId,
+        name: d.contact?.name || "Sconosciuto",
+        cap: d.contact?.cap,
+        originalPhone: d.contact?.originalPhone,
+        address: d.contact?.address,
+        reviewRequestedAt: d.createdAt,
+        reviewNote: `Richiesta appuntamento in deroga il ${new Date(d.date).toLocaleString('it-IT')} da ${d.commerciale?.name || d.operator?.name || 'Utente'}. Data/Ora appuntamento: ${new Date(d.date).toLocaleString('it-IT')}. Note: ${d.clientNeeds}`,
+        type: 'DEROGA',
+        date: d.createdAt
+      })),
       ...gestioneSeparata.map(g => ({
         id: g.id,
         contactId: g.contactId,
@@ -68,14 +95,18 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const { id, action } = await req.json(); // action can be "RESTORE" or "BLACKLIST"
+    const body = await req.json();
+    const { id, action, newDate } = body;
     if (!id || !action) {
       return NextResponse.json({ error: "Dati mancanti" }, { status: 400 });
     }
 
-    const contact = await prisma.contact.findUnique({ where: { id } });
-    if (!contact) {
-      return NextResponse.json({ error: "Contatto non trovato" }, { status: 404 });
+    let contact = null;
+    if (!action.startsWith("DEROGA_")) {
+      contact = await prisma.contact.findUnique({ where: { id } });
+      if (!contact) {
+        return NextResponse.json({ error: "Contatto non trovato" }, { status: 404 });
+      }
     }
 
     const tlId = (session.user as any).id;
@@ -100,6 +131,44 @@ export async function PATCH(req: Request) {
           }
         })
       ]);
+    } else if (action === "DEROGA_ACCEPT") {
+      await prisma.appointment.update({
+        where: { id },
+        data: { isApproved: true, status: "CONFIRMED" }
+      });
+      return NextResponse.json({ success: true });
+    } else if (action === "DEROGA_REJECT") {
+      const appt = await prisma.appointment.findUnique({ where: { id } });
+      if (appt) {
+        await prisma.$transaction(async (tx) => {
+          await tx.appointment.update({
+            where: { id },
+            data: { status: "CANCELLED" }
+          });
+          // Se commercialeId esiste (significa che è un Commerciale che si stava auto-fissando), lo rimandiamo in FOLLOW_UP
+          if (appt.commercialeId) {
+            await tx.contact.update({
+              where: { id: appt.contactId },
+              data: {
+                assignedToId: appt.commercialeId,
+                hiddenUntil: null
+              }
+            });
+          }
+        });
+      }
+      return NextResponse.json({ success: true });
+    } else if (action === "DEROGA_RESCHEDULE") {
+      if (!newDate) return NextResponse.json({ error: "newDate missing" }, { status: 400 });
+      await prisma.appointment.update({
+        where: { id },
+        data: { 
+          isApproved: true, 
+          status: "CONFIRMED",
+          date: new Date(newDate)
+        }
+      });
+      return NextResponse.json({ success: true });
     } else if (action === "BLACKLIST") {
       // Elimina definitivamente e sposta nel cestino permanente (blacklist)
       await prisma.$transaction([
@@ -110,7 +179,7 @@ export async function PATCH(req: Request) {
             reviewNote: null,
             isKo: true,
             blacklisted: true,
-            blacklistReason: contact.reviewNote || "Eliminato dopo revisione TL",
+            blacklistReason: contact?.reviewNote || "Eliminato dopo revisione TL",
             hiddenUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // Nascosto per 1 anno (e filtrato da blacklist)
           }
         }),
@@ -119,7 +188,7 @@ export async function PATCH(req: Request) {
             userId: tlId,
             contactId: id,
             action: "CONTACT_REVIEW_BLACKLISTED",
-            details: `Contatto inserito in Blacklist dopo revisione TL. Motivo: ${contact.reviewNote}`
+            details: `Contatto inserito in Blacklist dopo revisione TL. Motivo: ${contact?.reviewNote || "N/A"}`
           }
         })
       ]);

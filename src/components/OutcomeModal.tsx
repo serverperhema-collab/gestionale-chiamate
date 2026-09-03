@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 interface OutcomeModalProps {
   appointmentId: string;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (triggerFixAppt?: boolean, contactId?: string, cap?: string) => void;
 }
 
 export default function OutcomeModal({ appointmentId, onClose, onSuccess }: OutcomeModalProps) {
@@ -184,12 +184,10 @@ export default function OutcomeModal({ appointmentId, onClose, onSuccess }: Outc
         toast.success("Esito salvato con successo");
         
         if (payload.nextActionType === "FISSA_NUOVO_APP" && wantsToFixAppt) {
-          // Instruct parent to open fix appt modal, passing data
-          // For now, we will just rely on onSuccess and let the UI know if needed.
-          // Ideally, we'd trigger a callback `onFissaNuovo(appointmentId)`
+          onSuccess(true);
+        } else {
+          onSuccess();
         }
-        
-        onSuccess();
       } else {
         const data = await res.json();
         toast.error(data.error || "Errore durante il salvataggio");

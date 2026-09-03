@@ -7,12 +7,13 @@ import { eventEmitter } from "@/lib/eventEmitter";
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "OPERATORE") {
+    if (!session || !["OPERATORE", "COMMERCIALE", "TEAM_LEADER"].includes((session.user as any).role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const operatorId = (session.user as any).id;
-    const userName = (session.user as any).name || "Operatore";
+    const userId = (session.user as any).id;
+    const role = (session.user as any).role;
+    const userName = (session.user as any).name || "Utente";
     const body = await req.json();
     const { 
       contactId, 
@@ -36,12 +37,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Contatto non trovato" }, { status: 404 });
     }
 
-    if (isDeroga) {
-      const user = await prisma.user.findUnique({ where: { id: operatorId } });
+    if (isDeroga && role === "OPERATORE") {
+      const user = await prisma.user.findUnique({ where: { id: userId } });
       const hoursAgo = new Date(Date.now() - (user!.maxDerogheHours * 60 * 60 * 1000));
       const recentDerogheCount = await prisma.appointment.count({
         where: {
-          operatorId,
+          operatorId: userId,
           isDeroga: true,
           createdAt: { gte: hoursAgo }
         }
@@ -67,8 +68,8 @@ export async function POST(req: Request) {
       const appt = await tx.appointment.create({
         data: {
           contactId,
-          operatorId,
-          commercialeId: assignedCommercialeId,
+          operatorId: role === "OPERATORE" ? userId : undefined,
+          commercialeId: role === "COMMERCIALE" ? userId : assignedCommercialeId,
           zoneAgendaId, // ID esplicito dell'agenda
           date: new Date(date),
           isDeroga,
@@ -105,7 +106,7 @@ export async function POST(req: Request) {
       await tx.callLog.create({
         data: {
           contactId,
-          userId: operatorId,
+          userId: userId,
           outcome: "APPOINTMENT",
           notes: `Fissato appuntamento per il ${new Date(date).toLocaleString()} (Deroga: ${isDeroga})`
         }

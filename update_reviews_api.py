@@ -1,77 +1,51 @@
 ﻿# -*- coding: utf-8 -*-
 import sys
+import re
 
 path = 'src/app/api/tl/reviews/route.ts'
 with open(path, 'r', encoding='utf-8') as f:
     code = f.read()
 
-target = """    const reviews = await prisma.contact.findMany({
+target1 = '''    const gestioneSeparata = await prisma.gestioneSeparataRequest.findMany({'''
+replacement1 = '''    const deroghe = await prisma.appointment.findMany({
       where: {
-        reviewRequestedAt: { not: null }
-      },
-      select: {
-        id: true,
-        name: true,
-        cap: true,
-        originalPhone: true,
-        address: true,
-        reviewRequestedAt: true,
-        reviewNote: true
-      },
-      orderBy: {
-        reviewRequestedAt: "asc"
-      }
-    });
-
-    return NextResponse.json({ reviews });"""
-
-replacement = """    const standardReviews = await prisma.contact.findMany({
-      where: {
-        reviewRequestedAt: { not: null }
-      },
-      select: {
-        id: true,
-        name: true,
-        cap: true,
-        originalPhone: true,
-        address: true,
-        reviewRequestedAt: true,
-        reviewNote: true
-      }
-    });
-
-    const gestioneSeparata = await prisma.gestioneSeparataRequest.findMany({
-      where: {
-        isResolved: false
+        isDeroga: true,
+        isApproved: false,
+        status: "PENDING"
       },
       include: {
         contact: {
           select: { name: true, cap: true, originalPhone: true, address: true }
-        }
+        },
+        commerciale: { select: { name: true } },
+        operator: { select: { name: true } }
       }
     });
 
-    const combined = [
+    const gestioneSeparata = await prisma.gestioneSeparataRequest.findMany({'''
+code = code.replace(target1, replacement1)
+
+target2 = '''    const combined = [
       ...standardReviews.map(r => ({ ...r, type: 'REVIEW', date: r.reviewRequestedAt })),
-      ...gestioneSeparata.map(g => ({
-        id: g.id,
-        contactId: g.contactId,
-        name: g.contact?.name || "Sconosciuto",
-        cap: g.contact?.cap,
-        originalPhone: g.contact?.originalPhone,
-        address: g.contact?.address,
-        reviewRequestedAt: g.createdAt,
-        reviewNote: g.reason,
-        type: 'GESTIONE_SEPARATA',
-        date: g.createdAt
-      }))
-    ];
-
-    combined.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-    return NextResponse.json({ reviews: combined });"""
-
-code = code.replace(target, replacement)
+      ...gestioneSeparata.map(g => ({'''
+replacement2 = '''    const combined = [
+      ...standardReviews.map(r => ({ ...r, type: 'REVIEW', date: r.reviewRequestedAt })),
+      ...deroghe.map(d => ({
+        id: d.id,
+        contactId: d.contactId,
+        name: d.contact?.name || "Sconosciuto",
+        cap: d.contact?.cap,
+        originalPhone: d.contact?.originalPhone,
+        address: d.contact?.address,
+        reviewRequestedAt: d.createdAt,
+        reviewNote: `Richiesta appuntamento in deroga il ${new Date(d.date).toLocaleString('it-IT')} da ${d.commerciale?.name || d.operator?.name || 'Utente'}. Data/Ora appuntamento: ${new Date(d.date).toLocaleString('it-IT')}. Note: ${d.clientNeeds}`,
+        type: 'DEROGA',
+        date: d.createdAt
+      })),
+      ...gestioneSeparata.map(g => ({'''
+code = code.replace(target2, replacement2)
 
 with open(path, 'w', encoding='utf-8') as f:
     f.write(code)
+
+print("SUCCESS")

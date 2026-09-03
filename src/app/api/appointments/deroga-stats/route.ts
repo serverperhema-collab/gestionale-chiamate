@@ -6,8 +6,18 @@ import { authOptions } from "@/lib/authOptions";
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "OPERATORE") {
+    if (!session || !["OPERATORE", "COMMERCIALE", "TEAM_LEADER"].includes((session.user as any).role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    const role = (session.user as any).role;
+    if (role === "COMMERCIALE" || role === "TEAM_LEADER") {
+      return NextResponse.json({
+        maxDeroghe: 999,
+        maxDerogheHours: 24,
+        usedDeroghe: 0,
+        remainingDeroghe: 999
+      });
     }
 
     const operatorId = (session.user as any).id;
