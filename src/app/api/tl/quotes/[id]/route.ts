@@ -32,6 +32,17 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       data: dataToUpdate
     });
 
+    if (status === "COMPLETATO" && updated.commercialeId) {
+      await prisma.notification.create({
+        data: {
+          userId: updated.commercialeId,
+          title: "Preventivo Sviluppato",
+          message: `Il TL ha completato la tua richiesta di preventivo.`,
+          appointmentId: updated.appointmentId
+        }
+      });
+    }
+
     return NextResponse.json({ success: true, quoteRequest: updated });
   } catch (error) {
     console.error("PATCH quote error:", error);

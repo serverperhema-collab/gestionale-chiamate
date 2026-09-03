@@ -40,7 +40,7 @@ model User {
   maxNotAvailableMins     Int @default(30)
   maxGestioneSeparata     Int @default(5)
   maxGestioneSeparataMins Int @default(60)
-  
+
   // Operatore Fidato
   isTrusted Boolean @default(false)
 
@@ -92,9 +92,10 @@ model User {
   attendances       Attendance[]      @relation("AttendanceOperator")
   attendanceUpdates Attendance[]      @relation("AttendanceUpdatedBy")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  TlTask    TlTask[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  TlTask        TlTask[]
+  notifications Notification[]
 }
 
 model DailyAssignment {
@@ -665,4 +666,19 @@ model GestioneSeparataRequest {
 
   createdAt  DateTime  @default(now())
   resolvedAt DateTime?
+}
+
+model Notification {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  title   String
+  message String
+  isRead  Boolean @default(false)
+
+  contactId     String?
+  appointmentId String?
+
+  createdAt DateTime @default(now())
 }

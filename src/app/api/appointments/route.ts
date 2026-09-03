@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     }
 
     // 1. Controlla se il contatto esiste ed è disponibile
-    const contact = await prisma.contact.findUnique({ where: { id: contactId } });
+    const contact = await prisma.contact.findUnique({ where: { id: contactId }, include: { assignedTo: true } });
     if (!contact) {
       return NextResponse.json({ error: "Contatto non trovato" }, { status: 404 });
     }
@@ -111,6 +111,19 @@ export async function POST(req: Request) {
           notes: `Fissato appuntamento per il ${new Date(date).toLocaleString()} (Deroga: ${isDeroga})`
         }
       });
+
+      // Notifica il commerciale se il contatto era assegnato a lui
+      if (contact.assignedTo?.role === "COMMERCIALE" && role === "OPERATORE") {
+        await tx.notification.create({
+          data: {
+            userId: contact.assignedToId!,
+            title: "Richiamo Lavorato",
+            message: `L'operatore ${userName} ha fissato un appuntamento per il tuo richiamo "${contact.name}".`,
+            appointmentId: appt.id,
+            contactId: contact.id
+          }
+        });
+      }
 
       return appt;
     });

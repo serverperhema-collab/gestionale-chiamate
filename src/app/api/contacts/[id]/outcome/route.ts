@@ -57,10 +57,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }, { status: 403 });
     }
 
-    const contact = await prisma.contact.findUnique({ where: { id: id } });
+    const contact = await prisma.contact.findUnique({ where: { id: id }, include: { assignedTo: true } });
     if (!contact) return NextResponse.json({ error: "Contatto non trovato" }, { status: 404 });
 
     const transaction = [];
+    const role = (session.user as any).role;
+
+    if (contact.assignedTo?.role === "COMMERCIALE" && role === "OPERATORE") {
+      transaction.push(prisma.notification.create({
+        data: {
+          userId: contact.assignedToId!,
+          title: "Richiamo Lavorato (Esito)",
+          message: `L'operatore ${userName} ha lavorato il tuo richiamo "${contact.name}". Nuovo esito: ${outcome}.`,
+          contactId: contact.id
+        }
+      }));
+    }
     let willLock = false;
     let willLockNoAnswer = false;
 

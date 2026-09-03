@@ -132,10 +132,21 @@ export async function PATCH(req: Request) {
         })
       ]);
     } else if (action === "DEROGA_ACCEPT") {
-      await prisma.appointment.update({
+      const appt = await prisma.appointment.update({
         where: { id },
         data: { isApproved: true, status: "CONFIRMED" }
       });
+      if (appt.commercialeId) {
+        await prisma.notification.create({
+          data: {
+            userId: appt.commercialeId,
+            title: "Deroga Approvata",
+            message: `La tua richiesta di appuntamento fuori agenda per il ${new Date(appt.date).toLocaleString('it-IT')} è stata approvata.`,
+            appointmentId: appt.id,
+            contactId: appt.contactId
+          }
+        });
+      }
       return NextResponse.json({ success: true });
     } else if (action === "DEROGA_REJECT") {
       const appt = await prisma.appointment.findUnique({ where: { id } });
@@ -154,13 +165,21 @@ export async function PATCH(req: Request) {
                 hiddenUntil: null
               }
             });
+            await tx.notification.create({
+              data: {
+                userId: appt.commercialeId,
+                title: "Deroga Rifiutata",
+                message: `La tua richiesta di deroga è stata rifiutata dal TL. Il contatto è tornato nelle tue Trattative In Corso.`,
+                contactId: appt.contactId
+              }
+            });
           }
         });
       }
       return NextResponse.json({ success: true });
     } else if (action === "DEROGA_RESCHEDULE") {
       if (!newDate) return NextResponse.json({ error: "newDate missing" }, { status: 400 });
-      await prisma.appointment.update({
+      const appt = await prisma.appointment.update({
         where: { id },
         data: { 
           isApproved: true, 
@@ -168,6 +187,17 @@ export async function PATCH(req: Request) {
           date: new Date(newDate)
         }
       });
+      if (appt.commercialeId) {
+        await prisma.notification.create({
+          data: {
+            userId: appt.commercialeId,
+            title: "Deroga Spostata e Approvata",
+            message: `La tua deroga è stata spostata dal TL al ${new Date(newDate).toLocaleString('it-IT')} e confermata.`,
+            appointmentId: appt.id,
+            contactId: appt.contactId
+          }
+        });
+      }
       return NextResponse.json({ success: true });
     } else if (action === "BLACKLIST") {
       // Elimina definitivamente e sposta nel cestino permanente (blacklist)

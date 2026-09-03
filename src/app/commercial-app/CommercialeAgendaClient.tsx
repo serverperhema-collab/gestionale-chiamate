@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Clock, MapPin, Phone, User, FileText, CheckCircle, AlertTriangle, Printer, PhoneCall, RefreshCw, Handshake, XCircle, PauseCircle, PhoneForwarded } from "lucide-react";
+import { Clock, MapPin, Phone, User, FileText, CheckCircle, AlertTriangle, Printer, PhoneCall, RefreshCw, Handshake, XCircle, PauseCircle, PhoneForwarded, Bell } from "lucide-react";
 import toast from "react-hot-toast";
 import OutcomeModal from "@/components/OutcomeModal";
 import AppointmentModal from "@/components/AppointmentModal";
@@ -17,10 +17,11 @@ type TabType =
   | "TRATTATIVE_CORSO"
   | "TRATTATIVE_KO"
   | "STANDBY"
-  | "CONTRATTI_FIRMATI";
+  | "CONTRATTI_FIRMATI" | "NOTIFICHE";
 
 export default function CommercialeAgendaClient() {
   const [appointments, setAppointments] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedApptId, setSelectedApptId] = useState<string | null>(null);
   const [fixApptContactInfo, setFixApptContactInfo] = useState<{contactId: string, cap: string, referentName?: string, phone?: string} | null>(null);

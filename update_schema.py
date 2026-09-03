@@ -1,23 +1,40 @@
 ﻿# -*- coding: utf-8 -*-
 import sys
-import re
 
 path = 'prisma/schema.prisma'
 with open(path, 'r', encoding='utf-8') as f:
     code = f.read()
 
-target = r'enum OutcomeFinal \{\n  VENDUTO\n  NON_VENDUTO\n  RIPENSARCI\n  STANDBY\n  FOLLOWUP\n  KO\n\}'
-replacement = '''enum OutcomeFinal {
-  VENDUTO
-  NON_VENDUTO
-  RIPENSARCI
-  STANDBY
-  FOLLOWUP
-  TRATTATIVA_IN_CORSO
-  KO
-}'''
+model = """
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  
+  contactId     String?
+  appointmentId String?
+  
+  createdAt DateTime @default(now())
+}
+"""
 
-new_code = re.sub(target, replacement, code)
+if "model Notification" not in code:
+    code += model
+
+# Add to User model
+if "notifications Notification[]" not in code:
+    target_user = '''  attendances        Attendance[] @relation("AttendanceOperator")
+  attendanceUpdates  Attendance[] @relation("AttendanceUpdatedBy")'''
+    replacement_user = '''  attendances        Attendance[] @relation("AttendanceOperator")
+  attendanceUpdates  Attendance[] @relation("AttendanceUpdatedBy")
+  notifications      Notification[]'''
+    code = code.replace(target_user, replacement_user)
 
 with open(path, 'w', encoding='utf-8') as f:
-    f.write(new_code)
+    f.write(code)
+
+print("SUCCESS")
