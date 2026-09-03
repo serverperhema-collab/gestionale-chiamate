@@ -96,7 +96,7 @@ export async function PATCH(req: Request) {
     }
 
     const body = await req.json();
-    const { id, action, newDate } = body;
+    const { id, action, newDate, rejectReason } = body;
     if (!id || !action) {
       return NextResponse.json({ error: "Dati mancanti" }, { status: 400 });
     }

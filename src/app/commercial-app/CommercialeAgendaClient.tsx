@@ -278,6 +278,7 @@ export default function CommercialeAgendaClient() {
                       <div className="flex gap-2 mt-1">
                         {appt.isPhoneAppt && <span className="text-[10px] font-bold uppercase tracking-wider bg-purple-900/50 text-purple-300 px-2 py-0.5 rounded border border-purple-500/50 inline-flex items-center"><PhoneCall className="w-3 h-3 mr-1" /> Telefonico</span>}
                         {appt.isSecondAppt && <span className="text-[10px] font-bold uppercase tracking-wider bg-teal-900/50 text-teal-300 px-2 py-0.5 rounded border border-teal-500/50 inline-flex items-center"><RefreshCw className="w-3 h-3 mr-1" /> 2° App</span>}
+                        {appt.isDeroga && <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-900/50 text-amber-300 px-2 py-0.5 rounded border border-amber-500/50 inline-flex items-center">Deroga</span>}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
