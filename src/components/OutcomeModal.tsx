@@ -24,7 +24,7 @@ export default function OutcomeModal({ appointmentId, onClose, onSuccess }: Outc
   // Preventivo (Svolto)
   const [quoteOption, setQuoteOption] = useState<"NONE" | "ATTACH" | "REQUEST_TL">("NONE");
   const [quoteNotes, setQuoteNotes] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
 
   // Azione Successiva (Svolto)
@@ -43,30 +43,32 @@ export default function OutcomeModal({ appointmentId, onClose, onSuccess }: Outc
   const [wantsToFixAppt, setWantsToFixAppt] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+    if (e.target.files) {
+      setFiles(Array.from(e.target.files));
     }
   };
 
-  const uploadFile = async (): Promise<string | null> => {
-    if (!file) return null;
+  const uploadFiles = async (): Promise<string | null> => {
+    if (files.length === 0) return null;
     
     setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-
+    const urls: string[] = [];
     try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      if (res.ok) {
-        return data.url;
-      } else {
-        toast.error("Errore upload file");
-        return null;
+      for (const f of files) {
+        const formData = new FormData();
+        formData.append("file", f);
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        if (res.ok) {
+          urls.push(data.url);
+        } else {
+          toast.error("Errore upload file " + f.name);
+        }
       }
+      return urls.join(",");
     } catch (e) {
       toast.error("Errore di rete durante upload");
       return null;
@@ -123,8 +125,8 @@ export default function OutcomeModal({ appointmentId, onClose, onSuccess }: Outc
         }
         payload.quoteRequested = true;
         payload.quoteNotes = quoteNotes;
-      } else if (quoteOption === "ATTACH") {
-        if (!file) {
+      } else if (quoteOption === "ATTACH" && outcomeFinal !== "VENDUTO") {
+        if (files.length === 0) {
           toast.error("Allega il file del preventivo.");
           return;
         }
@@ -161,8 +163,8 @@ export default function OutcomeModal({ appointmentId, onClose, onSuccess }: Outc
 
     setSubmitting(true);
     try {
-      if (quoteOption === "ATTACH" && file) {
-        const quoteUrl = await uploadFile();
+      if ((quoteOption === "ATTACH" || outcomeFinal === "VENDUTO") && files.length > 0) {
+        const quoteUrl = await uploadFiles();
         if (!quoteUrl) {
           setSubmitting(false);
           return; // Upload failed
