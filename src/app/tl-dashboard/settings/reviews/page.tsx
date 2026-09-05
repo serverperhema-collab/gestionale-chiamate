@@ -50,10 +50,11 @@ export default function ReviewsPage() {
   const handleDerogaAction = async (id: string, action: "DEROGA_ACCEPT" | "DEROGA_REJECT" | "DEROGA_RESCHEDULE", newDate?: string, rejectReason?: string) => {
     setProcessingId(id);
     try {
+      const isNewSystem = reviews.find(r => r.id === id)?.isNewSystem;
       const res = await fetch("/api/tl/reviews", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, action, newDate, rejectReason })
+        body: JSON.stringify({ id, action, newDate, rejectReason, isNewSystem })
       });
       if (res.ok) {
         toast.success(action === "DEROGA_ACCEPT" ? "Approvato!" : action === "DEROGA_REJECT" ? "Rifiutato!" : "Spostato e approvato!");

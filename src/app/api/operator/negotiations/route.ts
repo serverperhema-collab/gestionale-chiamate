@@ -33,6 +33,20 @@ export async function GET(req: Request) {
       orderBy: { recallDate: "asc" }
     });
 
+    const newSTs = await prisma.trattativaSheet.findMany({
+      where: {
+        currentOperatorId: userId,
+        status: "RICHIAMO_PERSONALE",
+        closedAt: null
+      },
+      include: {
+        contact: {
+          select: { id: true, name: true, cap: true, originalPhone: true, address: true, delegatedUntil: true }
+        },
+        currentOperator: { select: { id: true, name: true } }
+      }
+    });
+
     const userIdsToFetch = new Set<string>();
     negotiations.forEach(n => {
       if (n.originalOperatorId) userIdsToFetch.add(n.originalOperatorId);
@@ -47,10 +61,28 @@ export async function GET(req: Request) {
       users.forEach(u => originalUsers[u.id] = u.name);
     }
 
-    const mappedNegotiations = negotiations.map(n => ({
+    let mappedNegotiations = negotiations.map(n => ({
       ...n,
       originalOperator: n.originalOperatorId ? { id: n.originalOperatorId, name: originalUsers[n.originalOperatorId] || "Sconosciuto" } : null
     }));
+
+    // Mappiamo le ST per il formato legacy
+    const mappedSTs = newSTs.map(st => ({
+      id: st.id,
+      isNewSystem: true, // Flag per il frontend
+      contactId: st.contactId,
+      operatorId: st.currentOperatorId,
+      recallDate: st.nextActionDate || new Date(), // Se non c'è, mettiamo oggi
+      reason: st.outcomeNotes || "Trattativa (Nuovo Sistema)",
+      contact: st.contact,
+      operator: st.currentOperator,
+      originalOperator: null
+    }));
+
+    mappedNegotiations = [...mappedNegotiations, ...mappedSTs] as any;
+    mappedNegotiations.sort((a, b) => 
+      new Date(a.recallDate as any).getTime() - new Date(b.recallDate as any).getTime()
+    );
 
     return NextResponse.json({ 
       negotiations: mappedNegotiations,

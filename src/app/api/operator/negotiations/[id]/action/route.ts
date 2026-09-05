@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -12,21 +12,57 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
 
     const userId = (session.user as any).id;
-    const { action } = await req.json();
+    const { action, targetUserId, durationDays, isNewSystem } = await req.json();
+
+    if (isNewSystem) {
+      const st = await prisma.trattativaSheet.findUnique({ where: { id } });
+      if (!st) return NextResponse.json({ error: "ST non trovata" }, { status: 404 });
+      if (st.currentOperatorId !== userId && st.createdByOperatorId !== userId) {
+        return NextResponse.json({ error: "Non autorizzato" }, { status: 403 });
+      }
+
+      if (action === "ABANDON") {
+        await prisma.trattativaSheet.update({
+          where: { id },
+          data: { status: "CHIUSA_PERSA", closedAt: new Date(), outcomeNotes: "Abbandonata dall'operatore", nextActionType: "NONE", nextActionDate: null, version: { increment: 1 } }
+        });
+        await prisma.contact.update({
+          where: { id: st.contactId },
+          data: { hiddenUntil: null, assignedToId: null }
+        });
+        return NextResponse.json({ success: true });
+      }
+
+      if (action === "DELEGATE") {
+        // Simple swap of currentOperatorId for new system
+        await prisma.trattativaSheet.update({
+          where: { id },
+          data: { currentOperatorId: targetUserId, version: { increment: 1 } }
+        });
+        return NextResponse.json({ success: true });
+      }
+
+      if (action === "REVOKE") {
+        await prisma.trattativaSheet.update({
+          where: { id },
+          data: { currentOperatorId: st.createdByOperatorId, version: { increment: 1 } }
+        });
+        return NextResponse.json({ success: true });
+      }
+
+      return NextResponse.json({ error: "Azione non valida per ST" }, { status: 400 });
+    }
 
     const negotiation = await prisma.negotiation.findUnique({ where: { id } });
     if (!negotiation) {
       return NextResponse.json({ error: "Trattativa non trovata" }, { status: 404 });
     }
 
-    // L'operatore può agire solo sulle proprie trattative
-    if (negotiation.operatorId !== userId) {
+    if (negotiation.operatorId !== userId && negotiation.originalOperatorId !== userId) {
       return NextResponse.json({ error: "Azione non consentita su trattative altrui" }, { status: 403 });
     }
 
     if (action === "ABANDON") {
-      // Abbandona: la trattativa viene marcata come abbandonata
-      // e il contatto torna libero nel calderone (hiddenUntil = null, assignedToId = null)
       await prisma.$transaction([
         prisma.negotiation.update({
           where: { id },
@@ -37,7 +73,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           data: { hiddenUntil: null, assignedToId: null }
         })
       ]);
-
       return NextResponse.json({ success: true });
     }
 

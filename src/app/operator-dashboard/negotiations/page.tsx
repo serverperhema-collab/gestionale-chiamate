@@ -69,7 +69,7 @@ export default function OperatorNegotiationsPage() {
       const res = await fetch(`/api/operator/negotiations/${id}/action`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "ABANDON" })
+        body: JSON.stringify({ action: "ABANDON", isNewSystem: negotiations.find(n => n.id === id)?.isNewSystem })
       });
       if (res.ok) {
         toast.success("Trattativa abbandonata");

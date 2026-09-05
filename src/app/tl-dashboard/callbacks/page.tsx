@@ -29,14 +29,22 @@ export default function TLCallbacksPage() {
     fetchData();
   }, []);
 
-  const handleFreeContact = async (contactId: string) => {
+  const handleFreeContact = async (contact: any) => {
     try {
-      // Per liberare il contatto basta un piccolo endpoint o usiamo un metodo PATCH
-      const res = await fetch(`/api/contacts/${contactId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assignedToId: null, isPersonalCallback: false })
-      });
+      let res;
+      if (contact.isNewSystem) {
+         res = await fetch(`/api/trattative/${contact.trattativaId}/actions`, {
+           method: "POST",
+           headers: { "Content-Type": "application/json" },
+           body: JSON.stringify({ action: "chiudi-persa", payload: { note: "Rilasciato dal TL" } })
+         });
+      } else {
+        res = await fetch(`/api/contacts/${contact.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ assignedToId: null, isPersonalCallback: false })
+        });
+      }
       if (res.ok) {
         toast.success("Contatto sbloccato e rimesso nel calderone");
         fetchData();
@@ -92,7 +100,7 @@ export default function TLCallbacksPage() {
 
               <div className="mt-auto pt-4 border-t border-gray-700">
                 <button
-                  onClick={() => handleFreeContact(contact.id)}
+                  onClick={() => handleFreeContact(contact)}
                   className="w-full flex items-center justify-center px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition font-medium text-sm"
                 >
                   <CheckCircle className="w-4 h-4 mr-2" />

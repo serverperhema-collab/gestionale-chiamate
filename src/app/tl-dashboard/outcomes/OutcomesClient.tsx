@@ -401,6 +401,7 @@ export default function OutcomesClient() {
       {outcomeModalApptId && (
         <OutcomeModal
           appointmentId={outcomeModalApptId}
+          trattativaId={data.find(a => a.id === outcomeModalApptId)?.trattativaId}
           onClose={() => setOutcomeModalApptId(null)}
           onSuccess={() => {
             setOutcomeModalApptId(null);

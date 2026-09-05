@@ -105,6 +105,14 @@ export async function GET(req: Request) {
         { hiddenUntil: null },
         { hiddenUntil: { lte: new Date() } }
       ],
+      AND: [
+        {
+          OR: [
+            { trattativaSheet: null },
+            { trattativaSheet: { status: "CHIUSA_PERSA" } }
+          ]
+        }
+      ],
       cap: { in: caps }
     };
 

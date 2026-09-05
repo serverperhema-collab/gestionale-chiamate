@@ -271,12 +271,45 @@ export default function OperatorTerminal() {
         payload.delayHours = notAvailableDelay;
       }
 
-      const res = await fetch(`/api/contacts/${contact.id}/outcome`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
+      let res;
+      let data;
+
+      // FASE 5: Se l'esito è RICHIAMO_PERSONALE, crea/riapre la ST e poi imposta il NextAction
+      if (outcome === "RICHIAMO_PERSONALE") {
+        const stRes = await fetch("/api/trattative", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contactId: contact.id })
+        });
+        
+        if (!stRes.ok) {
+          data = await stRes.json();
+          res = stRes;
+        } else {
+          const stData = await stRes.json();
+          const trattativaId = stData.trattativa.id;
+          
+          const actionPayload = {
+            recallDate: recallDateStr,
+            notes: notes
+          };
+          
+          res = await fetch(`/api/trattative/${trattativaId}/actions`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "richiamo", payload: actionPayload })
+          });
+          data = await res.json();
+        }
+      } else {
+        // Fallback per NO_ANSWER, NOT_AVAILABLE, KO standard (su Contact)
+        res = await fetch(`/api/contacts/${contact.id}/outcome`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        data = await res.json();
+      }
       
       if (res.ok) {
         if (data.locked) {

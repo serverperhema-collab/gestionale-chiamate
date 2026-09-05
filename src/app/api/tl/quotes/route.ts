@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -29,7 +29,34 @@ export async function GET(req: Request) {
          },
          orderBy: { createdAt: "desc" },
        });
-       return NextResponse.json({ items: outcomes, type: "RECEIVED" });
+
+       const stAttachments = await prisma.trattativaAttachment.findMany({
+         where: { type: "PREVENTIVO" },
+         include: {
+           trattativa: {
+             include: {
+               contact: true,
+               currentCommerciale: { select: { id: true, name: true } },
+               currentOperator: { select: { id: true, name: true } }
+             }
+           }
+         },
+         orderBy: { trattativa: { updatedAt: "desc" } }
+       });
+
+       const mappedStAttachments = stAttachments.map(att => ({
+         id: att.id,
+         isNewSystem: true,
+         quoteAttached: true,
+         appointment: {
+           contact: att.trattativa.contact,
+           commerciale: att.trattativa.currentCommerciale,
+           operator: att.trattativa.currentOperator
+         },
+         createdAt: att.trattativa.updatedAt // approx
+       }));
+
+       return NextResponse.json({ items: [...outcomes, ...mappedStAttachments], type: "RECEIVED" });
     } else {
        // Richieste di preventivo in attesa
        let whereFilter: any = {};
@@ -50,7 +77,33 @@ export async function GET(req: Request) {
          },
          orderBy: { createdAt: "desc" },
        });
-       return NextResponse.json({ items: requests, type: "REQUESTS" });
+
+       // NUOVO SISTEMA: ST in status PREVENTIVO
+       const stRequests = await prisma.trattativaSheet.findMany({
+         where: { status: "PREVENTIVO" },
+         include: {
+           contact: true,
+           currentOperator: { select: { id: true, name: true } },
+           currentCommerciale: { select: { id: true, name: true } }
+         },
+         orderBy: { updatedAt: "desc" }
+       });
+
+       const mappedStRequests = stRequests.map(st => ({
+         id: st.id,
+         isNewSystem: true,
+         status: "PENDING",
+         createdAt: st.updatedAt,
+         commerciale: st.currentCommerciale,
+         appointment: {
+           contact: st.contact,
+           operator: st.currentOperator,
+           date: st.nextActionDate || st.updatedAt,
+           clientNeeds: st.clientNeeds
+         }
+       }));
+
+       return NextResponse.json({ items: [...requests, ...mappedStRequests], type: "REQUESTS" });
     }
   } catch (error) {
     console.error("GET quotes error:", error);

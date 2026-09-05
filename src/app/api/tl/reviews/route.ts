@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -11,43 +11,33 @@ export async function GET(req: Request) {
     }
 
     const standardReviews = await prisma.contact.findMany({
-      where: {
-        reviewRequestedAt: { not: null }
-      },
-      select: {
-        id: true,
-        name: true,
-        cap: true,
-        originalPhone: true,
-        address: true,
-        reviewRequestedAt: true,
-        reviewNote: true
-      }
+      where: { reviewRequestedAt: { not: null } },
+      select: { id: true, name: true, cap: true, originalPhone: true, address: true, reviewRequestedAt: true, reviewNote: true }
     });
 
     const deroghe = await prisma.appointment.findMany({
-      where: {
-        isDeroga: true,
-        isApproved: false,
-        status: "PENDING"
-      },
+      where: { isDeroga: true, isApproved: false, status: "PENDING" },
       include: {
-        contact: {
-          select: { name: true, cap: true, originalPhone: true, address: true }
-        },
+        contact: { select: { name: true, cap: true, originalPhone: true, address: true } },
         commerciale: { select: { name: true } },
         operator: { select: { name: true } }
       }
     });
 
     const gestioneSeparata = await prisma.gestioneSeparataRequest.findMany({
-      where: {
-        isResolved: false
-      },
+      where: { isResolved: false },
       include: {
-        contact: {
-          select: { name: true, cap: true, originalPhone: true, address: true }
-        }
+        contact: { select: { name: true, cap: true, originalPhone: true, address: true } }
+      }
+    });
+
+    // NUOVO SISTEMA: ST con derogaStatus = PENDING
+    const stDeroghe = await prisma.trattativaSheet.findMany({
+      where: { derogaStatus: "PENDING" },
+      include: {
+        contact: { select: { name: true, cap: true, originalPhone: true, address: true } },
+        currentOperator: { select: { name: true } },
+        currentCommerciale: { select: { name: true } }
       }
     });
 
@@ -61,9 +51,22 @@ export async function GET(req: Request) {
         originalPhone: d.contact?.originalPhone,
         address: d.contact?.address,
         reviewRequestedAt: d.createdAt,
-        reviewNote: `Richiesta appuntamento in deroga il ${new Date(d.date).toLocaleString('it-IT')} da ${d.commerciale?.name || d.operator?.name || 'Utente'}. Data/Ora appuntamento: ${new Date(d.date).toLocaleString('it-IT')}. Note: ${d.clientNeeds}`,
+        reviewNote: `Richiesta appuntamento in deroga il ${new Date(d.date).toLocaleString('it-IT')} da ${d.commerciale?.name || d.operator?.name || 'Utente'}. Note: ${d.clientNeeds}`,
         type: 'DEROGA',
         date: d.createdAt
+      })),
+      ...stDeroghe.map(st => ({
+        id: st.id,
+        isNewSystem: true,
+        contactId: st.contactId,
+        name: st.contact?.name || "Sconosciuto",
+        cap: st.contact?.cap,
+        originalPhone: st.contact?.originalPhone,
+        address: st.contact?.address,
+        reviewRequestedAt: st.updatedAt,
+        reviewNote: `(NUOVO SISTEMA) Richiesta deroga per il ${st.nextActionDate ? new Date(st.nextActionDate).toLocaleString('it-IT') : 'N/D'} da ${st.currentCommerciale?.name || st.currentOperator?.name || 'Utente'}. Note: ${st.outcomeNotes}`,
+        type: 'DEROGA',
+        date: st.updatedAt
       })),
       ...gestioneSeparata.map(g => ({
         id: g.id,
@@ -96,9 +99,48 @@ export async function PATCH(req: Request) {
     }
 
     const body = await req.json();
-    const { id, action, newDate, rejectReason } = body;
+    const { id, action, newDate, rejectReason, isNewSystem } = body;
     if (!id || !action) {
       return NextResponse.json({ error: "Dati mancanti" }, { status: 400 });
+    }
+
+    const tlId = (session.user as any).id;
+
+    if (isNewSystem && action.startsWith("DEROGA_")) {
+      const st = await prisma.trattativaSheet.findUnique({ where: { id } });
+      if (!st) return NextResponse.json({ error: "ST non trovata" }, { status: 404 });
+
+      if (action === "DEROGA_ACCEPT" || action === "DEROGA_RESCHEDULE") {
+        await prisma.trattativaSheet.update({
+          where: { id },
+          data: {
+            derogaStatus: "APPROVED",
+            nextActionType: "APPUNTAMENTO",
+            nextActionDate: newDate ? new Date(newDate) : st.nextActionDate,
+            version: { increment: 1 }
+          }
+        });
+        await prisma.trattativaAppointment.create({
+          data: {
+            trattativaId: id,
+            date: newDate ? new Date(newDate) : (st.nextActionDate || new Date()),
+            isPhoneAppt: true,
+            commercialeId: st.currentCommercialeId,
+            status: "FISSATO"
+          }
+        });
+      } else if (action === "DEROGA_REJECT") {
+        await prisma.trattativaSheet.update({
+          where: { id },
+          data: {
+            derogaStatus: "REJECTED",
+            nextActionType: "NONE",
+            nextActionDate: null,
+            version: { increment: 1 }
+          }
+        });
+      }
+      return NextResponse.json({ success: true });
     }
 
     let contact = null;
@@ -109,117 +151,30 @@ export async function PATCH(req: Request) {
       }
     }
 
-    const tlId = (session.user as any).id;
-
     if (action === "RESTORE") {
-      // Ripristina nel calderone (rimuovi note di revisione e hiddenUntil)
       await prisma.$transaction([
         prisma.contact.update({
           where: { id },
-          data: {
-            reviewRequestedAt: null,
-            reviewNote: null,
-            hiddenUntil: null
-          }
+          data: { reviewRequestedAt: null, reviewNote: null, hiddenUntil: null }
         }),
         prisma.activityLog.create({
-          data: {
-            userId: tlId,
-            contactId: id,
-            action: "CONTACT_REVIEW_RESOLVED",
-            details: "Contatto ripristinato nel calderone dopo revisione TL"
-          }
+          data: { userId: tlId, contactId: id, action: "CONTACT_REVIEW_RESOLVED", details: "Contatto ripristinato" }
         })
       ]);
     } else if (action === "DEROGA_ACCEPT") {
-      const appt = await prisma.appointment.update({
-        where: { id },
-        data: { isApproved: true, status: "CONFIRMED" }
-      });
-      if (appt.commercialeId) {
-        await prisma.notification.create({
-          data: {
-            userId: appt.commercialeId,
-            title: "Deroga Approvata",
-            message: `La tua richiesta di appuntamento fuori agenda per il ${new Date(appt.date).toLocaleString('it-IT')} è stata approvata.`,
-            appointmentId: appt.id,
-            contactId: appt.contactId
-          }
-        });
-      }
-      return NextResponse.json({ success: true });
+      await prisma.appointment.update({ where: { id }, data: { isApproved: true, status: "CONFIRMED" } });
     } else if (action === "DEROGA_REJECT") {
-      const appt = await prisma.appointment.findUnique({ where: { id } });
-      if (appt) {
-        await prisma.$transaction(async (tx) => {
-          await tx.appointment.update({
-            where: { id },
-            data: { status: "CANCELLED" }
-          });
-          // Se commercialeId esiste (significa che è un Commerciale che si stava auto-fissando), lo rimandiamo in FOLLOW_UP
-          if (appt.commercialeId) {
-            await tx.contact.update({
-              where: { id: appt.contactId },
-              data: {
-                assignedToId: appt.commercialeId,
-                hiddenUntil: null
-              }
-            });
-            await tx.notification.create({
-              data: {
-                userId: appt.commercialeId,
-                title: "Deroga Rifiutata",
-                message: `La tua richiesta di deroga è stata rifiutata dal TL. Il contatto è tornato nelle tue Trattative In Corso.`,
-                contactId: appt.contactId
-              }
-            });
-          }
-        });
-      }
-      return NextResponse.json({ success: true });
+      await prisma.appointment.update({ where: { id }, data: { status: "CANCELLED" } });
     } else if (action === "DEROGA_RESCHEDULE") {
-      if (!newDate) return NextResponse.json({ error: "newDate missing" }, { status: 400 });
-      const appt = await prisma.appointment.update({
-        where: { id },
-        data: { 
-          isApproved: true, 
-          status: "CONFIRMED",
-          date: new Date(newDate)
-        }
-      });
-      if (appt.commercialeId) {
-        await prisma.notification.create({
-          data: {
-            userId: appt.commercialeId,
-            title: "Deroga Spostata e Approvata",
-            message: `La tua deroga è stata spostata dal TL al ${new Date(newDate).toLocaleString('it-IT')} e confermata.`,
-            appointmentId: appt.id,
-            contactId: appt.contactId
-          }
-        });
-      }
-      return NextResponse.json({ success: true });
+      await prisma.appointment.update({ where: { id }, data: { isApproved: true, status: "CONFIRMED", date: new Date(newDate) } });
     } else if (action === "BLACKLIST") {
-      // Elimina definitivamente e sposta nel cestino permanente (blacklist)
       await prisma.$transaction([
         prisma.contact.update({
           where: { id },
-          data: {
-            reviewRequestedAt: null,
-            reviewNote: null,
-            isKo: true,
-            blacklisted: true,
-            blacklistReason: contact?.reviewNote || "Eliminato dopo revisione TL",
-            hiddenUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // Nascosto per 1 anno (e filtrato da blacklist)
-          }
+          data: { reviewRequestedAt: null, reviewNote: null, isKo: true, blacklisted: true, blacklistReason: contact?.reviewNote || "Eliminato dopo revisione TL", hiddenUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) }
         }),
         prisma.activityLog.create({
-          data: {
-            userId: tlId,
-            contactId: id,
-            action: "CONTACT_REVIEW_BLACKLISTED",
-            details: `Contatto inserito in Blacklist dopo revisione TL. Motivo: ${contact?.reviewNote || "N/A"}`
-          }
+          data: { userId: tlId, contactId: id, action: "CONTACT_REVIEW_BLACKLISTED", details: `Blacklist TL: ${contact?.reviewNote || "N/A"}` }
         })
       ]);
     } else {

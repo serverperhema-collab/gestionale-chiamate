@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -12,20 +12,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
 
     const userId = (session.user as any).id;
-    const { targetOperatorId, durationDays } = await req.json();
+    const { targetOperatorId, durationDays, isNewSystem } = await req.json();
 
     if (!targetOperatorId) {
       return NextResponse.json({ error: "Nessun operatore di destinazione specificato" }, { status: 400 });
-    }
-
-    const negotiation = await prisma.negotiation.findUnique({ where: { id } });
-    if (!negotiation) {
-      return NextResponse.json({ error: "Trattativa non trovata" }, { status: 404 });
-    }
-
-    // L'operatore può agire solo sulle proprie trattative
-    if (negotiation.operatorId !== userId) {
-      return NextResponse.json({ error: "Azione non consentita" }, { status: 403 });
     }
 
     const targetUser = await prisma.user.findUnique({ where: { id: targetOperatorId } });
@@ -33,16 +23,47 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       return NextResponse.json({ error: "Operatore di destinazione non valido" }, { status: 400 });
     }
 
-    // Calcola scadenza delega
     const delegatedUntil = durationDays ? new Date(Date.now() + parseInt(durationDays) * 24 * 60 * 60 * 1000) : null;
 
-    // Effettua la delega
+    if (isNewSystem) {
+      const st = await prisma.trattativaSheet.findUnique({ where: { id } });
+      if (!st) return NextResponse.json({ error: "ST non trovata" }, { status: 404 });
+      if (st.currentOperatorId !== userId) return NextResponse.json({ error: "Azione non consentita" }, { status: 403 });
+
+      await prisma.$transaction([
+        prisma.trattativaSheet.update({
+          where: { id },
+          data: { 
+            currentOperatorId: targetOperatorId,
+            version: { increment: 1 }
+          }
+        }),
+        prisma.contact.update({
+          where: { id: st.contactId },
+          data: { 
+            assignedToId: targetOperatorId,
+            delegatedToId: targetOperatorId,
+            delegatedUntil: delegatedUntil
+          }
+        })
+      ]);
+      return NextResponse.json({ success: true });
+    }
+
+    const negotiation = await prisma.negotiation.findUnique({ where: { id } });
+    if (!negotiation) {
+      return NextResponse.json({ error: "Trattativa non trovata" }, { status: 404 });
+    }
+
+    if (negotiation.operatorId !== userId) {
+      return NextResponse.json({ error: "Azione non consentita" }, { status: 403 });
+    }
+
     await prisma.$transaction([
       prisma.negotiation.update({
         where: { id },
         data: { 
           operatorId: targetOperatorId,
-          // Imposta originalOperatorId solo se non è già stato delegato prima (mantiene il primissimo)
           originalOperatorId: negotiation.originalOperatorId || userId
         }
       }),

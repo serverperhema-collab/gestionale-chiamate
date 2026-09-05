@@ -97,15 +97,30 @@ export default function QuotesClient({ externalTab }: { externalTab?: "REQUESTS"
         }
       }
 
-      const res = await fetch(`/api/tl/quotes/${selectedReq.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-           status: newStatus,
-           tlNotes,
-           quoteUrl
-        })
-      });
+      let res;
+      if (selectedReq.isNewSystem) {
+        res = await fetch(`/api/trattative/${selectedReq.id}/actions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+             action: "preventivo-complete",
+             payload: {
+               url: quoteUrl || "",
+               notes: tlNotes
+             }
+          })
+        });
+      } else {
+        res = await fetch(`/api/tl/quotes/${selectedReq.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+             status: newStatus,
+             tlNotes,
+             quoteUrl
+          })
+        });
+      }
 
       if (res.ok) {
         toast.success("Richiesta aggiornata con successo");
