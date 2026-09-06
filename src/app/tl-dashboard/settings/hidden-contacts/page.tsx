@@ -217,7 +217,17 @@ export default function HiddenContactsPage() {
           </p>
         </div>
         
-        <div className="relative w-full xl:w-72">
+                        <div className="flex gap-4 w-full xl:w-auto">
+          <a
+            href="/api/tl/backup/hidden-contacts"
+            className="flex items-center justify-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 text-white rounded-lg transition text-sm font-medium whitespace-nowrap shadow"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Scarica Backup
+          </a>
+          <div className="relative w-full xl:w-72">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-gray-500" />
           </div>
@@ -229,76 +239,47 @@ export default function HiddenContactsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-      </div>
-
-      {/* Barra dei Filtri Avanzati */}
-      <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-4 mb-8 flex flex-col md:flex-row gap-4 items-center">
-        <div className="flex items-center text-gray-400 mr-2 shrink-0">
-          <Filter className="w-5 h-5 mr-2" />
-          <span className="font-medium text-sm">Filtri:</span>
-        </div>
-
-        <div className="flex-1 min-w-[200px]">
-          <MultiSelect 
-            options={uniqueOperators} 
-            selected={filterOperators} 
-            onChange={setFilterOperators} 
-            placeholder="Tutti gli Operatori" 
-          />
-        </div>
-
-        <div className="flex-1 min-w-[200px]">
-          <MultiSelect 
-            options={uniqueReasons} 
-            selected={filterReasons} 
-            onChange={setFilterReasons} 
-            placeholder="Tutti i Motivi" 
-          />
-        </div>
-
-        <div className="flex-1 min-w-[200px]">
-          <MultiSelect 
-            options={uniqueCaps} 
-            selected={filterCaps} 
-            onChange={setFilterCaps} 
-            placeholder="Tutti i CAP" 
-          />
         </div>
       </div>
 
       {filteredContacts.length === 0 ? (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center flex-1">
-          <EyeOff className="w-16 h-16 mx-auto text-gray-700 mb-4" />
-          <h3 className="text-xl font-medium text-gray-300">Nessun contatto trovato</h3>
-          <p className="text-gray-500 mt-2">I filtri attuali non hanno prodotto nessun risultato oppure la lista è vuota.</p>
+        <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-12 text-center">
+          <EyeOff className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-white mb-2">Nessun contatto nascosto</h2>
+          <p className="text-gray-400">Attualmente non ci sono contatti in pausa o bloccati.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
-          {filteredContacts.map((contact) => (
-            <div key={contact.id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden shadow-lg transition hover:border-gray-700 flex flex-col">
-              <div className="p-5 border-b border-gray-800/50 flex-1">
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-lg font-bold text-white truncate pr-4 flex-1" title={contact.name}>
-                    {contact.name}
-                  </h3>
-                  <div className="bg-yellow-900/30 text-yellow-500 border border-yellow-700/30 px-2 py-1 rounded text-xs font-mono flex items-center whitespace-nowrap">
-                    <Clock className="w-3 h-3 mr-1.5" />
-                    {getTimeRemaining(contact.hiddenUntil)}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredContacts.map(contact => (
+            <div key={contact.id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-emerald-500/50 transition-colors shadow-lg flex flex-col">
+              <div className="p-5 flex-1">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-white mb-1 flex items-center">
+                      <FileText className="w-5 h-5 mr-2 text-emerald-400" />
+                      {contact.name}
+                    </h3>
+                    <p className="text-sm text-gray-400 flex items-center">
+                      <MapPin className="w-4 h-4 mr-1 text-gray-500" />
+                      {contact.cap}
+                    </p>
                   </div>
-                </div>
-                
-                <div className="space-y-2 text-sm text-gray-400 mb-4">
-                  <div className="flex items-center">
-                    <MapPin className="w-4 h-4 mr-2 text-gray-500" />
-                    <span className="truncate">{contact.address || 'Indirizzo non disponibile'} (CAP: {contact.cap})</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Building className="w-4 h-4 mr-2 text-gray-500" />
-                    <span>Azionato da: <span className="text-gray-300 font-medium">{contact.blockedBy}</span></span>
-                  </div>
+                  <span className="bg-red-500/10 text-red-400 px-3 py-1 rounded-full text-xs font-bold border border-red-500/20 shadow-sm whitespace-nowrap">
+                    Bloccato
+                  </span>
                 </div>
 
-                <div className="bg-gray-800/80 rounded border border-gray-700 p-3 mt-4">
+                <div className="space-y-3 bg-gray-800/40 rounded-lg p-3 border border-gray-800/80">
+                  <div className="flex items-start">
+                    <Clock className="w-4 h-4 mr-2 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase tracking-wider mb-0.5 font-bold">Scadenza Blocco</p>
+                      <p className="text-sm text-white font-medium">
+                        {contact.hiddenUntil ? new Date(contact.hiddenUntil).toLocaleString() : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+
                   <div className="flex items-start">
                     <AlertTriangle className="w-4 h-4 mr-2 text-orange-400 mt-0.5 flex-shrink-0" />
                     <div>
