@@ -26,7 +26,8 @@ export async function GET(req: Request) {
       }
     });
 
-    let csv = "ID,Nome,CAP,Indirizzo,Telefono Originale,HiddenUntil,isKo,Operatore,Motivazione,Note\n";
+    let csv = "ID,Nome,CAP,Indirizzo,Telefono Originale,Scadenza Blocco,isKo,Operatore,Motivazione,Note
+";
     
     for (const c of hiddenContacts) {
       
@@ -80,10 +81,18 @@ export async function GET(req: Request) {
         return `"${str.replace(/"/g, '""')}"`;
       };
 
-      const hiddenUntilStr = c.hiddenUntil ? c.hiddenUntil.toISOString() : "";
+      const hiddenUntilStr = c.hiddenUntil ? new Date(c.hiddenUntil).toLocaleString("it-IT") : "";
       const isKoStr = c.isKo ? "SI" : "NO";
+      
+      let dataBlocco = "";
+      if (c.callLogs && c.callLogs.length > 0) {
+          dataBlocco = new Date(c.callLogs[0].createdAt).toLocaleString("it-IT");
+      } else if (c.activityLogs && c.activityLogs.length > 0) {
+          dataBlocco = new Date(c.activityLogs[0].createdAt).toLocaleString("it-IT");
+      }
 
-      csv += `${escapeCsv(c.id)},${escapeCsv(c.name)},${escapeCsv(c.cap)},${escapeCsv(c.address)},${escapeCsv(c.originalPhone)},${escapeCsv(hiddenUntilStr)},${escapeCsv(isKoStr)},${escapeCsv(blockedBy)},${escapeCsv(reason)},${escapeCsv(note)}\n`;
+      csv += `${escapeCsv(c.id)},${escapeCsv(c.name)},${escapeCsv(c.cap)},${escapeCsv(c.address)},${escapeCsv(c.originalPhone)},${escapeCsv(dataBlocco)},${escapeCsv(hiddenUntilStr)},${escapeCsv(isKoStr)},${escapeCsv(blockedBy)},${escapeCsv(reason)},${escapeCsv(note)}
+`;
     }
 
     return new NextResponse(csv, {
