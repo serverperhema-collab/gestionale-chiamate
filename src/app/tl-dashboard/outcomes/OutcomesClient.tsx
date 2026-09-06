@@ -137,8 +137,8 @@ export default function OutcomesClient() {
     <div className="p-6 max-w-[1600px] w-full mx-auto h-[calc(100vh-4rem)] flex flex-col">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-2">Appuntamenti & Preventivi</h1>
-          <p className="text-gray-400">Monitora gli appuntamenti e gli esiti dei commerciali.</p>
+          <h1 className="text-2xl font-bold text-white mb-2">TRATTATIVE</h1>
+          <p className="text-gray-400">STORICO DI TUTTE LE TRATTATIVE INTRAPRESE.</p>
         </div>
       </div>
 

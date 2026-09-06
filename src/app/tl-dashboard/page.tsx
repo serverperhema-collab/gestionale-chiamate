@@ -188,8 +188,8 @@ export default async function TLDashboardPage() {
           <Link href="/tl-dashboard/outcomes" className="group">
             <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-blue-500 transition h-full">
               <CheckCircle className="w-8 h-8 text-blue-400 mb-4" />
-              <h2 className="text-lg font-semibold text-white">Appuntamenti e Preventivi</h2>
-              <p className="text-sm text-gray-400 mt-2">Gestisci lo storico degli appuntamenti, gli esiti e sviluppa i preventivi richiesti.</p>
+              <h2 className="text-lg font-semibold text-white">TRATTATIVE</h2>
+              <p className="text-sm text-gray-400 mt-2">STORICO DI TUTTE LE TRATTATIVE INTRAPRESE</p>
             </div>
           </Link>
 
