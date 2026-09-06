@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import { checkExpiredDelegations } from "@/lib/delegationHelper";
 
 export async function GET(req: Request) {
   try {
@@ -11,8 +10,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    await checkExpiredDelegations();
-
+    
     const userId = (session.user as any).id;
 
     const user = await prisma.user.findUnique({ where: { id: userId } });

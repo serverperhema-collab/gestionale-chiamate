@@ -19,11 +19,7 @@ export async function POST(req: Request) {
 
     // Esegui il reset in ordine sicuro (rispettando le foreign key)
     // Ordine corretto: prima i figli, poi i genitori (rispetto FK)
-    await prisma.appointmentOutcome.deleteMany();
-    await prisma.quoteRequest.deleteMany();
-    await prisma.appointment.deleteMany();
-    await prisma.negotiation.deleteMany();
-    await prisma.activityLog.deleteMany();
+                    await prisma.activityLog.deleteMany();
     await prisma.callLog.deleteMany();
     await prisma.dailyAssignment.deleteMany();
     await prisma.tlTask.deleteMany();
@@ -43,8 +39,7 @@ export async function POST(req: Request) {
         blacklistReason: null,
         delegatedToId: null,
         delegatedUntil: null,
-        reviewRequestedAt: null,
-        reviewNote: null,
+                
         skipCount: 0,
         lastOutcome: null,
         targetCompany: null,

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -24,7 +24,6 @@ export async function GET(req: Request) {
     if (contactId) where.contactId = contactId;
     if (nextActionType) where.nextActionType = nextActionType;
 
-    // RBAC base filter
     if (userRole === Role.OPERATORE) {
       where.currentOperatorId = userId;
     } else if (userRole === Role.COMMERCIALE) {
@@ -37,10 +36,7 @@ export async function GET(req: Request) {
     const trattative = await prisma.trattativaSheet.findMany({
       where,
       include: {
-        contact: true,
-        appointments: {
-          orderBy: { createdAt: 'desc' }
-        }
+        contact: true
       },
       orderBy: { updatedAt: 'desc' }
     });

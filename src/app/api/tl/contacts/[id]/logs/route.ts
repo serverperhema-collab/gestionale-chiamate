@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -19,25 +19,19 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         },
         activityLogs: {
           include: { user: { select: { name: true, role: true } } }
-        },
-        negotiations: {
-          include: { operator: { select: { name: true, role: true } } }
-        },
-        appointments: {
-          include: { operator: { select: { name: true, role: true } } }
         }
       }
     });
 
-    if (!contact) {
-      return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+    if(!contact) {
+        return NextResponse.json({error: "Not found"}, { status: 404 });
     }
 
     const timeline: any[] = [];
 
     // Mappatura Call Logs
     contact.callLogs.forEach(log => {
-      // Evitiamo il duplicato: se l'esito è APPOINTMENT, usiamo solo il record dell'appuntamento creato di seguito
+      // Evitiamo il duplicato: se l'esito  APPOINTMENT, usiamo solo il record dell'appuntamento creato di seguito
       if (log.outcome === "APPOINTMENT") return;
 
       let label = "Esito Telefonata";
@@ -87,11 +81,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       cleanDetails = cleanDetails.replace(/Contatto pescato dal calderone/ig, "Contatto prelevato dal database centrale e assegnato all'operatore.");
       cleanDetails = cleanDetails.replace(/sull'appuntamento\s[a-z0-9]+/ig, ""); // Rimuove "sull'appuntamento cmrs..."
       cleanDetails = cleanDetails.replace(/Azione CONFIRM eseguita/g, "Appuntamento validato e confermato definitivamente.");
-      cleanDetails = cleanDetails.replace(/Azione RIMBALZA_COMMERCIALE eseguita/g, "L'appuntamento è stato delegato alla gestione diretta del Commerciale.");
-      cleanDetails = cleanDetails.replace(/Azione ANNULLA_RIMANDA_OPERATORE eseguita/g, "L'appuntamento è stato annullato. Il contatto è stato rimandato all'operatore originario.");
-      cleanDetails = cleanDetails.replace(/Azione ANNULLA_CALDERONE eseguita/g, "L'appuntamento è stato annullato. Il contatto è stato sbloccato e rimesso nel Calderone generale.");
-      cleanDetails = cleanDetails.replace(/Azione ANNULLA_BLOCCO_PERENNE eseguita/g, "L'appuntamento è stato annullato. Il contatto è stato inserito in Blacklist (Blocco perenne).");
-      cleanDetails = cleanDetails.replace(/Azione RICHIAMA_TL eseguita/g, "L'appuntamento è stato annullato ed è stato creato un Task per la TL.");
+      cleanDetails = cleanDetails.replace(/Azione RIMBALZA_COMMERCIALE eseguita/g, "L'appuntamento  stato delegato alla gestione diretta del Commerciale.");
+      cleanDetails = cleanDetails.replace(/Azione ANNULLA_RIMANDA_OPERATORE eseguita/g, "L'appuntamento  stato annullato. Il contatto  stato rimandato all'operatore originario.");
+      cleanDetails = cleanDetails.replace(/Azione ANNULLA_CALDERONE eseguita/g, "L'appuntamento  stato annullato. Il contatto  stato sbloccato e rimesso nel Calderone generale.");
+      cleanDetails = cleanDetails.replace(/Azione ANNULLA_BLOCCO_PERENNE eseguita/g, "L'appuntamento  stato annullato. Il contatto  stato inserito in Blacklist (Blocco perenne).");
+      cleanDetails = cleanDetails.replace(/Azione RICHIAMA_TL eseguita/g, "L'appuntamento  stato annullato ed  stato creato un Task per la TL.");
 
       timeline.push({
         id: `activity_${log.id}`,
@@ -101,19 +95,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         date: log.createdAt,
         user: log.user.name,
         userRole: log.user.role
-      });
-    });
-
-    // Mappatura Appuntamenti Creati
-    contact.appointments.forEach(app => {
-      timeline.push({
-        id: `app_${app.id}`,
-        type: "APPOINTMENT",
-        title: "Dettagli Appuntamento Generato",
-        description: `La visita/call è stata fissata per il ${new Date(app.date).toLocaleDateString()} alle ore ${new Date(app.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`,
-        date: app.createdAt,
-        user: app.operator.name,
-        userRole: app.operator.role
       });
     });
 

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -14,7 +14,6 @@ export async function GET() {
 
     const now = new Date();
     
-    // Fetch all operators who are currently locked for any reason
     const lockedUsers = await prisma.user.findMany({
       where: {
         role: "OPERATORE",
@@ -56,56 +55,6 @@ export async function GET() {
       }
     });
 
-    // Fetch review requests (Strict Lock notes e Richieste Eliminazione)
-    const reviewContacts = await prisma.contact.findMany({
-      where: { reviewRequestedAt: { not: null } },
-      include: {
-        assignedTo: { select: { id: true, name: true } },
-        appointments: { where: { status: { in: ["PENDING", "CONFIRMED"] } }, select: { id: true, date: true, operatorId: true, operator: { select: { name: true } } } },
-        negotiations: { where: { isAbandoned: false }, select: { id: true, operatorId: true, operator: { select: { name: true } } } },
-        activityLogs: {
-          where: { action: { in: ["CONTACT_REVIEW_REQUESTED", "CONTACT_DELETION_REQUESTED"] } },
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-          select: { user: { select: { id: true, name: true } } }
-        }
-      }
-    });
-
-    reviewContacts.forEach(c => {
-      const requester = c.activityLogs[0]?.user;
-      
-      let lockContext = "Nessun blocco specifico trovato";
-      let lockType = "NONE";
-      if (c.appointments.length > 0) {
-        lockType = "APPOINTMENT";
-        lockContext = `Appuntamento fissato da ${c.appointments[0].operator?.name} il ${c.appointments[0].date.toLocaleString('it-IT')}`;
-      } else if (c.negotiations.length > 0) {
-        lockType = "NEGOTIATION";
-        lockContext = `In Trattativa con ${c.negotiations[0].operator?.name}`;
-      }
-
-      activeAlerts.push({
-        type: 'REVIEW_REQUEST',
-        contactId: c.id,
-        contactName: c.name,
-        requesterName: requester?.name || "Sconosciuto",
-        requesterId: requester?.id || "",
-        reviewNote: c.reviewNote,
-        reviewRequestedAt: c.reviewRequestedAt,
-        lockContext,
-        lockType
-      });
-    });
-
-    const derogaApps = await prisma.appointment.findMany({
-      where: { isDeroga: true, isApproved: false, status: { in: ["PENDING", "CONFIRMED"] } },
-      include: {
-        operator: { select: { id: true, name: true } },
-        contact: { select: { name: true, cap: true, address: true } }
-      }
-    });
-
     const gestioneSeparataRequests = await prisma.gestioneSeparataRequest.findMany({
       where: { isResolved: false },
       include: {
@@ -122,21 +71,6 @@ export async function GET() {
         operatorId: req.operatorId,
         reason: req.reason,
         requestedAt: req.createdAt
-      });
-    });
-
-    derogaApps.forEach(app => {
-      activeAlerts.push({
-        type: 'DEROGA_APP_REQUEST',
-        appId: app.id,
-        operatorName: app.operator?.name || "Sconosciuto",
-        contactName: app.contact?.name || "Azienda non disponibile",
-        cap: app.contact?.cap || "",
-        address: app.contact?.address || "",
-        date: app.date,
-        referentName: app.referentName,
-        phone: app.phone,
-        clientNeeds: app.clientNeeds
       });
     });
 

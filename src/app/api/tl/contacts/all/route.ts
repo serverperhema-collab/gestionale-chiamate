@@ -63,7 +63,7 @@ export async function GET(req: Request) {
       select: {
         id: true,
         _count: {
-          select: { callLogs: true, activityLogs: true, appointments: true }
+          select: { callLogs: true, activityLogs: true,  }
         }
       }
     });
@@ -72,7 +72,7 @@ export async function GET(req: Request) {
     const sortedContacts = allContacts
       .map(c => ({
         id: c.id,
-        totalLogs: c._count.callLogs + c._count.activityLogs + c._count.appointments
+        totalLogs: c._count.callLogs + c._count.activityLogs + 0
       }))
       .sort((a, b) => b.totalLogs - a.totalLogs);
 
@@ -86,7 +86,7 @@ export async function GET(req: Request) {
       where: { id: { in: paginatedIds } },
       include: {
         _count: {
-          select: { callLogs: true, activityLogs: true, appointments: true }
+          select: { callLogs: true, activityLogs: true,  }
         },
         assignedTo: {
           select: { name: true }

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -31,14 +31,7 @@ export async function GET(req: Request) {
       include: {
         phones: true,
         assignedTo: { select: { name: true } },
-        appointments: { 
-          where: { status: { in: ["PENDING", "CONFIRMED"] } },
-          select: { operatorId: true, operator: { select: { name: true } } } 
-        },
-        negotiations: { 
-          where: { isAbandoned: false },
-          select: { operatorId: true, operator: { select: { name: true } } } 
-        }
+        trattativa: true
       }
     });
 
@@ -49,32 +42,17 @@ export async function GET(req: Request) {
       let isStrictLocked = false;
       let lockReason = null;
 
-      // Check for active negotiations or appointments
-      const activeNeg = c.negotiations?.[0];
-      const activeAppt = c.appointments?.[0];
+      const activeTrattativa = c.trattativa && c.trattativa.closedAt === null ? c.trattativa : null;
 
-      if (activeNeg) {
-        if (activeNeg.operatorId === userId) {
-          // It's MY negotiation -> No lock, can manage directly
+      if (activeTrattativa) {
+        if (activeTrattativa.currentOperatorId === userId) {
           isLocked = false;
         } else {
-          // It's SOMEONE ELSE's negotiation -> Strict lock
           isLocked = true;
           isStrictLocked = true;
-          lockReason = `In Trattativa Personale con: ${activeNeg.operator?.name || "Altro operatore"}`;
-        }
-      } else if (activeAppt) {
-        if (activeAppt.operatorId === userId) {
-          // It's MY appointment -> No lock, can manage directly
-          isLocked = false;
-        } else {
-          // SOMEONE ELSE's appointment -> Strict lock
-          isLocked = true;
-          isStrictLocked = true;
-          lockReason = `Ha un appuntamento fissato da: ${activeAppt.operator?.name || "Altro operatore"}`;
+          lockReason = `In Trattativa con operatore ID: ${activeTrattativa.currentOperatorId}`;
         }
       } else {
-        // Fallback to basic locks (can be forced)
         if (c.blacklisted) {
           isLocked = true;
           lockReason = "Cestino Permanente (Blacklist)";
@@ -86,13 +64,7 @@ export async function GET(req: Request) {
           lockReason = `In lavorazione da: ${c.assignedTo?.name || "Altro operatore"}`;
         } else if (c.hiddenUntil && c.hiddenUntil > now) {
           isLocked = true;
-          if (c.lastOutcome === "NEGOTIATION") {
-            lockReason = "In Trattativa (Nascosto)";
-          } else if (c.lastOutcome === "NON_INTERESSATO") {
-            lockReason = "Non Interessato (Blocco 90gg)";
-          } else {
-            lockReason = `Nascosto fino al ${c.hiddenUntil.toLocaleDateString("it-IT")} (Esito recente)`;
-          }
+          lockReason = `Nascosto fino al ${c.hiddenUntil.toLocaleDateString("it-IT")} (Esito recente)`;
         }
       }
 

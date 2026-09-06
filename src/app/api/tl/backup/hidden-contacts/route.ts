@@ -22,9 +22,7 @@ export async function GET(req: Request) {
         assignedTo: true,
         koRecords: { where: { isResolved: false } },
         callLogs: { orderBy: { createdAt: "desc" }, take: 1, include: { user: true } },
-        activityLogs: { orderBy: { createdAt: "desc" }, take: 1, include: { user: true } },
-        negotiations: { orderBy: { createdAt: "desc" }, take: 1, include: { operator: true } },
-        appointments: { orderBy: { createdAt: "desc" }, take: 1, include: { operator: true } }
+        activityLogs: { orderBy: { createdAt: "desc" }, take: 1, include: { user: true } }
       }
     });
 
@@ -38,18 +36,6 @@ export async function GET(req: Request) {
 
       if (c.koRecords && c.koRecords.length > 0) {
         reason = "Bloccato (KO Record)";
-      } else if (c.appointments.length > 0 && ["PENDING", "CONFIRMED"].includes(c.appointments[0].status)) {
-        const st = c.appointments[0].status;
-        if (st === "PENDING") reason = "Appuntamento Fissato (Da Confermare)";
-        else if (st === "CONFIRMED") reason = "Appuntamento Confermato";
-        else reason = "Appuntamento Fissato";
-        
-        blockedBy = c.appointments[0].operator ? `${c.appointments[0].operator.name}` : "Operatore Sconosciuto";
-      } 
-      else if (c.callLogs.length > 0 && c.callLogs[0].outcome === "NEGOTIATION") {
-        reason = "Richiami operatore in corso";
-        blockedBy = `${c.callLogs[0].user.name}`;
-        note = c.callLogs[0].notes || "";
       }
       else if (c.callLogs.length > 0) {
         const lastCall = c.callLogs[0];
@@ -72,14 +58,12 @@ export async function GET(req: Request) {
         }
       }
       
-      if (!reason.startsWith("Appuntamento") && reason !== "Richiami operatore in corso" && c.activityLogs.length > 0) {
+      if (reason !== "Richiami operatore in corso" && c.activityLogs.length > 0) {
         const lastActivity = c.activityLogs[0];
         const lastCallDate = c.callLogs.length > 0 ? c.callLogs[0].createdAt : new Date(0);
         if (lastActivity.createdAt > lastCallDate && lastActivity.action.includes("TL_")) {
           if (lastActivity.action === "TL_UNBLOCK") {
              reason = "Sbloccato manualmente dalla TL";
-          } else if (lastActivity.action === "TL_APPOINTMENT_ACTION") {
-             reason = "Azione TL sull'appuntamento";
           } else {
              reason = `Azione TL: ${lastActivity.details}`;
           }

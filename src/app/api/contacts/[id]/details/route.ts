@@ -17,14 +17,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       where: { id },
       include: {
         phones: true,
-        appointments: {
-          include: { operator: true, commerciale: true, outcomes: true },
-          orderBy: { date: 'desc' }
-        },
-        negotiations: {
-          include: { operator: true },
-          orderBy: { createdAt: 'desc' }
-        },
         activityLogs: {
           where: {
             action: { notIn: ["PESCATO DAL CALDERONE", "CONTACT_EXTRACTED"] }

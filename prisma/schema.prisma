@@ -86,12 +86,8 @@ model User {
   dailyAssignments  DailyAssignment[]
   callLogs          CallLog[]
   activityLogs      ActivityLog[]
-  negotiations      Negotiation[]
-  asCommerciale     Appointment[]     @relation("CommercialeAppointments")
-  asOperator        Appointment[]     @relation("OperatorAppointments")
   assignedContacts  Contact[]         @relation("AssignedContacts")
   zoneAgendas       ZoneAgenda[]
-  quoteRequests     QuoteRequest[]
   attendances       Attendance[]      @relation("AttendanceOperator")
   attendanceUpdates Attendance[]      @relation("AttendanceUpdatedBy")
 
@@ -159,8 +155,6 @@ model Contact {
   blacklistReason   String?
   delegatedToId     String?
   delegatedUntil    DateTime?
-  reviewRequestedAt DateTime?
-  reviewNote        String?
   skipCount         Int       @default(0)
   lastOutcome       String?
   targetCompany     String?
@@ -169,8 +163,6 @@ model Contact {
   phones                  ContactPhone[]
   callLogs                CallLog[]
   activityLogs            ActivityLog[]
-  negotiations            Negotiation[]
-  appointments            Appointment[]
   koRecords               KoRecord[]
   gestioneSeparataRequest GestioneSeparataRequest?
 
@@ -247,24 +239,6 @@ model TlTask {
   createdAt DateTime @default(now())
 }
 
-model Negotiation {
-  id                 String  @id @default(cuid())
-  contactId          String
-  contact            Contact @relation(fields: [contactId], references: [id])
-  operatorId         String
-  operator           User    @relation(fields: [operatorId], references: [id])
-  originalOperatorId String? // Per tracciare chi era il proprietario prima della delega
-
-  recallDate  DateTime
-  reason      String
-  isApproved  Boolean   @default(false)
-  expiresAt   DateTime?
-  isExpired   Boolean   @default(false)
-  isAbandoned Boolean   @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
 enum ApptStatus {
   PENDING
@@ -275,42 +249,6 @@ enum ApptStatus {
   DA_GESTIRE_COMMERCIALE
 }
 
-model Appointment {
-  id            String  @id @default(cuid())
-  contactId     String
-  contact       Contact @relation(fields: [contactId], references: [id])
-  operatorId    String
-  operator      User    @relation("OperatorAppointments", fields: [operatorId], references: [id])
-  commercialeId String?
-  commerciale   User?   @relation("CommercialeAppointments", fields: [commercialeId], references: [id])
-
-  date        DateTime
-  isPhoneAppt Boolean  @default(false)
-  isDeroga    Boolean  @default(false)
-  isApproved  Boolean  @default(true) // True unless isDeroga is true
-
-  // Link all'Agenda
-  zoneAgendaId String?
-  zoneAgenda   ZoneAgenda? @relation(fields: [zoneAgendaId], references: [id], onDelete: SetNull)
-
-  // Scheda
-  referentName String
-  referentRole String
-  phone        String
-  email        String?
-  clientNeeds  String
-  tlNotes      String?
-
-  status           ApptStatus        @default(PENDING)
-  commercialStatus CommercialStatus?
-  isSecondAppt     Boolean           @default(false)
-
-  outcomes     AppointmentOutcome[]
-  quoteRequest QuoteRequest?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
 enum CommercialStatus {
   ASSEGNATO
@@ -364,44 +302,7 @@ enum QuoteStatus {
   ANNULLATO
 }
 
-model AppointmentOutcome {
-  id            String      @id @default(cuid())
-  appointmentId String      @unique
-  appointment   Appointment @relation(fields: [appointmentId], references: [id])
 
-  outcomeFinal OutcomeFinal
-  skipReason   SkipReason?
-  notes        String
-
-  nextActionType   NextActionType?
-  nextActionTarget NextActionTarget?
-  nextActionDate   DateTime?
-
-  koRequested    Boolean @default(false)
-  quoteAttached  Boolean @default(false)
-  quoteUrl       String?
-  quoteRequested Boolean @default(false)
-
-  createdAt DateTime @default(now())
-}
-
-model QuoteRequest {
-  id            String      @id @default(cuid())
-  appointmentId String      @unique
-  appointment   Appointment @relation(fields: [appointmentId], references: [id])
-  commercialeId String
-  commerciale   User        @relation(fields: [commercialeId], references: [id])
-
-  notes  String
-  status QuoteStatus @default(PENDING)
-
-  tlNotes    String?
-  quoteUrl   String?
-  resolvedAt DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
 model DeletionRequest {
   id         String   @id @default(cuid())
@@ -437,8 +338,6 @@ model ZoneAgenda {
 
   isClosed Boolean @default(false)
   tlNotes  String?
-
-  appointments           Appointment[]
   trattativaAppointments TrattativaAppointment[]
 
   createdAt DateTime @default(now())
@@ -858,12 +757,3 @@ model TrattativaAttachment {
   @@index([type])
 }
 
-model MigrationMapping {
-  id          String @id @default(cuid())
-  legacyModel String
-  legacyId    String
-  newModel    String
-  newEntityId String
-
-  @@unique([legacyModel, legacyId])
-}

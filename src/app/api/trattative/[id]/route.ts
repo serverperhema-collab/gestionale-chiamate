@@ -12,7 +12,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       where: { id: params.id },
       include: {
         contact: true,
-        appointments: { orderBy: { date: 'asc' } },
+        
         events: { orderBy: { createdAt: 'desc' }, take: 50 },
         attachments: true
       }

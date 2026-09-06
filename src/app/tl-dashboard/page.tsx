@@ -35,9 +35,7 @@ export default async function TLDashboardPage() {
       select: { cap: true },
       distinct: ['cap']
     }),
-    prisma.appointment.count({
-      where: { createdAt: { gte: startOfDay, lte: endOfDay } }
-    }),
+    Promise.resolve(0),
     prisma.activityLog.groupBy({
       by: ['contactId'],
       where: { 
