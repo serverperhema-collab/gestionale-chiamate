@@ -106,8 +106,8 @@ export async function GET(req: Request) {
       AND: [
         {
           OR: [
-            { trattativaSheet: null },
-            { trattativaSheet: { status: "CHIUSA_PERSA" } }
+            { trattativa: null },
+            { trattativa: { status: "CHIUSA_PERSA" } }
           ]
         }
       ],
