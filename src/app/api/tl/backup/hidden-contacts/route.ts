@@ -26,8 +26,7 @@ export async function GET(req: Request) {
       }
     });
 
-    let csv = "ID,Nome,CAP,Indirizzo,Telefono Originale,Scadenza Blocco,isKo,Operatore,Motivazione,Note
-";
+    let csv = "ID,Nome,CAP,Indirizzo,Telefono Originale,Data Blocco,Scadenza Blocco,isKo,Operatore,Motivazione,Note\n";
     
     for (const c of hiddenContacts) {
       

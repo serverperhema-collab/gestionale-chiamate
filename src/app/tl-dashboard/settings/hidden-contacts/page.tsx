@@ -181,7 +181,7 @@ export default function HiddenContactsPage() {
   const filteredContacts = contacts.filter(c => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase());
     const matchOperator = filterOperators.length === 0 || filterOperators.includes(c.blockedBy);
-    const matchReason = filterReasons.length === 0 || filterReasons.includes(c.reason);
+    const matchReason = filterReasons.length === 0 || filterReasons.some(r => c.reason.startsWith(r));
     const matchCap = filterCaps.length === 0 || filterCaps.includes(c.cap);
 
     return matchSearch && matchOperator && matchReason && matchCap;
