@@ -24,7 +24,17 @@ export async function GET(req: Request) {
       })
     );
 
-    // 2. Togliere i blocchi temporanei (Non Risponde, Non Reperibile) 
+    // Se oggi è Lunedì (1), azzeriamo anche i contatori "Non Disponibile" (settimanali)
+      if (new Date().getDay() === 1) {
+        transaction.push(
+          prisma.contact.updateMany({
+            where: { notAvailableCount: { gt: 0 } },
+            data: { notAvailableCount: 0 }
+          })
+        );
+      }
+
+      // 2. Togliere i blocchi temporanei (Non Risponde, Non Reperibile) 
     // che hanno una scadenza a breve termine (meno di 24h nel futuro)
     // Le trattative hanno 1 anno di hidden, quindi non verranno toccate
     transaction.push(

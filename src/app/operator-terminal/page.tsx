@@ -593,7 +593,7 @@ export default function OperatorTerminal() {
                     <span className="font-bold">NON REPERIBILE</span>
                     <span className="text-xs italic opacity-80 font-normal">nessuna risposta, non reperibile</span>
                   </button>
-                  <button disabled={noAnswerLocked} onClick={() => requestOutcomeModal("NOT_AVAILABLE")} className="px-6 py-3 bg-orange-600/20 text-orange-400 hover:bg-orange-600 hover:text-white border border-orange-500/30 rounded-lg transition shadow-sm disabled:opacity-50 flex flex-col items-center justify-center gap-1">
+                  <button disabled={noAnswerLocked} onClick={() => handleOutcome("NOT_AVAILABLE", "")} className="px-6 py-3 bg-orange-600/20 text-orange-400 hover:bg-orange-600 hover:text-white border border-orange-500/30 rounded-lg transition shadow-sm disabled:opacity-50 flex flex-col items-center justify-center gap-1">
                     <span className="font-bold">RICHIAMO GENERICO</span>
                     <span className="text-xs italic opacity-80 font-normal">il titolare non era disponibile</span>
                   </button>

@@ -143,6 +143,7 @@ model Contact {
 
   // State
   noAnswerCount      Int       @default(0)
+  notAvailableCount  Int       @default(0)
   hiddenUntil        DateTime?
   assignedToId       String?
   assignedTo         User?     @relation("AssignedContacts", fields: [assignedToId], references: [id])

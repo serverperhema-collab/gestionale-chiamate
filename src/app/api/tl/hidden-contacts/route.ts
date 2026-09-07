@@ -22,6 +22,7 @@ export async function GET() {
         originalPhone: true,
         hiddenUntil: true,
         noAnswerCount: true,
+          notAvailableCount: true,
         assignedTo: {
           select: { name: true }
         },
@@ -66,9 +67,10 @@ export async function GET() {
             reason = `Non Risponde BLOCCATO PER ${timeStr}`;
             blockedBy = lastCall.user.name;
           } else if (lastCall.outcome === "NOT_AVAILABLE") {
-          reason = "Non Reperibile Temporaneamente";
-          blockedBy = lastCall.user.name;
-        } else if (lastCall.outcome === "NO_INFO") {
+            const timeStr = c.notAvailableCount === 1 ? "4 ORE" : (c.notAvailableCount === 2 ? "24 ORE" : "48 ORE");
+            reason = `Non Disponibile BLOCCATO PER ${timeStr}`;
+            blockedBy = lastCall.user.name;
+          } else if (lastCall.outcome === "NO_INFO") {
           reason = "Non Reperibile Senza Info";
           blockedBy = lastCall.user.name;
         } else if (lastCall.outcome === "TRASH_REQUEST") {

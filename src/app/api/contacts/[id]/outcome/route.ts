@@ -26,6 +26,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     // Calcolo HiddenUntil
     let newHiddenUntil: Date | null = null;
     let newNoAnswerCount = contact.noAnswerCount;
+    let newNotAvailableCount = contact.notAvailableCount || 0;
     let isKo = contact.isKo;
 
     if (outcome === "NO_ANSWER") {
@@ -39,9 +40,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         newHiddenUntil.setHours(newHiddenUntil.getHours() + 4);
       }
     } else if (outcome === "NOT_AVAILABLE") {
+      newNotAvailableCount += 1;
       newHiddenUntil = new Date();
-      newHiddenUntil.setDate(newHiddenUntil.getDate() + 1); // 1 day block
-      newHiddenUntil.setHours(9, 0, 0, 0); // next morning
+      if (newNotAvailableCount === 1) {
+        newHiddenUntil.setHours(newHiddenUntil.getHours() + 4);
+      } else if (newNotAvailableCount === 2) {
+        newHiddenUntil.setHours(newHiddenUntil.getHours() + 24);
+      } else {
+        newHiddenUntil.setHours(newHiddenUntil.getHours() + 48);
+      }
     } else if (outcome === "SKIP") {
       newHiddenUntil = skipUntil ? new Date(skipUntil) : new Date(Date.now() + 4 * 60 * 60 * 1000); // 4 hours default
     } else if (outcome === "WRONG_NUMBER" || outcome === "NOT_INTERESTED") {
@@ -64,6 +71,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           assignedToId: null, // Release from Calderone
           hiddenUntil: newHiddenUntil,
           noAnswerCount: newNoAnswerCount,
+          notAvailableCount: newNotAvailableCount,
           isKo,
           lastOutcome: outcome
         }
