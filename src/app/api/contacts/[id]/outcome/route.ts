@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -13,7 +13,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const userId = (session.user as any).id as string;
     const { id: contactId } = await params;
     const body = await req.json();
-    const { outcome, notes, skipUntil, delayDurationObj } = body;
+    let { outcome, notes, skipUntil, delayDurationObj } = body;
 
     const contact = await prisma.contact.findUnique({
       where: { id: contactId }
@@ -21,6 +21,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     if (!contact) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+    }
+
+    // MAPPARE RICHIAMO_PERSONALE a NEGOTIATION per colpa dell'enum Prisma
+    if (outcome === "RICHIAMO_PERSONALE") {
+      outcome = "NEGOTIATION";
     }
 
     // Calcolo HiddenUntil
@@ -67,6 +72,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       } else {
         newHiddenUntil.setMonth(newHiddenUntil.getMonth() + 3);
       }
+    } else if (outcome === "NEGOTIATION" || outcome === "APPOINTMENT") {
+      // 5 anni di blocco dal calderone principale se diventa Trattativa
+      newHiddenUntil = new Date();
+      newHiddenUntil.setFullYear(newHiddenUntil.getFullYear() + 5);
     }
 
     await prisma.$transaction([
