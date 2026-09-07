@@ -6,7 +6,6 @@ import toast from "react-hot-toast";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { LogOut, PhoneCall } from "lucide-react";
-import Link from "next/link";
 import AppointmentModal from "@/components/AppointmentModal";
 
 export default function OperatorTlRequestsPage() {
