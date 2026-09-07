@@ -36,13 +36,14 @@ export default async function TLDashboardPage() {
       distinct: ['cap']
     }),
     Promise.resolve(0),
-    prisma.activityLog.groupBy({
-      by: ['contactId'],
-      where: { 
-        createdAt: { gte: startOfDay, lte: endOfDay },
-        contactId: { not: null }
-      }
-    })
+          prisma.activityLog.groupBy({
+        by: ['contactId'],
+        where: { 
+          createdAt: { gte: startOfDay, lte: endOfDay },
+          contactId: { not: null },
+          action: { in: ["CONTACT_EXTRACTED", "PESCATO DAL CALDERONE"] }
+        }
+      })
   ]);
 
   const managedContacts = todayActivities.length;
