@@ -5,6 +5,9 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Phone, Clock, FileText, Send, Calendar, CheckCircle, AlertTriangle, MapPin, Search } from "lucide-react";
 import toast from "react-hot-toast";
+import Link from "next/link";
+import { signOut } from "next-auth/react";
+import { LogOut, PhoneCall } from "lucide-react";
 import TrattativaTimeline from "@/components/TrattativaTimeline";
 
 export default function OperatorAppointments() {
@@ -35,7 +38,27 @@ export default function OperatorAppointments() {
   }, []);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-900 flex flex-col text-sm">
+      {/* Header (copiato da Operator Terminal) */}
+      <header className="bg-gray-800 border-b border-gray-700 h-16 flex items-center justify-between px-6 shrink-0 shadow-sm z-10">
+        <div className="flex items-center space-x-3">
+          <PhoneCall className="w-5 h-5 text-blue-400" />
+          <h1 className="font-bold text-gray-100 tracking-wide">Pannello Operativo</h1>
+        </div>
+        <div className="flex items-center space-x-4">
+          <Link href="/operator-dashboard/tl-requests" className="px-3 py-1.5 bg-red-900/40 border border-red-800/50 hover:bg-red-800/60 text-sm text-red-200 rounded transition font-medium">
+            Richieste TL
+          </Link>
+          <Link href="/operator-terminal" className="px-3 py-1.5 bg-blue-900/40 border border-blue-800/50 hover:bg-blue-800/60 text-sm text-blue-200 rounded transition font-medium">
+            Torna alle chiamate
+          </Link>
+          <button onClick={() => signOut()} className="p-2 text-gray-400 hover:text-white transition rounded-full hover:bg-gray-700">
+            <LogOut className="w-5 h-5" />
+          </button>
+        </div>
+      </header>
+      
+      <div className="p-6 max-w-7xl mx-auto flex-1 w-full relative">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-white flex items-center">
@@ -128,5 +151,6 @@ export default function OperatorAppointments() {
         />
       )}
     </div>
-  );
-}
+      </div>
+    );
+  }
