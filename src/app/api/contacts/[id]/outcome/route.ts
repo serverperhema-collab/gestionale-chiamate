@@ -30,12 +30,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     if (outcome === "NO_ANSWER") {
       newNoAnswerCount += 1;
-      if (newNoAnswerCount >= 3) {
-        newHiddenUntil = new Date();
-        newHiddenUntil.setDate(newHiddenUntil.getDate() + 90); // 90 days block
+      newHiddenUntil = new Date();
+      if (newNoAnswerCount === 1) {
+        newHiddenUntil.setMinutes(newHiddenUntil.getMinutes() + 10);
+      } else if (newNoAnswerCount === 2) {
+        newHiddenUntil.setHours(newHiddenUntil.getHours() + 1);
       } else {
-        newHiddenUntil = new Date();
-        newHiddenUntil.setHours(newHiddenUntil.getHours() + 2); // 2 hours block
+        newHiddenUntil.setHours(newHiddenUntil.getHours() + 4);
       }
     } else if (outcome === "NOT_AVAILABLE") {
       newHiddenUntil = new Date();

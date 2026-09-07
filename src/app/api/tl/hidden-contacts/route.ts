@@ -67,9 +67,10 @@ export async function GET() {
       else if (c.callLogs.length > 0) {
         const lastCall = c.callLogs[0];
         if (lastCall.outcome === "NO_ANSWER") {
-          reason = `Non Risponde (${c.noAnswerCount} tentativi)`;
-          blockedBy = lastCall.user.name;
-        } else if (lastCall.outcome === "NOT_AVAILABLE") {
+            const timeStr = c.noAnswerCount === 1 ? "10 MIN" : (c.noAnswerCount === 2 ? "1 ORA" : "4 ORE");
+            reason = `Non Risponde BLOCCATO PER ${timeStr}`;
+            blockedBy = lastCall.user.name;
+          } else if (lastCall.outcome === "NOT_AVAILABLE") {
           reason = "Non Reperibile Temporaneamente";
           blockedBy = lastCall.user.name;
         } else if (lastCall.outcome === "NO_INFO") {
