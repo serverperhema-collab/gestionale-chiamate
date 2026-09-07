@@ -24,8 +24,8 @@ export async function POST(req: Request) {
     await prisma.dailyAssignment.deleteMany();
     await prisma.tlTask.deleteMany();
     await prisma.zoneAgenda.deleteMany();
-    await prisma.koRecord.deleteMany();
-    await prisma.deletionRequest.deleteMany();
+    // await prisma.koRecord.deleteMany(); // Cestino conservato
+    // await prisma.deletionRequest.deleteMany(); // Cestino conservato
 
     // Ripristina lo stato di ogni contatto (mantiene anagrafiche e numeri)
     await prisma.contact.updateMany({
@@ -33,10 +33,10 @@ export async function POST(req: Request) {
         noAnswerCount: 0,
         hiddenUntil: null,
         assignedToId: null,
-        isKo: false,
+        // isKo: false, // Non tocchiamo il cestino
         isPersonalCallback: false,
-        blacklisted: false,
-        blacklistReason: null,
+        // blacklisted: false, // Non tocchiamo i bloccati permanenti
+        // blacklistReason: null,
         delegatedToId: null,
         delegatedUntil: null,
                 
