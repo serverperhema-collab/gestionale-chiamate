@@ -101,15 +101,19 @@ export async function GET() {
     const hiddenContacts = await prisma.contact.findMany({
       where: { assignedToId: null, hiddenUntil: { gt: now } },
       include: {
-        activityLogs: { where: { action: "CONTACT_REVIEW_REQUESTED" }, orderBy: { createdAt: "desc" }, take: 1 }
+        activityLogs: { orderBy: { createdAt: "desc" }, take: 1 }
       }
     });
 
     hiddenContacts.forEach(c => {
-      if (c.activityLogs.length > 0) {
+      if (c.activityLogs.length > 0 && c.activityLogs[0].action === "CONTACT_REVIEW_REQUESTED") {
+        const isTrash = c.activityLogs[0].details?.toLowerCase().includes("eliminazione");
         activeAlerts.push({
           type: 'REVIEW_REQUEST',
           contactId: c.id,
+          contactName: c.name,
+          lockType: isTrash ? "TRASH_REQUEST" : "REVIEW",
+          reviewNote: c.activityLogs[0].details,
           reviewRequestedAt: c.activityLogs[0].createdAt
         });
       }
