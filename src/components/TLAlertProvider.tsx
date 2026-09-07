@@ -247,6 +247,44 @@ export default function TLAlertProvider() {
       );
     }
 
+    if (activeModalAlert.type === 'GESTIONE_SEPARATA_REQUEST') {
+      return (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-purple-500/50 rounded-2xl w-full max-w-lg shadow-2xl shadow-purple-900/20 overflow-hidden flex flex-col">
+            <div className="bg-purple-950/40 border-b border-purple-900/50 px-6 py-4 flex justify-between items-center">
+              <div className="flex items-center text-purple-400 font-bold text-lg">
+                <AlertTriangle className="w-6 h-6 mr-3 text-purple-500" />
+                RICHIESTA GESTIONE SEPARATA
+              </div>
+              <button onClick={() => setActiveModalAlert(null)} className="text-gray-400 hover:text-white transition">
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-300 mb-4">
+                Un operatore ha richiesto di prendere in carico il contatto: <strong className="text-white">{activeModalAlert.contactName || 'Sconosciuto'}</strong>
+              </p>
+              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 text-sm space-y-2 mb-6">
+                <div><span className="text-gray-500">Motivazione:</span> <span className="text-white italic">"{activeModalAlert.reason || 'Nessuna motivazione'}"</span></div>
+              </div>
+            </div>
+            <div className="bg-gray-800 border-t border-gray-700 p-4 px-6 flex justify-between items-center gap-4">
+              <button onClick={() => setActiveModalAlert(null)} className="px-5 py-2 text-gray-400 hover:text-white transition font-medium">
+                Ignora per ora
+              </button>
+              <Link 
+                href="/tl-dashboard/settings/reviews"
+                onClick={() => setActiveModalAlert(null)}
+                className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition font-bold shadow-lg shadow-purple-900/20"
+              >
+                Vai alle Revisioni
+              </Link>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
         <div className="bg-gray-900 border border-red-500/50 rounded-2xl w-full max-w-2xl shadow-2xl shadow-red-900/20 overflow-hidden flex flex-col max-h-[90vh]">
