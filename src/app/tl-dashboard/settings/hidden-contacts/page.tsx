@@ -47,7 +47,7 @@ const MultiSelect = ({ options, selected, onChange, placeholder }: { options: st
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)}></div>
-          <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-60 overflow-auto">
+          <div className="absolute z-50 min-w-full w-max max-w-md mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-60 overflow-y-auto overflow-x-hidden">
             {options.map(opt => (
               <label key={opt} className="flex items-center px-4 py-2 hover:bg-gray-700 cursor-pointer">
                 <input 
@@ -56,7 +56,7 @@ const MultiSelect = ({ options, selected, onChange, placeholder }: { options: st
                   onChange={() => toggle(opt)}
                   className="mr-3 w-4 h-4 text-emerald-500 rounded border-gray-600 bg-gray-900 focus:ring-emerald-500"
                 />
-                <span className="text-sm text-gray-200 truncate">{opt}</span>
+                <span className="text-sm text-gray-200 whitespace-normal break-words leading-tight">{opt}</span>
               </label>
             ))}
           </div>
