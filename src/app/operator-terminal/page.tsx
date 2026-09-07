@@ -43,6 +43,8 @@ export default function OperatorTerminal() {
   const [outcomeModalOpen, setOutcomeModalOpen] = useState(false);
   const [outcomeType, setOutcomeType] = useState("");
   const [outcomeNotes, setOutcomeNotes] = useState("");
+  const [notInterestedValue, setNotInterestedValue] = useState("3");
+  const [notInterestedUnit, setNotInterestedUnit] = useState("months");
   const [notAvailableDelay, setNotAvailableDelay] = useState("2");
   const [targetCompany, setTargetCompany] = useState("PERSONALE_HEMA");
   
@@ -272,12 +274,21 @@ export default function OperatorTerminal() {
         return;
       }
 
-      const payload: any = { outcome, notes };
-      if (recallDateStr) payload.recallDate = recallDateStr;
-      
-      if (outcome === "NOT_AVAILABLE" || outcome === "NON_INTERESSATO") {
-        payload.targetCompany = targetCompany;
-      }
+      let finalNotes = notes;
+    let delayDurationObj = null;
+
+    if (outcome === "NON_INTERESSATO") {
+      const unitLabels: any = { "hours": "Ore", "days": "Giorni", "months": "Mesi" };
+      const unitSingular: any = { "hours": "Ora", "days": "Giorno", "months": "Mese" };
+      const val = parseInt(notInterestedValue) || 1;
+      const label = val === 1 ? unitSingular[notInterestedUnit] : unitLabels[notInterestedUnit];
+      finalNotes = `[${val} ${label}] ${notes}`;
+      delayDurationObj = { value: val, unit: notInterestedUnit };
+    }
+
+    const payload: any = { outcome, notes: finalNotes };
+    if (delayDurationObj) payload.delayDurationObj = delayDurationObj;
+    if (recallDateStr) payload.recallDate = recallDateStr;
       if (outcome === "NOT_AVAILABLE") {
         payload.delayHours = notAvailableDelay;
       }
@@ -790,64 +801,27 @@ export default function OperatorTerminal() {
               </button>
             </div>
             
-            {/* Selezione Azienda Target */}
-            <div className="mb-4 bg-gray-900/40 p-3 rounded-lg border border-gray-700">
-              <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Proposta per:</label>
-              <div className="flex gap-4">
-                <label className="flex items-center text-xs text-white cursor-pointer select-none">
-                  <input
-                    type="radio"
-                    name="targetCompany"
-                    value="PERSONALE_HEMA"
-                    checked={targetCompany === "PERSONALE_HEMA"}
-                    onChange={() => setTargetCompany("PERSONALE_HEMA")}
-                    className="mr-2"
-                  />
-                  Hema (Vostra Azienda)
-                </label>
-                <label className="flex items-center text-xs text-white cursor-pointer select-none">
-                  <input
-                    type="radio"
-                    name="targetCompany"
-                    value="PULIZIE"
-                    checked={targetCompany === "PULIZIE"}
-                    onChange={() => setTargetCompany("PULIZIE")}
-                    className="mr-2"
-                  />
-                  Ditta di Pulizie
-                </label>
-              </div>
-            </div>
-
-            {outcomeType === "NOT_AVAILABLE" && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-400 mb-2">Nascondi e richiama non prima di:</label>
-                <select
-                  value={notAvailableDelay}
-                  onChange={e => setNotAvailableDelay(e.target.value)}
-                  className="w-full bg-gray-900 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-orange-500"
-                >
-                  <option value="1">Tra 1 Ora</option>
-                  <option value="2">Tra 2 Ore (Default)</option>
-                  <option value="4">Tra 4 Ore</option>
-                  <option value="8">Tra 8 Ore</option>
-                  <option value="24">Domani (24 Ore)</option>
-                  <option value="48">Tra 2 Giorni (48 Ore)</option>
-                  <option value="72">Tra 3 Giorni (72 Ore)</option>
-                  <option value="96">Tra 4 Giorni</option>
-                  <option value="120">Tra 5 Giorni</option>
-                  <option value="144">Tra 6 Giorni</option>
-                  <option value="168">Tra 7 Giorni (1 Settimana)</option>
-                  <option value="240">Tra 10 Giorni</option>
-                  <option value="360">Tra 15 Giorni</option>
-                  <option value="480">Tra 20 Giorni</option>
-                </select>
-              </div>
-            )}
-
             {outcomeType === "NON_INTERESSATO" && (
-              <div className="mb-4 bg-red-950/20 border border-red-900/50 p-3 rounded-lg text-xs text-red-300">
-                Il contatto verrà nascosto dal calderone e non potrà essere chiamato da nessuno per 3 mesi (90 giorni).
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-400 mb-2">Nascondi e non richiamare per:</label>
+                <div className="flex gap-3">
+                  <input 
+                    type="number" 
+                    min="1" 
+                    value={notInterestedValue}
+                    onChange={e => setNotInterestedValue(e.target.value)}
+                    className="w-1/3 bg-gray-900 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-red-500" 
+                  />
+                  <select
+                    value={notInterestedUnit}
+                    onChange={e => setNotInterestedUnit(e.target.value)}
+                    className="w-2/3 bg-gray-900 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-red-500"
+                  >
+                    <option value="hours">Ore</option>
+                    <option value="days">Giorni</option>
+                    <option value="months">Mesi</option>
+                  </select>
+                </div>
               </div>
             )}
 

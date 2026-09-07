@@ -54,6 +54,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     } else if (outcome === "WRONG_NUMBER" || outcome === "NOT_INTERESTED") {
       newHiddenUntil = new Date();
       newHiddenUntil.setDate(newHiddenUntil.getDate() + 90);
+    } else if (outcome === "NON_INTERESSATO") {
+      newHiddenUntil = new Date();
+      if (delayDurationObj) {
+        if (delayDurationObj.unit === "hours") {
+          newHiddenUntil.setHours(newHiddenUntil.getHours() + delayDurationObj.value);
+        } else if (delayDurationObj.unit === "days") {
+          newHiddenUntil.setDate(newHiddenUntil.getDate() + delayDurationObj.value);
+        } else if (delayDurationObj.unit === "months") {
+          newHiddenUntil.setMonth(newHiddenUntil.getMonth() + delayDurationObj.value);
+        }
+      } else {
+        newHiddenUntil.setMonth(newHiddenUntil.getMonth() + 3);
+      }
     }
 
     await prisma.$transaction([

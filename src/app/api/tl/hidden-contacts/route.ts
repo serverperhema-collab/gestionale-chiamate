@@ -76,10 +76,18 @@ export async function GET() {
         } else if (lastCall.outcome === "TRASH_REQUEST") {
           reason = "In attesa di approvazione scarto (Cancellazione)";
           blockedBy = lastCall.user.name;
-        } else {
-          reason = `Esito: ${lastCall.outcome}`;
-          blockedBy = lastCall.user.name;
-        }
+        } else if (lastCall.outcome === "NON_INTERESSATO") {
+            const match = (lastCall.notes || "").match(/^\[(.*?)\] (.*)$/);
+            if (match) {
+              reason = `Non Interessato BLOCCATO PER ${match[1].toUpperCase()} - ${match[2]}`;
+            } else {
+              reason = `Non Interessato - ${lastCall.notes}`;
+            }
+            blockedBy = lastCall.user.name;
+          } else {
+            reason = `Esito: ${lastCall.outcome}`;
+            blockedBy = lastCall.user.name;
+          }
       }
       
       if (reason !== "Richiami operatore in corso" && c.activityLogs.length > 0) {
