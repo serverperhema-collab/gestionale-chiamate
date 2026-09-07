@@ -242,6 +242,43 @@ export default function HiddenContactsPage() {
         </div>
       </div>
 
+        {/* Filters Grid */}
+        <div className="bg-gray-800/20 border border-gray-800/80 rounded-xl p-4 mb-8 flex flex-col md:flex-row gap-4 items-center">
+          <div className="flex items-center text-gray-400 mr-2">
+            <Filter className="w-5 h-5 mr-2" />
+            <span className="text-sm font-medium">Filtra per:</span>
+          </div>
+          <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-3 gap-4">
+            <MultiSelect 
+              placeholder="Operatore" 
+              options={uniqueOperators} 
+              selected={filterOperators} 
+              onChange={setFilterOperators} 
+            />
+            <MultiSelect 
+              placeholder="Motivazione Blocco" 
+              options={uniqueReasons} 
+              selected={filterReasons} 
+              onChange={setFilterReasons} 
+            />
+            <MultiSelect 
+              placeholder="CAP" 
+              options={uniqueCaps} 
+              selected={filterCaps} 
+              onChange={setFilterCaps} 
+            />
+          </div>
+          {(filterOperators.length > 0 || filterReasons.length > 0 || filterCaps.length > 0) && (
+            <button 
+              onClick={() => { setFilterOperators([]); setFilterReasons([]); setFilterCaps([]); }}
+              className="text-gray-400 hover:text-white px-3 py-2 text-sm flex items-center transition-colors border border-gray-700 rounded-lg hover:bg-gray-800"
+            >
+              <X className="w-4 h-4 mr-1" />
+              Reset
+            </button>
+          )}
+        </div>
+
       {filteredContacts.length === 0 ? (
         <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-12 text-center">
           <EyeOff className="w-16 h-16 text-gray-600 mx-auto mb-4" />
