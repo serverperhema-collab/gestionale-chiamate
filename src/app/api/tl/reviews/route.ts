@@ -51,7 +51,6 @@ export async function GET() {
       },
       include: {
         activityLogs: {
-          where: { action: "CONTACT_REVIEW_REQUESTED" },
           orderBy: { createdAt: "desc" },
           take: 1
         }
@@ -59,7 +58,7 @@ export async function GET() {
     });
 
     for (const c of hiddenContacts) {
-      if (c.activityLogs.length > 0) {
+      if (c.activityLogs.length > 0 && c.activityLogs[0].action === "CONTACT_REVIEW_REQUESTED") {
         reviews.push({
           id: c.id,
           contactId: c.id,
