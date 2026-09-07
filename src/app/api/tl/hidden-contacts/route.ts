@@ -63,11 +63,11 @@ export async function GET() {
             const timeStr = c.noAnswerCount === 1 ? "10 MIN" : (c.noAnswerCount === 2 ? "1 ORA" : "4 ORE");
             reason = `Non Risponde BLOCCATO PER ${timeStr}`;
             blockedBy = lastCall.user.name;
-          } else if (lastCall.outcome === "NOT_AVAILABLE") {
+        } else if (lastCall.outcome === "NOT_AVAILABLE") {
             const timeStr = c.notAvailableCount === 1 ? "4 ORE" : (c.notAvailableCount === 2 ? "24 ORE" : "48 ORE");
             reason = `Non Disponibile BLOCCATO PER ${timeStr}`;
             blockedBy = lastCall.user.name;
-          } else if (lastCall.outcome === "NO_INFO") {
+        } else if (lastCall.outcome === "NO_INFO") {
           reason = "Non Reperibile Senza Info";
           blockedBy = lastCall.user.name;
         } else if (lastCall.outcome === "TRASH_REQUEST") {
@@ -81,24 +81,20 @@ export async function GET() {
               reason = `Non Interessato - ${lastCall.notes}`;
             }
             blockedBy = lastCall.user.name;
-          } else if (lastCall.outcome === "RICHIAMO_PERSONALE" || lastCall.outcome === "NEGOTIATION" || lastCall.outcome === "APPOINTMENT") {
-          if (c.trattativa && (c.trattativa.status === "APPUNTAMENTO" || lastCall.outcome === "APPOINTMENT")) {
-            reason = "TRATTATIVA IN CORSO (APPUNTAMENTO)";
-          } else {
-            reason = "TRATTATIVA IN CORSO (RICHIAMO OPERATORE)";
-          }
-          blockedBy = lastCall.user.name;
-        } else {
-              reason = "APERTA TRATTATIVA CON RICHIAMO";
+        } else if (lastCall.outcome === "RICHIAMO_PERSONALE" || lastCall.outcome === "NEGOTIATION" || lastCall.outcome === "APPOINTMENT") {
+            if (c.trattativa && (c.trattativa.status === "APPUNTAMENTO" || lastCall.outcome === "APPOINTMENT" || c.trattativa.nextActionType === "APPUNTAMENTO")) {
+              reason = "TRATTATIVA IN CORSO (APPUNTAMENTO)";
+            } else {
+              reason = "TRATTATIVA IN CORSO (RICHIAMO OPERATORE)";
             }
             blockedBy = lastCall.user.name;
-          } else {
+        } else {
             reason = `Esito: ${lastCall.outcome}`;
             blockedBy = lastCall.user.name;
-          }
+        }
       }
       
-      if (reason !== "Richiami operatore in corso" && c.activityLogs.length > 0) {
+      if (!reason.includes("TRATTATIVA IN CORSO") && c.activityLogs.length > 0) {
         const lastActivity = c.activityLogs[0];
         const lastCallDate = c.callLogs.length > 0 ? c.callLogs[0].createdAt : new Date(0);
         if (lastActivity.createdAt > lastCallDate && lastActivity.action.includes("TL_")) {
