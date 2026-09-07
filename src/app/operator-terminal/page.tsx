@@ -323,6 +323,19 @@ export default function OperatorTerminal() {
             body: JSON.stringify({ action: "richiamo", payload: actionPayload })
           });
           data = await res.json();
+          
+          if (res.ok) {
+            // Sblocca il contatto chiamando l'API outcome
+            const unlockRes = await fetch(`/api/contacts/${contact.id}/outcome`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+            if (!unlockRes.ok) {
+              res = unlockRes;
+              data = await unlockRes.json();
+            }
+          }
         }
       } else {
         // Fallback per NO_ANSWER, NOT_AVAILABLE, KO standard (su Contact)
