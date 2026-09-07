@@ -57,9 +57,13 @@ export async function GET(req: Request) {
             }
             blockedBy = `\`${lastCall.user.name}\``;
           } else if (lastCall.outcome === "RICHIAMO_PERSONALE") {
-              reason = "APERTA TRATTATIVA CON RICHIAMO";
-              blockedBy = `\`${lastCall.user.name}\``;
+            if (c.trattativa && (c.trattativa.status === "APPUNTAMENTO" || c.trattativa.nextActionType === "APPUNTAMENTO")) {
+              reason = "APERTA TRATTATIVA CON APPUNTAMENTO";
             } else {
+              reason = "APERTA TRATTATIVA CON RICHIAMO";
+            }
+            blockedBy = `\`${lastCall.user.name}\``;
+          } else {
               reason = `Esito: ${lastCall.outcome}`;
             blockedBy = `\`${lastCall.user.name}\``;
           }

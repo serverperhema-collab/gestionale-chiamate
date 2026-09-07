@@ -55,6 +55,7 @@ export default function OperatorTerminal() {
 
   const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
   const [activeRecall, setActiveRecall] = useState<any>(null);
+    const [postponeMinutes, setPostponeMinutes] = useState("10");
   const [showRecallAlert, setShowRecallAlert] = useState(false);
   
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
@@ -131,7 +132,7 @@ export default function OperatorTerminal() {
 
     const checkRecalls = async () => {
       try {
-        const res = await fetch("/api/trattative?status=RICHIAMO_PERSONALE&operatorId=me&nextActionDateBefore=now");
+        const res = await fetch(`/api/trattative?status=RICHIAMO_PERSONALE&operatorId=me&nextActionDateBefore=now&_t=${Date.now()}`);
         if (res.ok) {
           const data = await res.json();
           if (data.trattative && data.trattative.length > 0) {
@@ -964,66 +965,58 @@ export default function OperatorTerminal() {
                 </div>
               </div>
               
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={() => {
-                    setTimelineTrattativaId(activeRecall.id);
-                    setShowRecallAlert(false);
-                  }}
-                  className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white rounded-xl transition font-black tracking-wide shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2"
-                >
-                  <PhoneCall className="w-5 h-5" /> CHIAMA ORA!
-                </button>
-                
-                <div className="flex gap-2">
+              <div className="flex flex-col gap-4">
                   <button
-                    onClick={async () => {
-                      try {
-                        const res = await fetch("/api/operator/recalls/pending", {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ id: activeRecall.id, minutes: 10 })
-                        });
-                        if (res.ok) {
-                          toast.success("Ricontatto posticipato di 10 minuti");
-                          setShowRecallAlert(false);
-                          setActiveRecall(null);
-                        }
-                      } catch (err) {
-                        toast.error("Errore di rete");
-                      }
+                    onClick={() => {
+                      setTimelineTrattativaId(activeRecall.id);
+                      setShowRecallAlert(false);
+                      setActiveRecall(null);
                     }}
-                    className="flex-1 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-xs font-bold transition"
+                    className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white rounded-xl transition font-black tracking-wide shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2"
                   >
-                    Posticipa 10 Min
+                    <PhoneCall className="w-5 h-5" /> APRI SCHEDA TRATTATIVA
                   </button>
-                  <button
-                    onClick={async () => {
-                      try {
-                        const res = await fetch("/api/operator/recalls/pending", {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ id: activeRecall.id, minutes: 60 })
-                        });
-                        if (res.ok) {
-                          toast.success("Ricontatto posticipato di 1 ora");
-                          setShowRecallAlert(false);
-                          setActiveRecall(null);
+                  
+                  <div className="bg-gray-900/40 p-3 rounded-lg border border-gray-700 flex items-center gap-3">
+                    <span className="text-xs font-bold text-gray-400 whitespace-nowrap">POSTICIPA DI:</span>
+                    <select
+                      value={postponeMinutes}
+                      onChange={e => setPostponeMinutes(e.target.value)}
+                      className="flex-1 bg-gray-800 border border-gray-600 rounded p-2 text-white text-sm focus:outline-none focus:border-orange-500"
+                    >
+                      <option value="10">10 Minuti</option>
+                      <option value="30">30 Minuti</option>
+                      <option value="60">1 Ora</option>
+                      <option value="120">2 Ore</option>
+                      <option value="1440">Domani (24 Ore)</option>
+                    </select>
+                    <button
+                      onClick={async () => {
+                        try {
+                          const res = await fetch("/api/operator/recalls/pending", {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ id: activeRecall.id, minutes: parseInt(postponeMinutes) })
+                          });
+                          if (res.ok) {
+                            toast.success(`Ricontatto posticipato`);
+                            setShowRecallAlert(false);
+                            setActiveRecall(null);
+                          }
+                        } catch (err) {
+                          toast.error("Errore di rete");
                         }
-                      } catch (err) {
-                        toast.error("Errore di rete");
-                      }
-                    }}
-                    className="flex-1 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-xs font-bold transition"
-                  >
-                    Posticipa 1 Ora
-                  </button>
+                      }}
+                      className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded font-bold text-sm transition"
+                    >
+                      Conferma
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {searchModalOpen && (
         <SearchContactModal 
