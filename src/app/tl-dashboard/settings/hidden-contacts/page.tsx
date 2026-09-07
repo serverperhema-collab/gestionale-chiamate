@@ -364,19 +364,32 @@ export default function HiddenContactsPage() {
                   </div>
               </div>
               
-              <div className="bg-gray-800/30 p-3 flex justify-between items-center">
+              <div className="bg-gray-800/30 p-3 flex justify-between items-center flex-wrap gap-2">
                 <button
                   onClick={() => handleViewLogs(contact)}
                   className="flex items-center text-emerald-400 hover:text-emerald-300 px-2 py-2 text-sm font-medium transition-colors"
+                  title="Vedi Storico"
                 >
                   <FileText className="w-4 h-4 mr-1.5" />
-                  Vedi Storico
+                  Storico
                 </button>
+                
+                <button
+                  disabled={!contact.trattativa}
+                  onClick={() => contact.trattativa && setTimelineTrattativaId(contact.trattativa.id)}
+                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${contact.trattativa ? 'bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white border border-purple-500/30' : 'opacity-40 grayscale cursor-not-allowed bg-gray-800 text-gray-500 border border-gray-700'}`}
+                  title={contact.trattativa ? "Apri Scheda Trattativa" : "Nessuna Trattativa Attiva"}
+                >
+                  <Handshake className="w-4 h-4 mr-1.5" />
+                  Scheda Trattativa
+                </button>
+
                 <button
                   onClick={() => handleUnblockClick(contact)}
                   className="flex items-center bg-gray-800 hover:bg-emerald-600 border border-gray-700 hover:border-emerald-500 text-gray-300 hover:text-white px-4 py-2 rounded-lg transition-all duration-200 text-sm"
+                  title="Forza Sblocco"
                 >
-                  <Unlock className="w-4 h-4 mr-2" />
+                  <Unlock className="w-4 h-4 mr-1.5" />
                   Sblocca
                 </button>
               </div>
