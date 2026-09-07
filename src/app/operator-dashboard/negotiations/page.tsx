@@ -41,7 +41,7 @@ export default function OperatorNegotiations() {
   const filteredTrattative = trattative.filter(st => {
     if (activeTab === 'personal-recall') return st.status === 'RICHIAMO_PERSONALE';
     if (activeTab === 'appointment-recall') return st.status === 'APPUNTAMENTO';
-    if (activeTab === 'commercial-managing') return ['TRATTATIVA_IN_CORSO', 'PREVENTIVO', 'SOSPESA'].includes(st.status);
+    
     return false;
   });
 
@@ -92,13 +92,7 @@ export default function OperatorNegotiations() {
                 Da Richiamare
                 {activeTab === 'appointment-recall' && <ChevronRight className="w-4 h-4" />}
               </button>
-              <button 
-                onClick={() => setActiveTab('commercial-managing')}
-                className={`w-full text-left px-3 py-2 rounded-lg transition text-sm flex items-center justify-between ${activeTab === 'commercial-managing' ? 'bg-orange-600/20 text-orange-300 font-bold border border-orange-500/30' : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'}`}
-              >
-                In gestione al Commerciale
-                {activeTab === 'commercial-managing' && <ChevronRight className="w-4 h-4" />}
-              </button>
+              
             </div>
           </div>
         </div>
@@ -134,9 +128,6 @@ export default function OperatorNegotiations() {
                   if (st.status === 'APPUNTAMENTO') {
                     tagText = "APPUNTAMENTO";
                     tagColor = "bg-blue-600";
-                  } else if (['TRATTATIVA_IN_CORSO', 'PREVENTIVO', 'SOSPESA'].includes(st.status)) {
-                    tagText = "IN GESTIONE";
-                    tagColor = "bg-orange-600";
                   }
 
                   return (
