@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { EyeOff, Clock, Unlock, AlertTriangle, Building, MapPin, Search, FileText, Phone, Settings as SettingsIcon, Calendar, X, Filter, User } from "lucide-react";
+import TrattativaTimeline from "@/components/TrattativaTimeline";
+import { Handshake, EyeOff, Clock, Unlock, AlertTriangle, Building, MapPin, Search, FileText, Phone, Settings as SettingsIcon, Calendar, X, Filter, User } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface HiddenContact {
@@ -13,6 +14,7 @@ interface HiddenContact {
   hiddenUntil: string;
   reason: string;
   blockedBy: string;
+  trattativa?: { id: string; status: string } | null;
 }
 
 interface LogEvent {
@@ -104,6 +106,7 @@ export default function HiddenContactsPage() {
 
   // Unblock Confirmation Modal State
   const [contactToUnblock, setContactToUnblock] = useState<HiddenContact | null>(null);
+  const [timelineTrattativaId, setTimelineTrattativaId] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);

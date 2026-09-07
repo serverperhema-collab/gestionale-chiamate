@@ -30,7 +30,8 @@ export async function GET() {
         assignedTo: {
           select: { name: true }
         },
-        callLogs: {
+        trattativa: { select: { id: true, status: true } },
+          callLogs: {
           orderBy: { createdAt: "desc" },
           take: 1,
           select: {
