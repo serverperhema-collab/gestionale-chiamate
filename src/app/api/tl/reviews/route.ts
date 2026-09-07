@@ -70,6 +70,22 @@ export async function GET() {
       }
     }
 
+    const gestioneSeparata = await prisma.gestioneSeparataRequest.findMany({
+      where: { isResolved: false },
+      include: { contact: true }
+    });
+
+    for (const req of gestioneSeparata) {
+      reviews.push({
+        id: req.id,
+        contactId: req.contactId,
+        type: 'GESTIONE_SEPARATA',
+        name: req.contact?.name || 'Sconosciuto',
+        reviewNote: req.reason,
+        date: req.createdAt
+      });
+    }
+
     return NextResponse.json({ reviews });
   } catch (error: any) {
     console.error("GET reviews error:", error);
