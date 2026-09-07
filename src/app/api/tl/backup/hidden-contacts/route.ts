@@ -56,8 +56,11 @@ export async function GET(req: Request) {
               reason = `Non Interessato - ${lastCall.notes}`;
             }
             blockedBy = `\`${lastCall.user.name}\``;
-          } else {
-            reason = `Esito: ${lastCall.outcome}`;
+          } else if (lastCall.outcome === "RICHIAMO_PERSONALE") {
+              reason = "APERTA TRATTATIVA CON RICHIAMO";
+              blockedBy = `\`${lastCall.user.name}\``;
+            } else {
+              reason = `Esito: ${lastCall.outcome}`;
             blockedBy = `\`${lastCall.user.name}\``;
           }
       }

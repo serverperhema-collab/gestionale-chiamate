@@ -908,7 +908,7 @@ export default function OperatorTerminal() {
                 onClick={() => {
                   if (negoDate && negoTime && negoNotes.trim()) {
                     const isoDate = new Date(`${negoDate}T${negoTime}`).toISOString();
-                    handleOutcome("NEGOTIATION", negoNotes, isoDate);
+                    handleOutcome("RICHIAMO_PERSONALE", negoNotes, isoDate);
                   }
                 }} 
                 disabled={!negoDate || !negoTime || !negoNotes.trim()}
