@@ -240,10 +240,24 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
                 [...trattativa.history].sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()).map((h: any, idx: number, arr: any[]) => {
                   const isLast = idx === arr.length - 1;
                   
-                  // Custom rendering for the first event "RICHIAMO IMPOSTATO"
+                  // Nascondi il log grezzo "CREATA" se subito dopo c'è "Richiamo impostato"
+                  if (h.actionType === "CREATA" && arr.length > 1 && arr[idx + 1]?.notes === "Richiamo impostato") {
+                    return null;
+                  }
+
                   let actionTitle = h.actionType.replace(/_/g, " ");
+                  let actionDescription = h.details?.note || h.notes || "Nessuna nota aggiuntiva.";
+                  
                   if (actionTitle === "NOTA AGGIUNTA" && h.notes === "Richiamo impostato") {
                      actionTitle = "TRATTATIVA CREATA";
+                     const matchDate = actionDescription.match(/Data richiamo:\s*([^.]+)\./);
+                     const matchNote = actionDescription.match(/Note:\s*(.*)/);
+                     
+                     const d = matchDate ? matchDate[1] : "";
+                     const n = matchNote ? matchNote[1] : "";
+                     const creatorName = h.operator?.name || h.commerciale?.name || "Sistema";
+                     
+                     actionDescription = `Creata Trattativa da: ${creatorName} con richiamo il ${d} con nota: ${n}`;
                   }
 
                   return (
@@ -262,7 +276,7 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
                           </span>
                         </div>
                         <p className="text-sm text-gray-300 italic whitespace-pre-wrap leading-relaxed">
-                          {h.details?.note || h.notes || "Nessuna nota aggiuntiva."}
+                          {actionDescription}
                         </p>
                         <div className="mt-3 pt-3 border-t border-gray-700/50 flex justify-end">
                           <span className="text-[10px] font-black uppercase text-gray-500 tracking-wider">
