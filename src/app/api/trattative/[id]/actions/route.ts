@@ -4,13 +4,14 @@ import { authOptions } from "@/lib/authOptions";
 import { TrattativaService } from "@/lib/services/TrattativaService";
 import { Role } from "@prisma/client";
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const userRole = (session.user as any).role as Role;
     const userId = (session.user as any).id as string;
 
+    const { id } = await params;
     const body = await req.json();
     const { action, payload } = body;
 
@@ -21,37 +22,37 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     switch (action) {
       case "richiamo":
-        result = await service.setRichiamo(params.id, payload, userId, userRole);
+        result = await service.setRichiamo(id, payload, userId, userRole);
         break;
       case "preventivo-complete":
-        result = await service.completePreventivo(params.id, payload, userId, userRole);
+        result = await service.completePreventivo(id, payload, userId, userRole);
         break;
       case "resolve-deroga":
-        result = await service.resolveDeroga(params.id, payload, userId, userRole);
+        result = await service.resolveDeroga(id, payload, userId, userRole);
         break;
 
 
 
       case "appuntamento":
-        result = await service.scheduleAppointment(params.id, payload, userId, userRole);
+        result = await service.scheduleAppointment(id, payload, userId, userRole);
         break;
       case "rifissa-appuntamento":
-        result = await service.rescheduleAppointment(params.id, payload.appointmentId, payload, userId, userRole);
+        result = await service.rescheduleAppointment(id, payload.appointmentId, payload, userId, userRole);
         break;
       case "esito":
-        result = await service.submitOutcome(params.id, payload.appointmentId, payload, userId, userRole);
+        result = await service.submitOutcome(id, payload.appointmentId, payload, userId, userRole);
         break;
       case "chiudi-persa":
-        result = await service.closeLost(params.id, payload, userId, userRole);
+        result = await service.closeLost(id, payload, userId, userRole);
         break;
       case "riapri":
-        result = await service.reopen(params.id, payload, userId, userRole);
+        result = await service.reopen(id, payload, userId, userRole);
         break;
       case "deroga":
-        result = await service.requestDeroga(params.id, payload, userId, userRole);
+        result = await service.requestDeroga(id, payload, userId, userRole);
         break;
       case "nota":
-        result = await service.addNote(params.id, payload, userId, userRole);
+        result = await service.addNote(id, payload, userId, userRole);
         break;
       // ... mappatura altre action (annulla, deroga, preventivo, ecc)
       default:

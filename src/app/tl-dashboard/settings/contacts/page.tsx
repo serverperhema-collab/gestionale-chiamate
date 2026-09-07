@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import HistoricalApptModal from "@/components/HistoricalApptModal";
+import TrattativaTimeline from "@/components/TrattativaTimeline";
 
 import { Database, Search, Filter, History, X, ChevronLeft, ChevronRight, User, Phone, PhoneOff, Calendar, AlertCircle, ArrowRightCircle } from "lucide-react";
 import toast from "react-hot-toast";
@@ -29,6 +30,7 @@ export default function GlobalContactsPage() {
   const [loadingTimeline, setLoadingTimeline] = useState(false);
 
   // Modal Assegnazione
+  const [timelineTrattativaId, setTimelineTrattativaId] = useState<string | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [assignContact, setAssignContact] = useState<any | null>(null);
   const [usersList, setUsersList] = useState<any[]>([]);
@@ -39,6 +41,25 @@ export default function GlobalContactsPage() {
     notes: ""
   });
   const [isAssigning, setIsAssigning] = useState(false);
+
+  
+  const handleApriTrattativa = async (contactId: string) => {
+    try {
+      const res = await fetch("/api/trattative", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contactId })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTimelineTrattativaId(data.trattativa.id);
+      } else {
+        toast.error("Errore apertura trattativa");
+      }
+    } catch {
+      toast.error("Errore di rete");
+    }
+  };
 
   const fetchContacts = async () => {
     setLoading(true);
@@ -486,6 +507,13 @@ export default function GlobalContactsPage() {
         </div>
       )}
 
+      {timelineTrattativaId && (
+        <TrattativaTimeline 
+          trattativaId={timelineTrattativaId}
+          onClose={() => setTimelineTrattativaId(null)}
+        />
+      )}
+      
       {showHistModal && histContact && (
         <HistoricalApptModal
           contactId={histContact.id}

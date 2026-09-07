@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -72,6 +72,47 @@ export async function GET() {
         reason: req.reason,
         requestedAt: req.createdAt
       });
+    });
+
+    const pendingDeroghe = await prisma.trattativaSheet.findMany({
+      where: { derogaStatus: "PENDING" },
+      include: {
+        contact: { select: { name: true, address: true, cap: true } },
+        events: { where: { eventType: "DEROGA_RICHIESTA" }, orderBy: { createdAt: "desc" }, take: 1 },
+        currentOperator: { select: { name: true } }
+      }
+    });
+
+    pendingDeroghe.forEach(d => {
+      activeAlerts.push({
+        type: 'DEROGA_APP_REQUEST',
+        appId: d.id, // using trattativaId as appId identifier for the alert modal
+        contactId: d.contactId,
+        contactName: d.contact?.name || "Sconosciuto",
+        operatorName: d.currentOperator?.name || "Operatore",
+        date: d.nextActionDate || new Date(),
+        address: d.contact?.address || "",
+        cap: d.contact?.cap || "",
+        referentName: d.referentName || "",
+        clientNeeds: d.events[0]?.metadata?.notes || ""
+      });
+    });
+
+    const hiddenContacts = await prisma.contact.findMany({
+      where: { assignedToId: null, hiddenUntil: { gt: now } },
+      include: {
+        activityLogs: { where: { action: "CONTACT_REVIEW_REQUESTED" }, orderBy: { createdAt: "desc" }, take: 1 }
+      }
+    });
+
+    hiddenContacts.forEach(c => {
+      if (c.activityLogs.length > 0) {
+        activeAlerts.push({
+          type: 'REVIEW_REQUEST',
+          contactId: c.id,
+          reviewRequestedAt: c.activityLogs[0].createdAt
+        });
+      }
     });
 
     return NextResponse.json({ alerts: activeAlerts });

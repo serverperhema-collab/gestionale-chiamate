@@ -109,11 +109,33 @@ export default function UnifiedCalendarPage() {
     setLoading(true);
     try {
       const [resApp, resCal, resUsers] = await Promise.all([
-        fetch("/api/tl/appointments"),
+        fetch("/api/trattative?status=APPUNTAMENTO&includeAppointments=true"),
         fetch("/api/tl/calendar"),
         fetch("/api/users")
       ]);
-      const dataApp = resApp.ok ? await resApp.json() : { appointments: [] };
+      
+        const dataAppRaw = resApp.ok ? await resApp.json() : { trattative: [] };
+        
+        // Map Trattative to the array of flat appointments expected by the UI
+        const mappedAppointments = [];
+        if (dataAppRaw.trattative) {
+          dataAppRaw.trattative.forEach(st => {
+            if (st.appointments) {
+              st.appointments.forEach(a => {
+                mappedAppointments.push({
+                  ...a,
+                  contact: st.contact,
+                  trattativaStatus: st.status,
+                  isDeroga: st.derogaStatus === 'PENDING',
+                  isApproved: st.derogaStatus === 'APPROVED' || st.derogaStatus === 'NONE',
+                  trattativaId: st.id
+                });
+              });
+            }
+          });
+        }
+        const dataApp = { appointments: mappedAppointments };
+
       const dataCal = resCal.ok ? await resCal.json() : { agendas: [] };
       const dataUsers = resUsers.ok ? await resUsers.json() : { users: [] };
 

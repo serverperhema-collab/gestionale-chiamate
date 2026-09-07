@@ -8,6 +8,7 @@ import Link from "next/link";
 import CreateContactModal from "@/components/CreateContactModal";
 import AppointmentModal from "@/components/AppointmentModal";
 import SearchContactModal from "@/components/SearchContactModal";
+import TrattativaTimeline from "@/components/TrattativaTimeline";
 
 export default function OperatorTerminal() {
   const [contact, setContact] = useState<any>(null);
@@ -60,6 +61,7 @@ export default function OperatorTerminal() {
   const [gestioneSeparataNotes, setGestioneSeparataNotes] = useState("");
 
   const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [timelineTrattativaId, setTimelineTrattativaId] = useState<string | null>(null);
 
   const fetchNextContact = useCallback(async (forcedContactId?: string) => {
     setLoading(true);
@@ -127,11 +129,20 @@ export default function OperatorTerminal() {
 
     const checkRecalls = async () => {
       try {
-        const res = await fetch("/api/operator/recalls/pending");
+        const res = await fetch("/api/trattative?status=RICHIAMO_PERSONALE&operatorId=me&nextActionDateBefore=now");
         if (res.ok) {
           const data = await res.json();
-          if (data.recalls && data.recalls.length > 0) {
-            setActiveRecall(data.recalls[0]);
+          if (data.trattative && data.trattative.length > 0) {
+            // Usa la prima trattativa scaduta come recall
+            const st = data.trattative[0];
+            // Format it to match expected activeRecall structure if needed, or pass it raw
+            setActiveRecall({
+              id: st.id,
+              isST: true, // flag per il pop-up
+              contact: st.contact,
+              reason: st.clientNeeds || "Richiamo personale ST",
+              nextActionDate: st.nextActionDate
+            });
             setShowRecallAlert(true);
             playNotificationSound();
           }
@@ -982,7 +993,7 @@ export default function OperatorTerminal() {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={() => {
-                    fetchNextContact(activeRecall.contact.id);
+                    setTimelineTrattativaId(activeRecall.id);
                     setShowRecallAlert(false);
                   }}
                   className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white rounded-xl transition font-black tracking-wide shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2"
@@ -1047,6 +1058,12 @@ export default function OperatorTerminal() {
             setSearchModalOpen(false);
             fetchNextContact(id);
           }}
+        />
+      )}
+      {timelineTrattativaId && (
+        <TrattativaTimeline 
+          trattativaId={timelineTrattativaId} 
+          onClose={() => setTimelineTrattativaId(null)} 
         />
       )}
     </div>

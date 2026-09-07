@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -18,14 +18,25 @@ export async function GET(req: Request) {
     const commercialeId = searchParams.get("commercialeId");
     const contactId = searchParams.get("contactId");
     const nextActionType = searchParams.get("nextActionType");
+    const nextActionDateBefore = searchParams.get("nextActionDateBefore");
+    const includeAppointments = searchParams.get("includeAppointments") === "true";
 
     const where: any = {};
     if (status) where.status = status;
     if (contactId) where.contactId = contactId;
     if (nextActionType) where.nextActionType = nextActionType;
+    if (nextActionDateBefore) {
+      where.nextActionDate = { lte: nextActionDateBefore === 'now' ? new Date() : new Date(nextActionDateBefore) };
+    }
 
     if (userRole === Role.OPERATORE) {
-      where.currentOperatorId = userId;
+      if (operatorId === 'me') {
+        where.currentOperatorId = userId;
+      } else if (operatorId) {
+        where.currentOperatorId = operatorId;
+      } else {
+        where.currentOperatorId = userId;
+      }
     } else if (userRole === Role.COMMERCIALE) {
       where.currentCommercialeId = userId;
     } else if (userRole === Role.TEAM_LEADER) {
@@ -33,11 +44,14 @@ export async function GET(req: Request) {
       if (commercialeId) where.currentCommercialeId = commercialeId === 'null' ? null : commercialeId;
     }
 
+    const includeOpts: any = { contact: true };
+    if (includeAppointments) {
+      includeOpts.appointments = true;
+    }
+
     const trattative = await prisma.trattativaSheet.findMany({
       where,
-      include: {
-        contact: true
-      },
+      include: includeOpts,
       orderBy: { updatedAt: 'desc' }
     });
 

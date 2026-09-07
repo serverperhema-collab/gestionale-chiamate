@@ -1,13 +1,13 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = (await params).id;
+    const { id } = await params;
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "OPERATORE") {
+    if (!session || !["OPERATORE", "TEAM_LEADER"].includes((session.user as any).role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -24,11 +24,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       return NextResponse.json({ error: "Contatto non trovato" }, { status: 404 });
     }
 
-    const dataToUpdate: any = {
-      reviewRequestedAt: new Date(),
-      reviewNote: notes
-    };
-
+    const dataToUpdate: any = {};
     if (!preserveAssignment) {
       dataToUpdate.assignedToId = null;
       dataToUpdate.hiddenUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 giorni
@@ -39,6 +35,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         where: { id },
         data: dataToUpdate
       }),
+      
       prisma.activityLog.create({
         data: {
           userId,

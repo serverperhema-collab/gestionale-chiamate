@@ -1,4 +1,4 @@
-﻿import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { 
   TrattativaStatus, 
   AppointmentState, 
@@ -150,6 +150,7 @@ export class TrattativaService {
           referentName: params.referentName,
           commercialPhone: params.phone,
           clientNeeds: params.clientNeeds,
+          currentCommercialeId: params.commercialeId || st.currentCommercialeId,
           version: { increment: 1 }
         }
       });
@@ -255,11 +256,14 @@ export class TrattativaService {
       let nextStStatus: TrattativaStatus = TrattativaStatus.TRATTATIVA_IN_CORSO;
       if (params.nextActionType === NextActionType.PREVENTIVO) nextStStatus = TrattativaStatus.PREVENTIVO;
       
+      let dbOutcomeFinal = params.outcomeFinal;
+      if (dbOutcomeFinal === 'TRATTATIVA_IN_CORSO') dbOutcomeFinal = null;
+
       const updated = await tx.trattativaSheet.updateMany({
         where: { id: trattativaId, version: st.version },
         data: {
           status: nextStStatus,
-          outcomeFinal: params.outcomeFinal,
+          outcomeFinal: dbOutcomeFinal,
           outcomeNotes: params.outcomeNotes,
           nextActionType: params.nextActionType || NextActionType.NONE,
           nextActionDate: params.nextActionDate ? new Date(params.nextActionDate) : null,
