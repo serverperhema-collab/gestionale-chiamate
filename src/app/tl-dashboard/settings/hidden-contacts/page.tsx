@@ -305,7 +305,7 @@ export default function HiddenContactsPage() {
           <p className="text-gray-400">Attualmente non ci sono contatti in pausa o bloccati.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredContacts.map(contact => (
             <div key={contact.id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-emerald-500/50 transition-colors shadow-lg flex flex-col">
               <div className="p-5 flex-1">
