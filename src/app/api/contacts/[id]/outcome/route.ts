@@ -13,7 +13,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const userId = (session.user as any).id as string;
     const { id: contactId } = await params;
     const body = await req.json();
-    const { outcome, notes, skipUntil } = body;
+    const { outcome, notes, skipUntil, delayDurationObj } = body;
 
     const contact = await prisma.contact.findUnique({
       where: { id: contactId }
