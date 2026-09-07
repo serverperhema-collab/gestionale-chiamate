@@ -14,6 +14,7 @@ export async function GET(req: Request) {
       where: { hiddenUntil: { not: null }, isKo: false },
       include: {
         assignedTo: true,
+          trattativa: { select: { id: true, status: true, nextActionType: true } },
         koRecords: { where: { isResolved: false } },
         callLogs: { orderBy: { createdAt: "desc" }, take: 1, include: { user: true } },
         activityLogs: { orderBy: { createdAt: "desc" }, take: 1, include: { user: true } }

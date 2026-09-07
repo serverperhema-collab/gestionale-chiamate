@@ -32,8 +32,9 @@ export async function GET() {
           take: 1,
           select: {
             outcome: true,
-            createdAt: true,
-            user: { select: { name: true } }
+              createdAt: true,
+              notes: true,
+              user: { select: { name: true } }
           }
         },
         activityLogs: {
