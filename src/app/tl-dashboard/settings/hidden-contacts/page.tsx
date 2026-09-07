@@ -195,15 +195,29 @@ export default function HiddenContactsPage() {
     return `${mins}m ${secs}s`;
   };
 
+  
+  const getCategory = (r: string) => {
+    if (r.startsWith('Non Risponde')) return 'Non Risponde';
+    if (r.startsWith('Non Disponibile')) return 'Non Disponibile';
+    if (r.startsWith('Non Interessato')) return 'Non Interessato';
+    if (r.startsWith('Non Reperibile')) return 'Non Reperibile';
+    if (r.startsWith('APERTA TRATTATIVA')) return 'Trattativa Aperta';
+    if (r.startsWith('Richiami operatore')) return 'Trattativa in corso';
+    if (r.startsWith('In attesa di')) return 'Richiesta Scarto';
+    if (r.startsWith('Esito: SKIP')) return 'Esito: SKIP';
+    if (r.startsWith('Esito:')) return r.split(' ')[0] + ' ' + r.split(' ')[1];
+    return r.split(' - ')[0]; // fallback
+  };
+
   // Estrazione opzioni uniche per i filtri
   const uniqueOperators = useMemo(() => Array.from(new Set(contacts.map(c => c.blockedBy))).sort(), [contacts]);
-  const uniqueReasons = useMemo(() => Array.from(new Set(contacts.map(c => c.reason.split(' (')[0]))).sort(), [contacts]);
+  const uniqueReasons = useMemo(() => Array.from(new Set(contacts.map(c => getCategory(c.reason)))).sort(), [contacts]);
   const uniqueCaps = useMemo(() => Array.from(new Set(contacts.map(c => c.cap))).sort(), [contacts]);
 
   const filteredContacts = contacts.filter(c => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase());
     const matchOperator = filterOperators.length === 0 || filterOperators.includes(c.blockedBy);
-    const matchReason = filterReasons.length === 0 || filterReasons.some(r => c.reason.startsWith(r));
+    const matchReason = filterReasons.length === 0 || filterReasons.includes(getCategory(c.reason));
     const matchCap = filterCaps.length === 0 || filterCaps.includes(c.cap);
 
     return matchSearch && matchOperator && matchReason && matchCap;
