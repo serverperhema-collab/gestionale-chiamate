@@ -57,11 +57,7 @@ export async function GET() {
       let reason = "Motivo Sconosciuto";
       let blockedBy = c.assignedTo?.name || "Sistema";
 
-      if (c.callLogs.length > 0 && c.callLogs[0].outcome === "NEGOTIATION") {
-        reason = "Richiami operatore in corso";
-        blockedBy = c.callLogs[0].user.name;
-      }
-      else if (c.callLogs.length > 0) {
+      if (c.callLogs.length > 0) {
         const lastCall = c.callLogs[0];
         if (lastCall.outcome === "NO_ANSWER") {
             const timeStr = c.noAnswerCount === 1 ? "10 MIN" : (c.noAnswerCount === 2 ? "1 ORA" : "4 ORE");
@@ -85,10 +81,14 @@ export async function GET() {
               reason = `Non Interessato - ${lastCall.notes}`;
             }
             blockedBy = lastCall.user.name;
-          } else if (lastCall.outcome === "RICHIAMO_PERSONALE") {
-            if (c.trattativa && (c.trattativa.status === "APPUNTAMENTO" || c.trattativa.nextActionType === "APPUNTAMENTO")) {
-              reason = "APERTA TRATTATIVA CON APPUNTAMENTO";
-            } else {
+          } else if (lastCall.outcome === "RICHIAMO_PERSONALE" || lastCall.outcome === "NEGOTIATION" || lastCall.outcome === "APPOINTMENT") {
+          if (c.trattativa && (c.trattativa.status === "APPUNTAMENTO" || lastCall.outcome === "APPOINTMENT")) {
+            reason = "TRATTATIVA IN CORSO (APPUNTAMENTO)";
+          } else {
+            reason = "TRATTATIVA IN CORSO (RICHIAMO OPERATORE)";
+          }
+          blockedBy = lastCall.user.name;
+        } else {
               reason = "APERTA TRATTATIVA CON RICHIAMO";
             }
             blockedBy = lastCall.user.name;

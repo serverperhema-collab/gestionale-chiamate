@@ -202,6 +202,7 @@ export default function HiddenContactsPage() {
     if (r.startsWith('Non Interessato')) return 'Non Interessato';
     if (r.startsWith('Non Reperibile')) return 'Non Reperibile';
     if (r.startsWith('APERTA TRATTATIVA')) return 'Trattativa Aperta';
+    if (r.startsWith('TRATTATIVA IN CORSO')) return r;
     if (r.startsWith('Richiami operatore')) return 'Trattativa in corso';
     if (r.startsWith('In attesa di')) return 'Richiesta Scarto';
     if (r.startsWith('Esito: SKIP')) return 'Esito: SKIP';
