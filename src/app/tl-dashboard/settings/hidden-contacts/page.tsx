@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { EyeOff, Clock, Unlock, AlertTriangle, Building, MapPin, Search, FileText, Phone, Settings as SettingsIcon, Calendar, X, Filter } from "lucide-react";
+import { EyeOff, Clock, Unlock, AlertTriangle, Building, MapPin, Search, FileText, Phone, Settings as SettingsIcon, Calendar, X, Filter, User } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface HiddenContact {
@@ -65,6 +65,25 @@ const MultiSelect = ({ options, selected, onChange, placeholder }: { options: st
     </div>
   );
 };
+
+
+function formatCountdown(targetDate: string, now: Date) {
+  const target = new Date(targetDate).getTime();
+  const diff = target - now.getTime();
+  if (diff <= 0) return "Scaduto";
+
+  const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+  const m = Math.floor((diff / 1000 / 60) % 60);
+  const s = Math.floor((diff / 1000) % 60);
+
+  const parts = [];
+  if (d > 0) parts.push(`${d}g`);
+  if (h > 0 || d > 0) parts.push(`${h}h`);
+  parts.push(`${m}m`);
+  parts.push(`${s}s`);
+  return parts.join(' ');
+}
 
 export default function HiddenContactsPage() {
   const [contacts, setContacts] = useState<HiddenContact[]>([]);
@@ -307,24 +326,39 @@ export default function HiddenContactsPage() {
                 </div>
 
                 <div className="space-y-3 bg-gray-800/40 rounded-lg p-3 border border-gray-800/80">
-                  <div className="flex items-start">
-                    <Clock className="w-4 h-4 mr-2 text-gray-400 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wider mb-0.5 font-bold">Scadenza Blocco</p>
-                      <p className="text-sm text-white font-medium">
-                        {contact.hiddenUntil ? new Date(contact.hiddenUntil).toLocaleString() : 'N/A'}
-                      </p>
+                    <div className="flex items-start">
+                      <Clock className="w-4 h-4 mr-2 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-500 uppercase tracking-wider mb-0.5 font-bold">Scadenza Blocco</p>
+                        <div className="flex justify-between items-center">
+                          <p className="text-sm text-white font-medium">
+                            {contact.hiddenUntil ? new Date(contact.hiddenUntil).toLocaleString() : 'N/A'}
+                          </p>
+                          {contact.hiddenUntil && (
+                            <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-900/30 px-2 py-0.5 rounded border border-emerald-500/20">
+                              {formatCountdown(contact.hiddenUntil, now)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-start">
-                    <AlertTriangle className="w-4 h-4 mr-2 text-orange-400 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wider mb-0.5 font-bold">Motivo del Blocco</p>
-                      <p className="text-sm text-gray-300">{contact.reason}</p>
+                    <div className="flex items-start">
+                      <AlertTriangle className="w-4 h-4 mr-2 text-orange-400 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wider mb-0.5 font-bold">Motivo del Blocco</p>
+                        <p className="text-sm text-gray-300">{contact.reason}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start pt-1 border-t border-gray-800/50">
+                      <User className="w-4 h-4 mr-2 text-indigo-400 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wider mb-0.5 font-bold">Operatore</p>
+                        <p className="text-sm text-indigo-300 font-medium">{contact.blockedBy || "Sconosciuto"}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
               </div>
               
               <div className="bg-gray-800/30 p-3 flex justify-between items-center">
