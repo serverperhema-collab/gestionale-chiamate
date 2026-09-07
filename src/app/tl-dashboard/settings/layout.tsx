@@ -28,7 +28,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
         </div>
       </div>
 
-      <div className="flex flex-1 gap-8 max-w-7xl w-full">
+      <div className="flex flex-1 gap-8 w-full max-w-[1800px]">
         {/* SIDE MENU */}
         <div className="w-64 flex-shrink-0">
           <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden sticky top-8">
