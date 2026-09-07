@@ -13,12 +13,7 @@ export async function GET() {
     const now = new Date();
 
     const hiddenContacts = await prisma.contact.findMany({
-      where: {
-        OR: [
-          { hiddenUntil: { gt: now } },
-          { isKo: true }
-        ]
-      },
+      where: { hiddenUntil: { gt: now }, isKo: false },
       select: {
         id: true,
         name: true,

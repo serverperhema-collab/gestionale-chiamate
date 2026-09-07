@@ -11,13 +11,7 @@ export async function GET(req: Request) {
     }
 
     const hiddenContacts = await prisma.contact.findMany({
-      where: {
-        OR: [
-          { hiddenUntil: { not: null } },
-          { isKo: true },
-          { koRecords: { some: { isResolved: false } } }
-        ]
-      },
+      where: { hiddenUntil: { not: null }, isKo: false },
       include: {
         assignedTo: true,
         koRecords: { where: { isResolved: false } },
