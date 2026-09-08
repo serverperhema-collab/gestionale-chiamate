@@ -420,7 +420,7 @@ export class TrattativaService {
       return await tx.trattativaSheet.findUnique({ where: { id: trattativaId } });
     });
   }
-  async setRichiamo(trattativaId: string, params: { recallDate: string; notes?: string }, userId: string, userRole: Role) {
+  async setRichiamo(trattativaId: string, params: { recallDate: string; notes?: string; commercialeId?: string }, userId: string, userRole: Role) {
     this.validateRole(userRole, 'createOrReopen'); // Or any other suitable permission
     return prisma.$transaction(async (tx) => {
       const st = await tx.trattativaSheet.findUnique({ where: { id: trattativaId } });
@@ -437,9 +437,21 @@ export class TrattativaService {
       });
       if (updated.count === 0) throw new ConflictError("Conflitto di versione");
 
-      await this.appendEvent(tx, trattativaId, "NOTA_AGGIUNTA", "Richiamo impostato", {
-        note: `Data richiamo: ${params.recallDate}. Note: ${params.notes || ''}`
-      }, userId, userRole);
+      await this.appendEvent(tx, trattativaId, "NOTA_AGGIUNTA", params.commercialeId ? "Richiamo passato a Commerciale" : "Richiamo impostato", {
+          note: `Data richiamo: ${params.recallDate}. Note: ${params.notes || ''}`
+        }, userId, userRole);
+
+        if (params.commercialeId) {
+          await tx.notification.create({
+            data: {
+              userId: params.commercialeId,
+              type: "NUOVO_RICHIAMO",
+              title: "NUOVO CONTATTO ASSEGNATO",
+              message: `L'operatore ti ha assegnato un nuovo contatto da chiamare in data ${new Date(params.recallDate).toLocaleDateString('it-IT')}`,
+              metadata: { trattativaId }
+            }
+          });
+        }
 
       return await tx.trattativaSheet.findUnique({ where: { id: trattativaId } });
     });

@@ -56,6 +56,9 @@ export default function OperatorTerminal() {
   const [negoPhone, setNegoPhone] = useState("");
   const [negoAddress, setNegoAddress] = useState("");
   const [negoContactNotes, setNegoContactNotes] = useState("");
+  const [negoAssignTo, setNegoAssignTo] = useState<"OPERATOR" | "COMMERCIALE">("OPERATOR");
+  const [negoCommercialeId, setNegoCommercialeId] = useState("");
+  const [availableCommerciali, setAvailableCommerciali] = useState<any[]>([]);
 
   const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
   const [activeRecall, setActiveRecall] = useState<any>(null);
@@ -316,10 +319,13 @@ export default function OperatorTerminal() {
           const stData = await stRes.json();
           const trattativaId = stData.trattativa.id;
           
-          const actionPayload = {
-            recallDate: recallDateStr,
-            notes: notes
-          };
+          const actionPayload: any = {
+              recallDate: recallDateStr,
+              notes: notes
+            };
+            if (negoAssignTo === "COMMERCIALE" && negoCommercialeId) {
+              actionPayload.commercialeId = negoCommercialeId;
+            }
           
           res = await fetch(`/api/trattative/${trattativaId}/actions`, {
             method: "POST",
@@ -632,10 +638,19 @@ export default function OperatorTerminal() {
                   </button>
                   <button disabled={noAnswerLocked} onClick={() => {
                       setNegoReferent(contact.referentName || "");
-                      setNegoPhone(contact.originalPhone || "");
-                      setNegoAddress(contact.address || "");
-                      setNegoContactNotes(contact.notes || "");
-                      setNegoModalOpen(true);
+                        setNegoPhone(contact.originalPhone || "");
+                        setNegoAddress(contact.address || "");
+                        setNegoContactNotes(contact.notes || "");
+                        setNegoAssignTo("OPERATOR");
+                        setNegoCommercialeId("");
+                        setNegoModalOpen(true);
+                        // Fetch commerciali
+                        fetch("/api/commerciali")
+                          .then(res => res.json())
+                          .then(data => {
+                            if (data.commerciali) setAvailableCommerciali(data.commerciali);
+                          })
+                          .catch(e => console.error("Errore fetch commerciali", e));
                     }} className="px-6 py-3 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white border border-purple-500/30 rounded-lg transition shadow-sm disabled:opacity-50 flex flex-col items-center justify-center gap-1">
                     <span className="font-bold">RICHIAMO PERSONALE</span>
                     <span className="text-xs italic opacity-80 font-normal">ho avuto una trattativa, fisso un ricontatto personale</span>
@@ -891,13 +906,45 @@ export default function OperatorTerminal() {
             <div className="bg-gray-800 rounded-xl border border-gray-700 w-full max-w-2xl p-6 shadow-2xl my-8">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-bold text-purple-400">Inserisci Ricontatto e Anagrafica</h3>
-                <button onClick={() => setNegoModalOpen(false)} className="text-gray-400 hover:text-white">
-                  <XCircle className="w-5 h-5" />
-                </button>
-              </div>
-              <p className="text-sm text-gray-400 mb-4">
-                Verifica i dati anagrafici e imposta la data di ricontatto per la trattativa.
-              </p>
+                  <button onClick={() => setNegoModalOpen(false)} className="text-gray-400 hover:text-white">
+                    <XCircle className="w-5 h-5" />
+                  </button>
+                </div>
+                
+                <div className="flex bg-gray-900 rounded-lg p-1 mb-4 border border-gray-700">
+                  <button 
+                    onClick={() => setNegoAssignTo("OPERATOR")}
+                    className={`flex-1 py-2 text-sm font-bold rounded-md transition ${negoAssignTo === "OPERATOR" ? "bg-purple-600 text-white" : "text-gray-400 hover:text-gray-200"}`}
+                  >
+                    Ricontatto Personale
+                  </button>
+                  <button 
+                    onClick={() => setNegoAssignTo("COMMERCIALE")}
+                    className={`flex-1 py-2 text-sm font-bold rounded-md transition ${negoAssignTo === "COMMERCIALE" ? "bg-orange-600 text-white" : "text-gray-400 hover:text-gray-200"}`}
+                  >
+                    Richiamo Commerciale
+                  </button>
+                </div>
+                
+                {negoAssignTo === "COMMERCIALE" && (
+                  <div className="mb-4 bg-orange-900/20 border border-orange-700/50 p-4 rounded-xl">
+                    <label className="block text-xs font-bold text-orange-400 mb-2 uppercase">Assegna al Commerciale</label>
+                    <select 
+                      value={negoCommercialeId}
+                      onChange={(e) => setNegoCommercialeId(e.target.value)}
+                      className="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white focus:border-orange-500"
+                    >
+                      <option value="">-- Seleziona un commerciale --</option>
+                      {availableCommerciali.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
+                <p className="text-sm text-gray-400 mb-4">
+                  Verifica i dati anagrafici e imposta la data di ricontatto per la trattativa.
+                </p>
               
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="col-span-2 md:col-span-1">
@@ -959,7 +1006,7 @@ export default function OperatorTerminal() {
                       handleOutcome("RICHIAMO_PERSONALE", negoNotes, isoDate);
                     }
                   }} 
-                  disabled={!negoDate || !negoTime || !negoNotes.trim()}
+                  disabled={!negoDate || !negoTime || !negoNotes.trim() || (negoAssignTo === "COMMERCIALE" && !negoCommercialeId)}
                   className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Salva Ricontatto
