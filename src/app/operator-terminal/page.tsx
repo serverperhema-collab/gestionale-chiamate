@@ -1006,7 +1006,7 @@ export default function OperatorTerminal() {
                       handleOutcome("RICHIAMO_PERSONALE", negoNotes, isoDate);
                     }
                   }} 
-                  disabled={!negoDate || !negoTime || !negoNotes.trim() || (negoAssignTo === "COMMERCIALE" && !negoCommercialeId)}
+                  disabled={loading || !negoDate || !negoTime || !negoNotes.trim() || (negoAssignTo === "COMMERCIALE" && !negoCommercialeId)}
                   className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Salva Ricontatto

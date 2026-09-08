@@ -44,7 +44,7 @@ export async function GET(req: Request) {
       if (commercialeId) where.currentCommercialeId = commercialeId === 'null' ? null : commercialeId;
     }
 
-    const includeOpts: any = { contact: true };
+    const includeOpts: any = { contact: true, currentCommerciale: true, currentOperator: true };
     if (includeAppointments) {
       includeOpts.appointments = true;
     }
