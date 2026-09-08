@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import TrattativaTimeline from "@/components/TrattativaTimeline";
+import OperatorAgenda from "@/components/OperatorAgenda";
 
 export default function OperatorNegotiations() {
   const { data: session } = useSession();
@@ -150,6 +151,8 @@ export default function OperatorNegotiations() {
               <div className="flex justify-center py-20">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
               </div>
+            ) : activeTab === 'agenda' ? (
+              <OperatorAgenda trattative={trattative} onOpenTimeline={setTimelineId} />
             ) : filteredTrattative.length === 0 ? (
               <div className="bg-gray-800 rounded-xl border border-gray-700 p-12 text-center shadow-lg">
                 <Handshake className="w-16 h-16 text-gray-600 mx-auto mb-4" />
