@@ -127,7 +127,7 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
       if (subOption === 'riprova') {
         const payload = {
           action: "missed-call",
-          payload: { recallDate: `${callForm.date}T${callForm.time}:00Z`, notes: callForm.note }
+          payload: { recallDate: new Date(`${callForm.date}T${callForm.time}:00`).toISOString(), notes: callForm.note }
         };
         const res = await fetch(`/api/trattative/${trattativaId}/actions`, {
           method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
@@ -136,7 +136,7 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
       } else if (subOption === 'posticipa') {
         const payload = {
           action: "postpone-recall",
-          payload: { recallDate: `${callForm.date}T${callForm.time}:00Z`, notes: callForm.note }
+          payload: { recallDate: new Date(`${callForm.date}T${callForm.time}:00`).toISOString(), notes: callForm.note }
         };
         const res = await fetch(`/api/trattative/${trattativaId}/actions`, {
           method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
@@ -150,7 +150,7 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
         }
         const payload = {
           action: "richiamo",
-          payload: { recallDate: `${callForm.date}T${callForm.time}:00Z`, notes: callForm.note, commercialeId: callForm.commercialeId }
+          payload: { recallDate: new Date(`${callForm.date}T${callForm.time}:00`).toISOString(), notes: callForm.note, commercialeId: callForm.commercialeId }
         };
         const res = await fetch(`/api/trattative/${trattativaId}/actions`, {
           method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
@@ -523,6 +523,7 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
     </div>
   );
 }
+
 
 
 
