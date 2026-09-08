@@ -438,12 +438,22 @@ export class TrattativaService {
       });
       if (updated.count === 0) throw new ConflictError("Conflitto di versione");
 
-      const eventDesc = params.commercialeId 
-        ? `RICHIAMO TELEFONICO ASSEGNATO AL COMMERCIALE CON NOTE: ${params.notes || ''}`
-        : `RICHIAMO PERSONALE IMPOSTATO IN DATA ${new Date(params.recallDate).toLocaleDateString('it-IT')} CON NOTE: ${params.notes || ''}`;
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('it-IT');
+      const timeStr = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      const targetDate = new Date(params.recallDate);
+      const targetDateStr = targetDate.toLocaleDateString('it-IT');
+      const targetTimeStr = targetDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      
+      const currentUser = await tx.user.findUnique({ where: { id: userId } });
+      const userName = currentUser?.name || 'Operatore';
 
-      await this.appendEvent(tx, trattativaId, "NOTA_AGGIUNTA", eventDesc, {
-          note: params.notes || ''
+      const eventDesc = params.commercialeId 
+        ? `Il giorno ${dateStr} alle ore ${timeStr} l'operatore ${userName} chiede ricontatto da parte del commerciale per il giorno ${targetDateStr} alle ore ${targetTimeStr}, note: ${params.notes || ''}`
+        : `Richiamo impostato`;
+
+      await this.appendEvent(tx, trattativaId, params.commercialeId ? "RICHIAMO_COMMERCIALE" : "NOTA_AGGIUNTA", eventDesc, {
+          ...(params.commercialeId ? {} : { note: `Data richiamo: ${params.recallDate}. Note: ${params.notes || ''}` })
         }, userId, userRole);
 
         if (params.commercialeId) {
