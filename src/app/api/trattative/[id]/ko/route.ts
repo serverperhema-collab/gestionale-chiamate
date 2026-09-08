@@ -41,7 +41,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           trattativaId: id,
           userId: userId,
           userRole: (session.user as any).role,
-          eventType: "SOSPESA",
+          eventType: "NOTA_AGGIUNTA",
           description: `Chiamato il ${dateStr} alle ore ${timeStr}. Il cliente non è più interessato. Note: ${notes}`,
           metadata: { note: notes }
         }
@@ -105,3 +105,4 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
