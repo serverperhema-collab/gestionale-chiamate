@@ -64,7 +64,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         where: { id: trattativa.contactId },
         data: {
           assignedToId: null, // Release operator lock
-          modLockedUntil: frozenUntil,
+          hiddenUntil: frozenUntil,
           isKo: true
         }
       });
