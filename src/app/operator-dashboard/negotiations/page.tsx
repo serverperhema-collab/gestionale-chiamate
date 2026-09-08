@@ -40,9 +40,10 @@ export default function OperatorNegotiations() {
 
   const filteredTrattative = trattative.filter(st => {
     if (activeTab === 'personal-recall') return st.status === 'RICHIAMO_PERSONALE';
-    if (activeTab === 'appointment-recall') return st.status === 'APPUNTAMENTO';
-    
-    return false;
+      if (activeTab === 'appointment-recall') return st.status === 'APPUNTAMENTO';
+      if (activeTab === 'personal-ko') return st.status === 'SOSPESA' && !st.currentCommercialeId;
+      if (activeTab === 'appointment-ko') return st.status === 'SOSPESA' && !!st.currentCommercialeId;
+      return false;
   });
 
   return (
@@ -78,9 +79,13 @@ export default function OperatorNegotiations() {
               >
                 Da Richiamare
                 {activeTab === 'personal-recall' && <ChevronRight className="w-4 h-4" />}
-              </button>
+                </button>
+                <button onClick={() => setActiveTab('personal-ko')} className={`w-full text-left px-3 py-2 rounded-lg transition text-sm flex items-center justify-between ${activeTab === 'personal-ko' ? 'bg-red-600/20 text-red-300 font-bold border border-red-500/30' : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'}`}>
+                  Trattative KO
+                  {activeTab === 'personal-ko' && <ChevronRight className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
-          </div>
           
           <div>
             <h2 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">TRATTATIVE CON APPUNTAMENTO</h2>
@@ -91,10 +96,13 @@ export default function OperatorNegotiations() {
               >
                 Da Richiamare
                 {activeTab === 'appointment-recall' && <ChevronRight className="w-4 h-4" />}
-              </button>
-              
+                </button>
+                <button onClick={() => setActiveTab('appointment-ko')} className={`w-full text-left px-3 py-2 rounded-lg transition text-sm flex items-center justify-between ${activeTab === 'appointment-ko' ? 'bg-red-600/20 text-red-300 font-bold border border-red-500/30' : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'}`}>
+                  Trattative KO
+                  {activeTab === 'appointment-ko' && <ChevronRight className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
-          </div>
         </div>
 
         {/* Main Content */}
@@ -128,6 +136,12 @@ export default function OperatorNegotiations() {
                   if (st.status === 'APPUNTAMENTO') {
                     tagText = "APPUNTAMENTO";
                     tagColor = "bg-blue-600";
+                  } else if (st.status === 'SOSPESA') {
+                    tagText = "KO IN ATTESA DI REVISIONE";
+                    tagColor = "bg-red-600";
+                  } else if (st.status === 'SOSPESA') {
+                    tagText = "KO IN ATTESA DI REVISIONE";
+                    tagColor = "bg-red-600";
                   }
 
                   return (
