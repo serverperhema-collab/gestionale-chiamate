@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -56,7 +56,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         }
       });
 
-      // 3. Lock the Contact for 5 years
+      // 3. Lock the Contact for 5 years and mark as KO
       const frozenUntil = new Date();
       frozenUntil.setFullYear(frozenUntil.getFullYear() + 5);
 
@@ -64,14 +64,24 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         where: { id: trattativa.contactId },
         data: {
           assignedToId: null, // Release operator lock
-          modLockedUntil: frozenUntil
+          modLockedUntil: frozenUntil,
+          isKo: true
         }
       });
 
-      // 4. Send Notification
+      // 4. Create KoRecord for TL Approval
+      await tx.koRecord.create({
+        data: {
+          contactId: trattativa.contactId,
+          frozenUntil: frozenUntil,
+          isResolved: false
+        }
+      });
+
+      // 5. Send Notification
       const notifTitle = "CONTATTO MANDATO KO";
       const notifMessage = `La trattativa con ${trattativa.contact.name} è stata mandata in KO da ${userName}. Motivo: ${notes}`;
-      const notifMetadata = { type: "TRATTATIVA_KO", trattativaId: id, contactId: trattativa.contactId };
+      // const notifMetadata = { type: "TRATTATIVA_KO", trattativaId: id, contactId: trattativa.contactId };
 
       if (trattativa.currentCommercialeId) {
         // Send to Commerciale
@@ -105,6 +115,3 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
-
-
-
