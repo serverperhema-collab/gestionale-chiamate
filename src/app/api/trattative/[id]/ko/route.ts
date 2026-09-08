@@ -34,7 +34,46 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const timeStr = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
 
     // Decide who gets the notification
-    if (trattativa.currentCommercialeId) {
+    await prisma.$transaction(async (tx) => {
+      // 1. Create Timeline Event
+      await tx.trattativaEvent.create({
+        data: {
+          trattativaId: id,
+          userId: userId,
+          userRole: (session.user as any).role,
+          eventType: "SOSPESA",
+          description: `Chiamato il ${dateStr} alle ore ${timeStr}. Il cliente non è più interessato. Note: ${notes}`,
+          metadata: { note: notes }
+        }
+      });
+
+      // 2. Change Trattativa Status
+      await tx.trattativaSheet.update({
+        where: { id },
+        data: {
+          status: "SOSPESA", // SOSPESA makes sense for waiting approval
+          version: { increment: 1 }
+        }
+      });
+
+      // 3. Lock the Contact for 5 years
+      const frozenUntil = new Date();
+      frozenUntil.setFullYear(frozenUntil.getFullYear() + 5);
+
+      await tx.contact.update({
+        where: { id: trattativa.contactId },
+        data: {
+          assignedToId: null, // Release operator lock
+          modLockedUntil: frozenUntil
+        }
+      });
+
+      // 4. Send Notification
+      const notifTitle = "CONTATTO MANDATO KO";
+      const notifMessage = `La trattativa con ${trattativa.contact.name} è stata mandata in KO da ${userName}. Motivo: ${notes}`;
+      const notifMetadata = { type: "TRATTATIVA_KO", trattativaId: id, contactId: trattativa.contactId };
+
+      if (trattativa.currentCommercialeId) {
         // Send to Commerciale
         await tx.notification.create({
           data: {
