@@ -15,6 +15,8 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
   
   // Call mode
   const [isCalling, setIsCalling] = useState(false);
+  const [koModalOpen, setKoModalOpen] = useState(false);
+  const [koNotes, setKoNotes] = useState("");
 
   // Editable fields
   const [editingField, setEditingField] = useState<string | null>(null);
