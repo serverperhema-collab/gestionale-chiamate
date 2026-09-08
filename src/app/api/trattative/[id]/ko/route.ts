@@ -30,8 +30,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
 
     const now = new Date();
-    const dateStr = now.toLocaleDateString('it-IT');
-    const timeStr = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    const dateStr = now.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
+    const timeStr = now.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
 
     // Decide who gets the notification
     await prisma.$transaction(async (tx) => {
@@ -115,3 +115,4 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+

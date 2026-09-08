@@ -157,7 +157,7 @@ export class TrattativaService {
 
       if (updated.count === 0) throw new ConflictError("Conflitto di versione");
 
-      const evtDesc = `Fissato appuntamento ${params.isPhoneAppt ? "telefonico" : "fisico"} per il ${new Date(params.date).toLocaleString("it-IT", { dateStyle: "short", timeStyle: "short" })}` + (params.notes ? `\nNote: ${params.notes}` : "");
+      const evtDesc = `Fissato appuntamento ${params.isPhoneAppt ? "telefonico" : "fisico"} per il ${new Date(params.date).toLocaleString("it-IT", { timeZone: "Europe/Rome", dateStyle: "short", timeStyle: "short" })}` + (params.notes ? `\nNote: ${params.notes}` : "");
       await this.appendEvent(tx, trattativaId, "APPUNTAMENTO_FISSATO", evtDesc, {
         date: params.date,
         isPhoneAppt: params.isPhoneAppt,
@@ -222,7 +222,7 @@ export class TrattativaService {
 
       if (updated.count === 0) throw new ConflictError("Conflitto di versione");
 
-      const rescheduleDesc = `Appuntamento rifissato al ${new Date(params.newDate).toLocaleString("it-IT", { dateStyle: "short", timeStyle: "short" })}` + (params.notes ? `\nNote: ${params.notes}` : "");
+      const rescheduleDesc = `Appuntamento rifissato al ${new Date(params.newDate).toLocaleString("it-IT", { timeZone: "Europe/Rome", dateStyle: "short", timeStyle: "short" })}` + (params.notes ? `\nNote: ${params.notes}` : "");
       await this.appendEvent(tx, trattativaId, "APPUNTAMENTO_RIFISSATO", rescheduleDesc, {
         oldDate: appt.date.toISOString(),
         newDate: params.newDate,
@@ -446,11 +446,11 @@ export class TrattativaService {
       const userName = currentUser?.name || 'Operatore';
       
       const now = new Date();
-      const dateStr = now.toLocaleDateString('it-IT');
-      const timeStr = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      const dateStr = now.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
+      const timeStr = now.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
       const targetDate = new Date(params.recallDate);
-      const targetDateStr = targetDate.toLocaleDateString('it-IT');
-      const targetTimeStr = targetDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      const targetDateStr = targetDate.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
+      const targetTimeStr = targetDate.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
 
       const eventDesc = `Il giorno ${dateStr} alle ore ${timeStr} l'operatore ${userName} ha tentato di contattare il cliente senza successo. Prossimo tentativo fissato per il ${targetDateStr} alle ${targetTimeStr}. Nota operatore: ${params.notes}. Tentativi totali senza risposta: ${newCount}`;
 
@@ -481,11 +481,11 @@ export class TrattativaService {
       const userName = currentUser?.name || 'Operatore';
       
       const now = new Date();
-      const dateStr = now.toLocaleDateString('it-IT');
-      const timeStr = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      const dateStr = now.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
+      const timeStr = now.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
       const targetDate = new Date(params.recallDate);
-      const targetDateStr = targetDate.toLocaleDateString('it-IT');
-      const targetTimeStr = targetDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      const targetDateStr = targetDate.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
+      const targetTimeStr = targetDate.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
 
       const eventDesc = `Il giorno ${dateStr} alle ore ${timeStr} l'operatore ${userName} ha contattato il cliente. Il cliente ha chiesto di essere ricontattato il ${targetDateStr} alle ${targetTimeStr}. Nota operatore: ${params.notes}`;
 
@@ -514,11 +514,11 @@ export class TrattativaService {
       if (updated.count === 0) throw new ConflictError("Conflitto di versione");
 
       const now = new Date();
-      const dateStr = now.toLocaleDateString('it-IT');
-      const timeStr = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      const dateStr = now.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
+      const timeStr = now.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
       const targetDate = new Date(params.recallDate);
-      const targetDateStr = targetDate.toLocaleDateString('it-IT');
-      const targetTimeStr = targetDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      const targetDateStr = targetDate.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
+      const targetTimeStr = targetDate.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
       
       const currentUser = await tx.user.findUnique({ where: { id: userId } });
       const userName = currentUser?.name || 'Operatore';
@@ -536,7 +536,7 @@ export class TrattativaService {
             data: {
               userId: params.commercialeId,
               title: "NUOVO CONTATTO ASSEGNATO",
-              message: `L'operatore ti ha assegnato un nuovo contatto da chiamare in data ${new Date(params.recallDate).toLocaleDateString('it-IT')}`
+              message: `L'operatore ti ha assegnato un nuovo contatto da chiamare in data ${new Date(params.recallDate).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })}`
             }
           });
         }
@@ -638,4 +638,7 @@ export class TrattativaService {
     });
   }
 }
+
+
+
 
