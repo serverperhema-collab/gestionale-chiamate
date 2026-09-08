@@ -129,13 +129,22 @@ export class TrattativaService {
         throw new ValidationError(`Transizione non valida da ${st.status} a APPUNTAMENTO`);
       }
 
+      
+      let finalCommercialeId = params.commercialeId || st.currentCommercialeId;
+      if (!params.isPhoneAppt && params.zoneAgendaId) {
+        const agenda = await tx.zoneAgenda.findUnique({ where: { id: params.zoneAgendaId } });
+        if (agenda && agenda.commercialeId) {
+          finalCommercialeId = agenda.commercialeId;
+        }
+      }
+
       const appt = await tx.trattativaAppointment.create({
         data: {
           trattativaId,
           date: new Date(params.date),
           isPhoneAppt: params.isPhoneAppt,
           zoneAgendaId: params.zoneAgendaId,
-          commercialeId: params.commercialeId,
+          commercialeId: finalCommercialeId,
           status: AppointmentState.FISSATO,
         }
       });
@@ -150,19 +159,33 @@ export class TrattativaService {
           referentName: params.referentName,
           commercialPhone: params.phone,
           clientNeeds: params.clientNeeds,
-          currentCommercialeId: params.commercialeId || st.currentCommercialeId,
+          currentCommercialeId: finalCommercialeId,
           version: { increment: 1 }
         }
       });
 
       if (updated.count === 0) throw new ConflictError("Conflitto di versione");
 
-      const evtDesc = `Fissato appuntamento ${params.isPhoneAppt ? "telefonico" : "fisico"} per il ${new Date(params.date).toLocaleString("it-IT", { timeZone: "Europe/Rome", dateStyle: "short", timeStyle: "short" })}` + (params.notes ? `\nNote: ${params.notes}` : "");
+      const evtDesc = `Fissato appuntamento ${params.isPhoneAppt ? "telefonico" : "fisico"} per il ${new Date(params.date).toLocaleString("it-IT", { timeZone: "Europe/Rome", dateStyle: "short", timeStyle: "short" })}` + (params.clientNeeds ? `\nNote: ${params.clientNeeds}` : "");
       await this.appendEvent(tx, trattativaId, "APPUNTAMENTO_FISSATO", evtDesc, {
         date: params.date,
         isPhoneAppt: params.isPhoneAppt,
-        commercialeId: params.commercialeId
+        commercialeId: finalCommercialeId
       }, userId, userRole);
+
+      if (finalCommercialeId && userRole === 'OPERATORE') {
+        const currentUser = await tx.user.findUnique({ where: { id: userId } });
+        await tx.notification.create({
+          data: {
+            userId: finalCommercialeId,
+            title: "Nuovo Appuntamento",
+            message: `L'operatore ${currentUser?.name || 'Operatore'} ha fissato un appuntamento per il ${new Date(params.date).toLocaleString("it-IT", { timeZone: "Europe/Rome", dateStyle: "short", timeStyle: "short" })}. Referente: ${params.referentName}.`,
+            contactId: st.contactId,
+            appointmentId: appt.id
+          }
+        });
+      }
+
 
       return appt;
     });
@@ -395,6 +418,7 @@ export class TrattativaService {
       if (st.closedAt) throw new ValidationError("Trattativa chiusa");
       if (st.derogaStatus === "PENDING") throw new ValidationError("Deroga già in attesa");
 
+      
       const updated = await tx.trattativaSheet.updateMany({
         where: { id: trattativaId, version: st.version },
         data: {
@@ -410,6 +434,20 @@ export class TrattativaService {
         requestedDate: params.requestedDate,
         notes: params.notes
       }, userId, userRole);
+
+      const currentUser = await tx.user.findUnique({ where: { id: userId } });
+      const tls = await tx.user.findMany({ where: { role: "TEAM_LEADER" } });
+      for (const tl of tls) {
+        await tx.notification.create({
+          data: {
+            userId: tl.id,
+            title: "Richiesta Deroga Appuntamento",
+            message: `L'operatore ${currentUser?.name || 'Operatore'} ha richiesto una deroga per la data ${new Date(params.requestedDate).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })}`,
+            contactId: st.contactId
+          }
+        });
+      }
+
 
       return await tx.trattativaSheet.findUnique({ where: { id: trattativaId } });
     });
@@ -536,7 +574,7 @@ export class TrattativaService {
             data: {
               userId: params.commercialeId,
               title: "NUOVO CONTATTO ASSEGNATO",
-              message: `L'operatore ti ha assegnato un nuovo contatto da chiamare in data ${new Date(params.recallDate).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })}`
+              message: `L'operatore ti ha assegnato un nuovo contatto da chiamare in data ${new Date(params.recallDate).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })}`, contactId: st.contactId
             }
           });
         }

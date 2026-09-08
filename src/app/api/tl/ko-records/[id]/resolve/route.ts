@@ -29,6 +29,35 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         }
       });
 
+      // 2. Chiudi l'eventuale Trattativa in SOSPESA
+      const activeSt = await tx.trattativaSheet.findFirst({
+        where: { contactId: koRecord.contactId, closedAt: null }
+      });
+      if (activeSt) {
+        await tx.trattativaSheet.update({
+          where: { id: activeSt.id },
+          data: {
+            status: "CHIUSA_PERSA",
+            closedAt: new Date(),
+            outcomeFinal: action === "ARCHIVE" ? "KO_CONFERMATO_TL" : "KO_ANNULLATO_TL_RIPRISTINATO",
+            version: { increment: 1 }
+          }
+        });
+        
+        await tx.trattativaEvent.create({
+          data: {
+            trattativaId: activeSt.id,
+            eventType: "CHIUSA",
+            description: action === "ARCHIVE" 
+              ? "Trattativa chiusa definitivamente dal TL (KO Confermato)" 
+              : "Trattativa chiusa dal TL (KO Rifiutato, Contatto rimesso nel calderone)",
+            userId: (session.user as any).id,
+            userRole: "TEAM_LEADER",
+            metadata: {}
+          }
+        });
+      }
+
       if (action === "RESTORE") {
         // Rimetti nel calderone: isKo = false, assignedToId = null
         await tx.contact.update({
