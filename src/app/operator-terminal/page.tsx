@@ -626,7 +626,13 @@ export default function OperatorTerminal() {
                     <span className="font-bold">NON INTERESSATO</span>
                     <span className="text-xs italic opacity-80 font-normal">non interessato, blocca per 3 mesi</span>
                   </button>
-                  <button disabled={noAnswerLocked} onClick={() => setNegoModalOpen(true)} className="px-6 py-3 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white border border-purple-500/30 rounded-lg transition shadow-sm disabled:opacity-50 flex flex-col items-center justify-center gap-1">
+                  <button disabled={noAnswerLocked} onClick={() => {
+                      setNegoReferent(contact.referentName || "");
+                      setNegoPhone(contact.originalPhone || "");
+                      setNegoAddress(contact.address || "");
+                      setNegoContactNotes(contact.notes || "");
+                      setNegoModalOpen(true);
+                    }} className="px-6 py-3 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white border border-purple-500/30 rounded-lg transition shadow-sm disabled:opacity-50 flex flex-col items-center justify-center gap-1">
                     <span className="font-bold">RICHIAMO PERSONALE</span>
                     <span className="text-xs italic opacity-80 font-normal">ho avuto una trattativa, fisso un ricontatto personale</span>
                   </button>
