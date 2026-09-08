@@ -300,12 +300,22 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
 
         {/* TASTO CHIAMA IN BASSO */}
         <div className="p-6 bg-gray-950 border-t border-gray-800 shrink-0 flex justify-center">
-          <button 
-            onClick={() => setIsCalling(true)}
-            className="w-full max-w-md py-4 bg-green-600 hover:bg-green-500 active:bg-green-700 text-white rounded-2xl shadow-lg shadow-green-900/50 transition font-black text-xl tracking-widest flex items-center justify-center"
-          >
-            <PhoneCall className="w-6 h-6 mr-3" /> CHIAMA
-          </button>
+          {trattativa.status === 'SOSPESA' ? (
+            <div className="w-full max-w-md py-4 bg-gray-800 text-gray-500 rounded-2xl shadow-inner border border-gray-700 font-bold text-center flex items-center justify-center">
+              BLOCCATA IN ATTESA DI REVISIONE
+            </div>
+          ) : (trattativa.currentCommercialeId && trattativa.nextActionType !== 'RICHIAMO') ? (
+            <div className="w-full max-w-md py-4 bg-gray-800 text-gray-500 rounded-2xl shadow-inner border border-gray-700 font-bold text-center flex items-center justify-center">
+              IN ATTESA DEL COMMERCIALE
+            </div>
+          ) : (
+            <button 
+              onClick={() => setIsCalling(true)}
+              className="w-full max-w-md py-4 bg-green-600 hover:bg-green-500 active:bg-green-700 text-white rounded-2xl shadow-lg shadow-green-900/50 transition font-black text-xl tracking-widest flex items-center justify-center"
+            >
+              <PhoneCall className="w-6 h-6 mr-3" /> CHIAMA
+            </button>
+          )}
         </div>
 
       </div>
