@@ -452,7 +452,7 @@ export class TrattativaService {
         ? `Il giorno ${dateStr} alle ore ${timeStr} l'operatore ${userName} chiede ricontatto da parte del commerciale per il giorno ${targetDateStr} alle ore ${targetTimeStr}, note: ${params.notes || ''}`
         : `Richiamo impostato`;
 
-      await this.appendEvent(tx, trattativaId, params.commercialeId ? "RICHIAMO_COMMERCIALE" : "NOTA_AGGIUNTA", eventDesc, {
+      await this.appendEvent(tx, trattativaId, "NOTA_AGGIUNTA", eventDesc, {
           ...(params.commercialeId ? {} : { note: `Data richiamo: ${params.recallDate}. Note: ${params.notes || ''}` })
         }, userId, userRole);
 

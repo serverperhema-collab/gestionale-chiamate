@@ -45,7 +45,8 @@ export default function OperatorNegotiations() {
       if (activeTab === 'telefonica-operator') return !!st.currentCommercialeId && st.status === 'RICHIAMO_PERSONALE' && st.nextActionType === 'RICHIAMO';
       if (activeTab === 'telefonica-commerciale') return !!st.currentCommercialeId && st.status === 'RICHIAMO_PERSONALE' && st.nextActionType !== 'RICHIAMO';
 
-      if (activeTab === 'appointment-recall') return !!st.currentCommercialeId && st.status === 'APPUNTAMENTO';
+      if (activeTab === 'appointment-recall') return !!st.currentCommercialeId && st.status === 'APPUNTAMENTO' && st.nextActionType === 'RICHIAMO';
+        if (activeTab === 'appointment-commerciale') return !!st.currentCommercialeId && st.status === 'APPUNTAMENTO' && st.nextActionType !== 'RICHIAMO';
       if (activeTab === 'appointment-ko') return !!st.currentCommercialeId && st.status === 'SOSPESA';
       
       return false;
@@ -122,7 +123,11 @@ export default function OperatorNegotiations() {
                 Da Richiamare
                 {activeTab === 'appointment-recall' && <ChevronRight className="w-4 h-4" />}
                 </button>
-                <button onClick={() => setActiveTab('appointment-ko')} className={`w-full text-left px-3 py-2 rounded-lg transition text-sm flex items-center justify-between ${activeTab === 'appointment-ko' ? 'bg-red-600/20 text-red-300 font-bold border border-red-500/30' : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'}`}>
+                <button onClick={() => setActiveTab('appointment-commerciale')} className={`w-full text-left px-3 py-2 rounded-lg transition text-sm flex items-center justify-between ${activeTab === 'appointment-commerciale' ? 'bg-yellow-600/20 text-yellow-300 font-bold border border-yellow-500/30' : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'}`}>
+                    In gestione al commerciale
+                    {activeTab === 'appointment-commerciale' && <ChevronRight className="w-4 h-4" />}
+                  </button>
+                  <button onClick={() => setActiveTab('appointment-ko')} className={`w-full text-left px-3 py-2 rounded-lg transition text-sm flex items-center justify-between ${activeTab === 'appointment-ko' ? 'bg-red-600/20 text-red-300 font-bold border border-red-500/30' : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'}`}>
                   Trattative KO
                   {activeTab === 'appointment-ko' && <ChevronRight className="w-4 h-4" />}
                 </button>
