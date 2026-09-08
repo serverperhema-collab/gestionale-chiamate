@@ -420,6 +420,83 @@ export class TrattativaService {
       return await tx.trattativaSheet.findUnique({ where: { id: trattativaId } });
     });
   }
+  
+  async recordMissedCall(trattativaId: string, params: { recallDate: string; notes: string }, userId: string, userRole: Role) {
+    this.validateRole(userRole, 'createOrReopen');
+    return prisma.$transaction(async (tx) => {
+      const st = await tx.trattativaSheet.findUnique({ where: { id: trattativaId } });
+      if (!st) throw new NotFoundError("Trattativa non trovata");
+      if (st.closedAt !== null) throw new ValidationError("Trattativa chiusa");
+
+      const newCount = st.missedCallCount + 1;
+      
+      const updated = await tx.trattativaSheet.updateMany({
+        where: { id: trattativaId, version: st.version },
+        data: {
+          nextActionDate: new Date(params.recallDate),
+          missedCallCount: newCount,
+          version: { increment: 1 }
+        }
+      });
+      if (updated.count === 0) throw new ConflictError("Conflitto di versione");
+
+      const currentUser = await tx.user.findUnique({ where: { id: userId } });
+      const userName = currentUser?.name || 'Operatore';
+      
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('it-IT');
+      const timeStr = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      const targetDate = new Date(params.recallDate);
+      const targetDateStr = targetDate.toLocaleDateString('it-IT');
+      const targetTimeStr = targetDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+
+      const eventDesc = `Il giorno ${dateStr} alle ore ${timeStr} l'operatore ${userName} ha tentato di contattare il cliente senza successo. Prossimo tentativo fissato per il ${targetDateStr} alle ${targetTimeStr}. Nota operatore: ${params.notes}. Tentativi totali senza risposta: ${newCount}`;
+
+      await this.appendEvent(tx, trattativaId, "NOTA_AGGIUNTA", eventDesc, {
+        note: params.notes
+      }, userId, userRole);
+
+      return await tx.trattativaSheet.findUnique({ where: { id: trattativaId } });
+    });
+  }
+
+  async postponeRecall(trattativaId: string, params: { recallDate: string; notes: string }, userId: string, userRole: Role) {
+    this.validateRole(userRole, 'createOrReopen');
+    return prisma.$transaction(async (tx) => {
+      const st = await tx.trattativaSheet.findUnique({ where: { id: trattativaId } });
+      if (!st) throw new NotFoundError("Trattativa non trovata");
+      if (st.closedAt !== null) throw new ValidationError("Trattativa chiusa");
+
+      const updated = await tx.trattativaSheet.updateMany({
+        where: { id: trattativaId, version: st.version },
+        data: {
+          nextActionDate: new Date(params.recallDate),
+          missedCallCount: 0,
+          version: { increment: 1 }
+        }
+      });
+      if (updated.count === 0) throw new ConflictError("Conflitto di versione");
+
+      const currentUser = await tx.user.findUnique({ where: { id: userId } });
+      const userName = currentUser?.name || 'Operatore';
+      
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('it-IT');
+      const timeStr = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      const targetDate = new Date(params.recallDate);
+      const targetDateStr = targetDate.toLocaleDateString('it-IT');
+      const targetTimeStr = targetDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+
+      const eventDesc = `Il giorno ${dateStr} alle ore ${timeStr} l'operatore ${userName} ha contattato il cliente. Il cliente ha chiesto di essere ricontattato il ${targetDateStr} alle ${targetTimeStr}. Nota operatore: ${params.notes}`;
+
+      await this.appendEvent(tx, trattativaId, "NOTA_AGGIUNTA", eventDesc, {
+        note: params.notes
+      }, userId, userRole);
+
+      return await tx.trattativaSheet.findUnique({ where: { id: trattativaId } });
+    });
+  }
+
   async setRichiamo(trattativaId: string, params: { recallDate: string; notes?: string; commercialeId?: string }, userId: string, userRole: Role) {
     this.validateRole(userRole, 'createOrReopen'); // Or any other suitable permission
     return prisma.$transaction(async (tx) => {

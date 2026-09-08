@@ -21,6 +21,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     let result;
 
     switch (action) {
+            case "missed-call":
+        result = await service.recordMissedCall(id, payload, userId, userRole);
+        break;
+      case "postpone-recall":
+        result = await service.postponeRecall(id, payload, userId, userRole);
+        break;
       case "richiamo":
         result = await service.setRichiamo(id, payload, userId, userRole);
         break;

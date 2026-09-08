@@ -670,6 +670,7 @@ model TrattativaSheet {
 
   commercialPhone String?
   commercialEmail String?
+  missedCallCount Int @default(0)
   referentName    String?
   referentRole    String?
   clientNeeds     String?
