@@ -445,10 +445,8 @@ export class TrattativaService {
           await tx.notification.create({
             data: {
               userId: params.commercialeId,
-              type: "NUOVO_RICHIAMO",
               title: "NUOVO CONTATTO ASSEGNATO",
-              message: `L'operatore ti ha assegnato un nuovo contatto da chiamare in data ${new Date(params.recallDate).toLocaleDateString('it-IT')}`,
-              metadata: { trattativaId }
+              message: `L'operatore ti ha assegnato un nuovo contatto da chiamare in data ${new Date(params.recallDate).toLocaleDateString('it-IT')}`
             }
           });
         }

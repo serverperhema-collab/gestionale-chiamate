@@ -78,10 +78,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         await tx.notification.create({
           data: {
             userId: trattativa.currentCommercialeId,
-            type: "TRATTATIVA_KO",
             title: notifTitle,
             message: notifMessage,
-            metadata: notifMetadata
+            contactId: trattativa.contactId
           }
         });
       } else {
@@ -91,10 +90,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           await tx.notification.create({
             data: {
               userId: tl.id,
-              type: "TRATTATIVA_KO",
               title: notifTitle,
-              message: notifMessage,
-              metadata: notifMetadata
+            message: notifMessage,
+            contactId: trattativa.contactId
             }
           });
         }
