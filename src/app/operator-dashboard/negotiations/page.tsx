@@ -39,12 +39,17 @@ export default function OperatorNegotiations() {
   }, []);
 
   const filteredTrattative = trattative.filter(st => {
-    if (activeTab === 'personal-recall') return st.status === 'RICHIAMO_PERSONALE';
-      if (activeTab === 'appointment-recall') return st.status === 'APPUNTAMENTO';
-      if (activeTab === 'personal-ko') return st.status === 'SOSPESA' && !st.currentCommercialeId;
-      if (activeTab === 'appointment-ko') return st.status === 'SOSPESA' && !!st.currentCommercialeId;
+      if (activeTab === 'personal-recall') return !st.currentCommercialeId && st.status === 'RICHIAMO_PERSONALE';
+      if (activeTab === 'personal-ko') return !st.currentCommercialeId && st.status === 'SOSPESA';
+      
+      if (activeTab === 'telefonica-operator') return !!st.currentCommercialeId && st.status === 'RICHIAMO_PERSONALE' && st.nextActionType === 'RICHIAMO';
+      if (activeTab === 'telefonica-commerciale') return !!st.currentCommercialeId && st.status === 'RICHIAMO_PERSONALE' && st.nextActionType !== 'RICHIAMO';
+
+      if (activeTab === 'appointment-recall') return !!st.currentCommercialeId && st.status === 'APPUNTAMENTO';
+      if (activeTab === 'appointment-ko') return !!st.currentCommercialeId && st.status === 'SOSPESA';
+      
       return false;
-  });
+    });
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col text-sm">
@@ -88,7 +93,27 @@ export default function OperatorNegotiations() {
             </div>
           
           <div>
-            <h2 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">TRATTATIVE CON APPUNTAMENTO</h2>
+              <h2 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">TRATT. TELEFONICA CON COMM.</h2>
+              <div className="space-y-1 mb-6">
+                <button 
+                  onClick={() => setActiveTab('telefonica-operator')}
+                  className={`w-full text-left px-3 py-2 rounded-lg transition text-sm flex items-center justify-between ${activeTab === 'telefonica-operator' ? 'bg-orange-600/20 text-orange-300 font-bold border border-orange-500/30' : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'}`}
+                >
+                  Da Richiamare
+                  {activeTab === 'telefonica-operator' && <ChevronRight className="w-4 h-4" />}
+                </button>
+                <button 
+                  onClick={() => setActiveTab('telefonica-commerciale')}
+                  className={`w-full text-left px-3 py-2 rounded-lg transition text-sm flex items-center justify-between ${activeTab === 'telefonica-commerciale' ? 'bg-orange-600/20 text-orange-300 font-bold border border-orange-500/30' : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'}`}
+                >
+                  In attesa del commerciale
+                  {activeTab === 'telefonica-commerciale' && <ChevronRight className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">TRATTATIVE CON APPUNTAMENTO</h2>
             <div className="space-y-1">
               <button 
                 onClick={() => setActiveTab('appointment-recall')}
