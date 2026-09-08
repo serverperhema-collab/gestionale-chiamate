@@ -430,15 +430,20 @@ export class TrattativaService {
       const updated = await tx.trattativaSheet.updateMany({
         where: { id: trattativaId, version: st.version },
         data: {
-          nextActionType: NextActionType.RICHIAMO,
+          nextActionType: params.commercialeId ? "NONE" : "RICHIAMO",
           nextActionDate: new Date(params.recallDate),
+          ...(params.commercialeId ? { currentCommercialeId: params.commercialeId } : {}),
           version: { increment: 1 }
         }
       });
       if (updated.count === 0) throw new ConflictError("Conflitto di versione");
 
-      await this.appendEvent(tx, trattativaId, "NOTA_AGGIUNTA", params.commercialeId ? "Richiamo passato a Commerciale" : "Richiamo impostato", {
-          note: `Data richiamo: ${params.recallDate}. Note: ${params.notes || ''}`
+      const eventDesc = params.commercialeId 
+        ? `RICHIAMO TELEFONICO ASSEGNATO AL COMMERCIALE CON NOTE: ${params.notes || ''}`
+        : `RICHIAMO PERSONALE IMPOSTATO IN DATA ${new Date(params.recallDate).toLocaleDateString('it-IT')} CON NOTE: ${params.notes || ''}`;
+
+      await this.appendEvent(tx, trattativaId, "NOTA_AGGIUNTA", eventDesc, {
+          note: params.notes || ''
         }, userId, userRole);
 
         if (params.commercialeId) {
