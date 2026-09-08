@@ -16,6 +16,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         contact: true,
         
         events: { orderBy: { createdAt: 'desc' }, take: 50, include: { user: true } },
+        currentOperator: true,
+        currentCommerciale: true,
         attachments: true
       }
     });
