@@ -77,7 +77,20 @@ export default function OperatorNegotiations() {
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
         <div className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col p-4 shrink-0 overflow-y-auto">
-          <div className="mb-6">
+          <div>
+              <h2 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">AGENDA RICHIAMI</h2>
+              <div className="space-y-1 mb-6">
+                <button 
+                  onClick={() => setActiveTab('agenda')}
+                  className={`w-full text-left px-3 py-2 rounded-lg transition text-sm flex items-center justify-between ${activeTab === 'agenda' ? 'bg-indigo-600/20 text-indigo-300 font-bold border border-indigo-500/30' : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'}`}
+                >
+                  Agenda
+                  {activeTab === 'agenda' && <ChevronRight className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            
+            <div className="mb-6">
             <h2 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">TRATTATIVE PERSONALI</h2>
             <div className="space-y-1">
               <button 
