@@ -381,6 +381,22 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
   };
 
   return (
+    <>
+      {showAppointmentModal && (
+        <AppointmentModal 
+          contactId={trattativa?.contactId} 
+          cap={contact?.cap || ''}
+          initialReferentName={contact?.referentName || ''}
+          initialPhone={contact?.originalPhone || ''}
+          initialEmail={contact?.email || ''}
+          onClose={() => setShowAppointmentModal(false)}
+          onSuccess={() => {
+            setShowAppointmentModal(false);
+            setIsCalling(false);
+            fetchST();
+          }}
+        />
+      )}
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
       
@@ -521,8 +537,10 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
 
       </div>
     </div>
+    </>
   );
 }
+
 
 
 
