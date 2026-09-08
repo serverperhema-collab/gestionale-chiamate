@@ -52,6 +52,10 @@ export default function OperatorTerminal() {
   const [negoNotes, setNegoNotes] = useState("");
   const [negoDate, setNegoDate] = useState("");
   const [negoTime, setNegoTime] = useState("");
+  const [negoReferent, setNegoReferent] = useState("");
+  const [negoPhone, setNegoPhone] = useState("");
+  const [negoAddress, setNegoAddress] = useState("");
+  const [negoContactNotes, setNegoContactNotes] = useState("");
 
   const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
   const [activeRecall, setActiveRecall] = useState<any>(null);
@@ -673,7 +677,7 @@ export default function OperatorTerminal() {
       {/* Skip Modal */}
       {skipModalOpen && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-xl border border-gray-700 w-full max-w-md p-6 shadow-2xl">
+          <div className="bg-gray-800 rounded-xl border border-gray-700 w-full max-w-2xl p-6 shadow-2xl">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-white">Salta Contatto (Skip)</h3>
               <button onClick={() => setSkipModalOpen(false)} className="text-gray-400 hover:text-white">
@@ -883,63 +887,87 @@ export default function OperatorTerminal() {
 
       {/* Negotiation Modal */}
       {negoModalOpen && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-xl border border-gray-700 w-full max-w-md p-6 shadow-2xl">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-purple-400">Inserisci Ricontatto</h3>
-              <button onClick={() => setNegoModalOpen(false)} className="text-gray-400 hover:text-white">
-                <XCircle className="w-5 h-5" />
-              </button>
-            </div>
-            <p className="text-sm text-gray-400 mb-4">
-              Imposta la data e l'ora in cui richiamare questa azienda, e inserisci una nota dettagliata.
-            </p>
-            <div className="flex space-x-4 mb-4">
-              <div className="flex-1">
-                <label className="block text-xs text-gray-500 mb-1">Data</label>
-                <input 
-                  type="date" 
-                  value={negoDate}
-                  onChange={e => setNegoDate(e.target.value)}
-                  className="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white focus:outline-none focus:border-purple-500"
-                />
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto">
+            <div className="bg-gray-800 rounded-xl border border-gray-700 w-full max-w-2xl p-6 shadow-2xl my-8">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-purple-400">Inserisci Ricontatto e Anagrafica</h3>
+                <button onClick={() => setNegoModalOpen(false)} className="text-gray-400 hover:text-white">
+                  <XCircle className="w-5 h-5" />
+                </button>
               </div>
-              <div className="flex-1">
-                <label className="block text-xs text-gray-500 mb-1">Ora</label>
-                <input 
-                  type="time" 
-                  value={negoTime}
-                  onChange={e => setNegoTime(e.target.value)}
-                  className="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white focus:outline-none focus:border-purple-500"
-                />
+              <p className="text-sm text-gray-400 mb-4">
+                Verifica i dati anagrafici e imposta la data di ricontatto per la trattativa.
+              </p>
+              
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="col-span-2 md:col-span-1">
+                  <label className="block text-xs text-gray-400 mb-1">Referente</label>
+                  <input type="text" value={negoReferent} onChange={e => setNegoReferent(e.target.value)} className="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white focus:border-purple-500" />
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                  <label className="block text-xs text-gray-400 mb-1">Telefono</label>
+                  <input type="text" value={negoPhone} onChange={e => setNegoPhone(e.target.value)} className="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white focus:border-purple-500" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs text-gray-400 mb-1">Indirizzo</label>
+                  <input type="text" value={negoAddress} onChange={e => setNegoAddress(e.target.value)} className="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white focus:border-purple-500" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs text-gray-400 mb-1">Informazioni Aggiuntive</label>
+                  <textarea value={negoContactNotes} onChange={e => setNegoContactNotes(e.target.value)} className="w-full h-16 bg-gray-900 border border-gray-600 rounded p-2 text-white focus:border-purple-500 resize-none" />
+                </div>
               </div>
-            </div>
-            <textarea
-              className="w-full h-24 bg-gray-900 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-purple-500 resize-none mb-4"
-              placeholder="Di cosa avete parlato? Perché va richiamato?"
-              value={negoNotes}
-              onChange={e => setNegoNotes(e.target.value)}
-            />
-            <div className="flex justify-end space-x-3">
-              <button onClick={() => setNegoModalOpen(false)} className="px-4 py-2 text-gray-400 hover:text-white transition">
-                Annulla
-              </button>
-              <button 
-                onClick={() => {
-                  if (negoDate && negoTime && negoNotes.trim()) {
-                    const isoDate = new Date(`${negoDate}T${negoTime}`).toISOString();
-                    handleOutcome("RICHIAMO_PERSONALE", negoNotes, isoDate);
-                  }
-                }} 
-                disabled={!negoDate || !negoTime || !negoNotes.trim()}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Salva Ricontatto
-              </button>
+
+              <div className="border-t border-gray-700 my-4 pt-4">
+                <p className="text-sm font-bold text-purple-400 mb-4">Dettagli Ricontatto</p>
+                <div className="flex space-x-4 mb-4">
+                  <div className="flex-1">
+                    <label className="block text-xs text-gray-500 mb-1">Data</label>
+                    <input type="date" value={negoDate} onChange={e => setNegoDate(e.target.value)} className="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white focus:border-purple-500" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-xs text-gray-500 mb-1">Ora</label>
+                    <input type="time" value={negoTime} onChange={e => setNegoTime(e.target.value)} className="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white focus:border-purple-500" />
+                  </div>
+                </div>
+                <textarea className="w-full h-24 bg-gray-900 border border-gray-600 rounded p-3 text-white focus:border-purple-500 resize-none mb-4" placeholder="Di cosa avete parlato? Perchè va richiamato?" value={negoNotes} onChange={e => setNegoNotes(e.target.value)} />
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <button onClick={() => setNegoModalOpen(false)} className="px-4 py-2 text-gray-400 hover:text-white transition">
+                  Annulla
+                </button>
+                <button 
+                  onClick={async () => {
+                    if (negoDate && negoTime && negoNotes.trim()) {
+                      try {
+                        await fetch(`/api/contacts/${contact.id}`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            referentName: negoReferent,
+                            originalPhone: negoPhone,
+                            address: negoAddress,
+                            notes: negoContactNotes
+                          })
+                        });
+                      } catch (e) {
+                        console.error("Errore salvataggio info contatto", e);
+                      }
+
+                      const isoDate = new Date(`${negoDate}T${negoTime}`).toISOString();
+                      handleOutcome("RICHIAMO_PERSONALE", negoNotes, isoDate);
+                    }
+                  }} 
+                  disabled={!negoDate || !negoTime || !negoNotes.trim()}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Salva Ricontatto
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Appointment Modal */}
       {appointmentModalOpen && contact && (
