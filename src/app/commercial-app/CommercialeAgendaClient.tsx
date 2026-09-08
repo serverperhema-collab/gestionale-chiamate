@@ -5,9 +5,11 @@ import { Clock, MapPin, Phone, User, FileText, CheckCircle, AlertTriangle, Print
 import toast from "react-hot-toast";
 import OutcomeModal from "@/components/OutcomeModal";
 import AppointmentModal from "@/components/AppointmentModal";
-import TrattativaTimeline from "@/components/TrattativaTimeline"; // TO DO
+import TrattativaTimeline from "@/components/TrattativaTimeline";
+import AgendaView from "@/components/AgendaView"; // TO DO
 
 type TabType =
+  | "AGENDA"
   | "RICHIESTE_OPERATORE"
   | "DA_SVOLGERE"
   | "TRATTATIVE_CORSO"
@@ -27,7 +29,7 @@ export default function CommercialeAgendaClient() {
   
   const [timelineTrattativaId, setTimelineTrattativaId] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<TabType>("DA_SVOLGERE");
+  const [activeTab, setActiveTab] = useState<TabType>("AGENDA");
 
   const fetchData = async () => {
     try {
@@ -87,6 +89,7 @@ export default function CommercialeAgendaClient() {
         {/* TABS SIDEBAR */}
         <div className="w-64 border-r border-gray-800 bg-gray-950 p-4 space-y-2 shrink-0 overflow-y-auto">
           <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Operativo</div>
+            <TabButton id="AGENDA" label="Agenda" active={activeTab} setActive={setActiveTab} color="bg-indigo-600/20 border-indigo-500/50 text-indigo-200" count={trattative.filter(st => st.nextActionDate && !st.status.startsWith('CHIUSA')).length} />
             <TabButton id="RICHIESTE_OPERATORE" label="Richieste Operatore" active={activeTab} setActive={setActiveTab} color="bg-yellow-900/40 border-yellow-500/50 text-yellow-100" count={trattative.filter(st => st.status === "RICHIAMO_PERSONALE").length} />
           <TabButton id="DA_SVOLGERE" label="Appuntamenti" active={activeTab} setActive={setActiveTab} color="bg-blue-900/40 border-blue-500/50 text-blue-100" count={trattative.filter(st => st.status === "APPUNTAMENTO").length} />
           <TabButton id="TRATTATIVE_CORSO" label="In Corso" active={activeTab} setActive={setActiveTab} color="bg-indigo-900/40 border-indigo-500/50 text-indigo-100" count={trattative.filter(st => st.status === "TRATTATIVA_IN_CORSO").length} />
@@ -104,7 +107,12 @@ export default function CommercialeAgendaClient() {
             <div className="flex justify-center items-center h-full">
               <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
             </div>
-          ) : displayedSTs.length === 0 ? (
+          ) : activeTab === "AGENDA" ? (
+              <AgendaView 
+                trattative={trattative.filter(st => st.nextActionDate && !st.status.startsWith('CHIUSA'))} 
+                onOpenTimeline={setTimelineTrattativaId} 
+              />
+            ) : displayedSTs.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full opacity-50">
               <CheckCircle className="w-16 h-16 text-gray-700 mb-4" />
               <h3 className="text-xl font-bold text-white mb-2">Nessun elemento</h3>
