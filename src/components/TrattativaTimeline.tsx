@@ -236,26 +236,26 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
             </h3>
             
             <div className="space-y-6">
-              {trattativa.history && trattativa.history.length > 0 ? (
-                [...trattativa.history].sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()).map((h: any, idx: number, arr: any[]) => {
+              {trattativa.events && trattativa.events.length > 0 ? (
+                [...trattativa.events].sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()).map((h: any, idx: number, arr: any[]) => {
                   const isLast = idx === arr.length - 1;
                   
                   // Nascondi il log grezzo "CREATA" se subito dopo c'è "Richiamo impostato"
-                  if (h.actionType === "CREATA" && arr.length > 1 && arr[idx + 1]?.notes === "Richiamo impostato") {
+                  if (h.eventType === "CREATA" && arr.length > 1 && arr[idx + 1]?.description === "Richiamo impostato") {
                     return null;
                   }
 
-                  let actionTitle = h.actionType.replace(/_/g, " ");
-                  let actionDescription = h.details?.note || h.notes || "Nessuna nota aggiuntiva.";
+                  let actionTitle = h.eventType ? h.eventType.replace(/_/g, " ") : "EVENTO";
+                  let actionDescription = h.metadata?.note || h.description || "Nessuna nota aggiuntiva.";
+                  const creatorName = h.user?.name || "Sistema";
                   
-                  if (actionTitle === "NOTA AGGIUNTA" && h.notes === "Richiamo impostato") {
+                  if (actionTitle === "NOTA AGGIUNTA" && h.description === "Richiamo impostato") {
                      actionTitle = "TRATTATIVA CREATA";
                      const matchDate = actionDescription.match(/Data richiamo:\s*([^.]+)\./);
                      const matchNote = actionDescription.match(/Note:\s*(.*)/);
                      
                      const d = matchDate ? matchDate[1] : "";
                      const n = matchNote ? matchNote[1] : "";
-                     const creatorName = h.operator?.name || h.commerciale?.name || "Sistema";
                      
                      actionDescription = `Creata Trattativa da: ${creatorName} con richiamo il ${d} con nota: ${n}`;
                   }
@@ -280,7 +280,7 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
                         </p>
                         <div className="mt-3 pt-3 border-t border-gray-700/50 flex justify-end">
                           <span className="text-[10px] font-black uppercase text-gray-500 tracking-wider">
-                            Operatore: {h.operator?.name || h.commerciale?.name || "Sistema"}
+                            Operatore: {creatorName}
                           </span>
                         </div>
                       </div>

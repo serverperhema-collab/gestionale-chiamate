@@ -15,7 +15,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       include: {
         contact: true,
         
-        events: { orderBy: { createdAt: 'desc' }, take: 50 },
+        events: { orderBy: { createdAt: 'desc' }, take: 50, include: { user: true } },
         attachments: true
       }
     });
