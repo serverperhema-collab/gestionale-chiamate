@@ -253,7 +253,7 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
                         const now = new Date();
                         const ds = now.toLocaleDateString('it-IT');
                         const ts = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-                        setCallForm({ ...callForm, note: `Il giorno ${ds} alle ore ${ts} il cliente chiede di essere ricontattato dal commerciale per maggiori informazioni.`, commercialeId: trattativa?.currentCommercialeId || '' });
+                        setCallForm({ ...callForm, note: '', commercialeId: trattativa?.currentCommercialeId || '' });
                       }} 
                       className={`p-4 rounded-xl border-2 font-bold text-sm uppercase transition ${subOption === 'commerciale' ? 'border-yellow-500 bg-yellow-600/20 text-yellow-400' : 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-500'}`}>
                       Passa al Commerciale
@@ -540,6 +540,8 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
     </>
   );
 }
+
+
 
 
 
