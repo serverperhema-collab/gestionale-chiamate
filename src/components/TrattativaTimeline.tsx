@@ -25,8 +25,24 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
   const [editValues, setEditValues] = useState<any>({});
   const [savingEdit, setSavingEdit] = useState(false);
 
+  // Call interface hooks
+  const [callPhase, setCallPhase] = useState<'idle' | 'non-risponde' | 'ha-risposto'>('idle');
+  const [subOption, setSubOption] = useState<'riprova' | 'ko-non-risponde' | 'posticipa' | 'commerciale' | 'ko-risposto' | null>(null);
+  
+  const [callForm, setCallForm] = useState({ date: '', time: '', note: '', commercialeId: '' });
+  const [commerciali, setCommerciali] = useState<any[]>([]);
+
   useEffect(() => {
-    async function fetchST() {
+    if (isCalling) {
+      fetch('/api/commerciali').then(res => res.json()).then(data => setCommerciali(data.commerciali || []));
+      setCallPhase('idle');
+      setSubOption(null);
+      setCallForm({ date: '', time: '', note: '', commercialeId: trattativa?.currentCommercialeId || '' });
+    }
+  }, [isCalling, trattativa]);
+
+
+  const fetchST = async () => {
       try {
         const res = await fetch(`/api/trattative/${trattativaId}`);
         if (res.ok) {
@@ -45,7 +61,9 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
       } finally {
         setLoading(false);
       }
-    }
+  };
+
+  useEffect(() => {
     fetchST();
   }, [trattativaId]);
 
@@ -90,20 +108,6 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
   const contact = trattativa.contact || {};
 
   // --- INTERFACCIA CHIAMATA ---
-  const [callPhase, setCallPhase] = useState<'idle' | 'non-risponde' | 'ha-risposto'>('idle');
-  const [subOption, setSubOption] = useState<'riprova' | 'ko-non-risponde' | 'posticipa' | 'commerciale' | 'ko-risposto' | null>(null);
-  
-  const [callForm, setCallForm] = useState({ date: '', time: '', note: '', commercialeId: '' });
-  const [commerciali, setCommerciali] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (isCalling) {
-      fetch('/api/commerciali').then(res => res.json()).then(data => setCommerciali(data.commerciali || []));
-      setCallPhase('idle');
-      setSubOption(null);
-      setCallForm({ date: '', time: '', note: '', commercialeId: trattativa?.currentCommercialeId || '' });
-    }
-  }, [isCalling, trattativa]);
 
   const handleActionSubmit = async () => {
     if (subOption !== 'ko-non-risponde' && subOption !== 'ko-risposto') {
@@ -161,7 +165,7 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
       
       toast.success("Esito registrato!");
       setIsCalling(false);
-      fetchTrattativa();
+      fetchST();
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -519,3 +523,8 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
     </div>
   );
 }
+
+
+
+
+
