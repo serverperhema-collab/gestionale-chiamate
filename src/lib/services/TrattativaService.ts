@@ -157,7 +157,8 @@ export class TrattativaService {
 
       if (updated.count === 0) throw new ConflictError("Conflitto di versione");
 
-      await this.appendEvent(tx, trattativaId, "APPUNTAMENTO_FISSATO", "Appuntamento fissato", {
+      const evtDesc = `Fissato appuntamento ${params.isPhoneAppt ? "telefonico" : "fisico"} per il ${new Date(params.date).toLocaleString("it-IT", { dateStyle: "short", timeStyle: "short" })}` + (params.notes ? `\nNote: ${params.notes}` : "");
+      await this.appendEvent(tx, trattativaId, "APPUNTAMENTO_FISSATO", evtDesc, {
         date: params.date,
         isPhoneAppt: params.isPhoneAppt,
         commercialeId: params.commercialeId
@@ -221,7 +222,8 @@ export class TrattativaService {
 
       if (updated.count === 0) throw new ConflictError("Conflitto di versione");
 
-      await this.appendEvent(tx, trattativaId, "APPUNTAMENTO_RIFISSATO", "Appuntamento rifissato", {
+      const rescheduleDesc = `Appuntamento rifissato al ${new Date(params.newDate).toLocaleString("it-IT", { dateStyle: "short", timeStyle: "short" })}` + (params.notes ? `\nNote: ${params.notes}` : "");
+      await this.appendEvent(tx, trattativaId, "APPUNTAMENTO_RIFISSATO", rescheduleDesc, {
         oldDate: appt.date.toISOString(),
         newDate: params.newDate,
         rescheduleCount: appt.rescheduleCount + 1
@@ -636,3 +638,4 @@ export class TrattativaService {
     });
   }
 }
+
