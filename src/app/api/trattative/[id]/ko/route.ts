@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -43,7 +43,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           userRole: (session.user as any).role,
           eventType: "NOTA_AGGIUNTA",
           description: `Chiamato il ${dateStr} alle ore ${timeStr}. Il cliente non è più interessato. Note: ${notes}`,
-          metadata: { note: notes }
+          metadata: {}
         }
       });
 
@@ -105,4 +105,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+
 
