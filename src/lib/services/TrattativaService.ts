@@ -452,9 +452,7 @@ export class TrattativaService {
 
       const eventDesc = `Il giorno ${dateStr} alle ore ${timeStr} l'operatore ${userName} ha tentato di contattare il cliente senza successo. Prossimo tentativo fissato per il ${targetDateStr} alle ${targetTimeStr}. Nota operatore: ${params.notes}. Tentativi totali senza risposta: ${newCount}`;
 
-      await this.appendEvent(tx, trattativaId, "NOTA_AGGIUNTA", eventDesc, {
-        note: params.notes
-      }, userId, userRole);
+      await this.appendEvent(tx, trattativaId, "NOTA_AGGIUNTA", eventDesc, {}, userId, userRole);
 
       return await tx.trattativaSheet.findUnique({ where: { id: trattativaId } });
     });
@@ -489,9 +487,7 @@ export class TrattativaService {
 
       const eventDesc = `Il giorno ${dateStr} alle ore ${timeStr} l'operatore ${userName} ha contattato il cliente. Il cliente ha chiesto di essere ricontattato il ${targetDateStr} alle ${targetTimeStr}. Nota operatore: ${params.notes}`;
 
-      await this.appendEvent(tx, trattativaId, "NOTA_AGGIUNTA", eventDesc, {
-        note: params.notes
-      }, userId, userRole);
+      await this.appendEvent(tx, trattativaId, "NOTA_AGGIUNTA", eventDesc, {}, userId, userRole);
 
       return await tx.trattativaSheet.findUnique({ where: { id: trattativaId } });
     });
