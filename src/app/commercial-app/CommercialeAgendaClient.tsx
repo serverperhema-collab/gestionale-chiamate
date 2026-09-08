@@ -8,6 +8,7 @@ import AppointmentModal from "@/components/AppointmentModal";
 import TrattativaTimeline from "@/components/TrattativaTimeline"; // TO DO
 
 type TabType =
+  | "RICHIESTE_OPERATORE"
   | "DA_SVOLGERE"
   | "TRATTATIVE_CORSO"
   | "PREVENTIVI"
@@ -52,7 +53,9 @@ export default function CommercialeAgendaClient() {
 
   const getFilteredSTs = () => {
     switch (activeTab) {
-      case "DA_SVOLGERE":
+      case "RICHIESTE_OPERATORE":
+          return trattative.filter(st => st.status === "RICHIAMO_PERSONALE");
+        case "DA_SVOLGERE":
         return trattative.filter(st => st.status === "APPUNTAMENTO");
       case "TRATTATIVE_CORSO":
         return trattative.filter(st => st.status === "TRATTATIVA_IN_CORSO");
@@ -84,6 +87,7 @@ export default function CommercialeAgendaClient() {
         {/* TABS SIDEBAR */}
         <div className="w-64 border-r border-gray-800 bg-gray-950 p-4 space-y-2 shrink-0 overflow-y-auto">
           <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Operativo</div>
+            <TabButton id="RICHIESTE_OPERATORE" label="Richieste Operatore" active={activeTab} setActive={setActiveTab} color="bg-yellow-900/40 border-yellow-500/50 text-yellow-100" count={trattative.filter(st => st.status === "RICHIAMO_PERSONALE").length} />
           <TabButton id="DA_SVOLGERE" label="Appuntamenti" active={activeTab} setActive={setActiveTab} color="bg-blue-900/40 border-blue-500/50 text-blue-100" count={trattative.filter(st => st.status === "APPUNTAMENTO").length} />
           <TabButton id="TRATTATIVE_CORSO" label="In Corso" active={activeTab} setActive={setActiveTab} color="bg-indigo-900/40 border-indigo-500/50 text-indigo-100" count={trattative.filter(st => st.status === "TRATTATIVA_IN_CORSO").length} />
           <TabButton id="PREVENTIVI" label="Preventivi" active={activeTab} setActive={setActiveTab} color="bg-purple-900/40 border-purple-500/50 text-purple-100" count={trattative.filter(st => st.status === "PREVENTIVO").length} />
