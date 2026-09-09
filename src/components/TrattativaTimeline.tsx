@@ -450,7 +450,7 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
       <div className="relative w-full h-full max-w-6xl bg-gray-900 border border-gray-700 shadow-2xl rounded-2xl flex flex-col overflow-hidden print-modal-inner">
         
         {/* HEADER TOP */}
-        <div className="flex items-center justify-between p-4 bg-gray-950 border-b border-gray-800 shrink-0 print:hidden">
+        <div className="flex items-center justify-between p-4 bg-gray-950 border-b border-gray-800 shrink-0 print:bg-white print:border-b-2 print:border-black print:p-2">
           <div className="flex-1 flex justify-start">
             {trattativa.currentCommerciale && (
               <div className="bg-orange-600/20 border border-orange-500/30 px-3 py-1.5 rounded-lg flex items-center">
@@ -540,7 +540,7 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
                   }
 
                   return (
-                    <div key={h.id} className="relative flex items-start">
+                    <div key={h.id} className="relative flex items-start" style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                       {!isLast && <div className="absolute top-8 bottom-0 left-6 w-px bg-gray-700 -ml-px"></div>}
                       
                       <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-800 border-2 border-blue-500 shrink-0 z-10">
