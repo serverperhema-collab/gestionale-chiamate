@@ -95,6 +95,9 @@ export async function GET(req: Request) {
         },
         assignedTo: {
           select: { name: true }
+        },
+        trattativa: {
+          select: { id: true, status: true }
         }
       }
     });

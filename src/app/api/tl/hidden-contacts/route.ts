@@ -121,7 +121,8 @@ export async function GET() {
         phone: c.originalPhone,
         hiddenUntil: c.hiddenUntil,
         reason,
-        blockedBy
+        blockedBy,
+        trattativa: c.trattativa
       };
     });
 
