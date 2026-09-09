@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
-import { Role } from "@prisma/client";
 
 export async function POST(req: Request) {
   try {
@@ -15,55 +14,44 @@ export async function POST(req: Request) {
     
     const body = await req.json();
     const { 
-      contactId, operatorId, commercialeId, 
-      eventType, eventDate, eventTime, eventNotes, 
-      preventivo, isPast, outcome, nextDate, nextTime, outcomeNotes 
+      contactId, flow, operatorId, commercialeId, 
+      notes, appuntamentoSvolto, nextActionTo, nextActionDate, nextActionTime,
+      preventivoFile, contrattoFile
     } = body;
 
-    if (!contactId || !operatorId || !eventType || !eventDate || !eventTime) {
+    if (!contactId || !operatorId || !flow) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // GAP 3 FIX: Commerciale Validation
-    if (isPast && outcome === "RICHIAMO_COMMERCIALE" && !commercialeId) {
-      return NextResponse.json({ error: "Seleziona un Commerciale dal menu a tendina per poter assegnare la trattativa." }, { status: 400 });
-    }
+    const result = await prisma.$transaction(async (tx) => {
+      let trattativaStatus = "TRATTATIVA_IN_CORSO" as any;
+      let nextActionType = "NONE" as any;
+      let nextDateObj = null;
 
-    const eventDateTime = new Date(`${eventDate}T${eventTime}`);
+      // ---- SET STATUS E NEXT ACTION ----
+      if (flow === "IN_CORSO") {
+        if (!nextActionDate || !nextActionTime || !nextActionTo) {
+          throw new Error("Dati di pianificazione mancanti per la trattativa in corso");
+        }
+        nextDateObj = new Date(`${nextActionDate}T${nextActionTime}`);
+        
+        // Se la prossima azione è del commerciale, in corso.
+        // Se è dell'operatore e ha l'appuntamento, APPUNTAMENTO, se no RICHIAMO_PERSONALE
+        if (nextActionTo === "COMMERCIALE") {
+            trattativaStatus = "TRATTATIVA_IN_CORSO";
+            if (!commercialeId) throw new Error("Seleziona un Commerciale dal menu a tendina.");
+        } else {
+            trattativaStatus = appuntamentoSvolto ? "APPUNTAMENTO" : "RICHIAMO_PERSONALE";
+        }
+        nextActionType = "RICHIAMO";
 
-    let trattativaStatus = "TRATTATIVA_IN_CORSO" as any;
-    let computedNextActionType = "NONE";
-    
-    // GAP 2 FIX: Next Action Type Logic
-    if (!isPast) {
-      // Event in future
-      if (eventType === "TELEFONO") {
-        trattativaStatus = "RICHIAMO_PERSONALE";
-        computedNextActionType = "RICHIAMO";
-      }
-      if (eventType === "APPUNTAMENTO") {
-        trattativaStatus = "APPUNTAMENTO";
-        computedNextActionType = "APPUNTAMENTO";
-      }
-    } else {
-      // Event in past, rely on outcome
-      if (outcome === "RICHIAMO_OPERATORE") {
-        trattativaStatus = "RICHIAMO_PERSONALE";
-        computedNextActionType = "RICHIAMO";
-      }
-      if (outcome === "RICHIAMO_COMMERCIALE") {
-        trattativaStatus = "TRATTATIVA_IN_CORSO";
-        computedNextActionType = "RICHIAMO";
-      }
-      if (outcome === "CONTRATTO_FIRMATO") {
+      } else if (flow === "FIRMATO") {
         trattativaStatus = "CHIUSA_VINTA";
-      }
-      if (outcome === "KO_DEFINITIVO") {
+      } else if (flow === "KO") {
         trattativaStatus = "CHIUSA_PERSA";
       }
-    }
 
-    const result = await prisma.$transaction(async (tx) => {
+      // ---- CREA TRATTATIVA ----
       const trattativa = await tx.trattativaSheet.create({
         data: {
           contactId,
@@ -71,104 +59,100 @@ export async function POST(req: Request) {
           currentOperatorId: operatorId,
           createdByOperatorId: operatorId,
           currentCommercialeId: commercialeId || null,
-          nextActionType: computedNextActionType as any,
-          nextActionDate: isPast ? (nextDate && nextTime ? new Date(`${nextDate}T${nextTime}`) : null) : eventDateTime
+          nextActionType: nextActionType,
+          nextActionDate: nextDateObj,
+          closedAt: (flow === "FIRMATO" || flow === "KO") ? new Date() : null
         }
       });
 
-      // GAP 1 FIX: Update Contact Model
+      // ---- AGGIORNA CONTATTO ----
       const contactUpdateData: any = {
           assignedToId: operatorId,
           hiddenUntil: null,
           blacklisted: false,
           isKo: false
       };
-      if (trattativaStatus === "CHIUSA_PERSA") {
+      
+      if (flow === "KO") {
           contactUpdateData.isKo = true;
           contactUpdateData.assignedToId = null;
+      } else if (flow === "FIRMATO") {
+          // Nascondiamo il contatto firmato per 5 anni
+          const futureDate = new Date();
+          futureDate.setFullYear(futureDate.getFullYear() + 5);
+          contactUpdateData.hiddenUntil = futureDate;
       }
+      
       await tx.contact.update({
           where: { id: contactId },
           data: contactUpdateData
       });
 
-      // GAP 4 FIX: More semantic Initial Event Type
+      // ---- LOG E EVENTI ----
       const tl = await tx.user.findUnique({ where: { id: tlId } });
       
-      let initialDesc = "";
-      let initialEventType = "NOTA_AGGIUNTA" as any;
+      // LOG 1: Creazione
+      let log1Desc = "";
+      let initialEventType = "CREATA" as any;
 
-      if (eventType === "TELEFONO") {
-        initialDesc = `Il ${new Date(eventDate).toLocaleDateString('it-IT')} alle ore ${eventTime} è avvenuto un contatto telefonico.\nNote: ${eventNotes}`;
-        initialEventType = isPast ? "ESITO_INSERITO" : "RICHIAMO_IMPOSTATO";
-      } else {
-        initialDesc = `Il ${new Date(eventDate).toLocaleDateString('it-IT')} alle ore ${eventTime} è stato fissato un appuntamento.\nNote: ${eventNotes}`;
-        initialEventType = "APPUNTAMENTO_FISSATO";
+      if (flow === "IN_CORSO") {
+        log1Desc = `Creazione TL. Appuntamento: ${appuntamentoSvolto ? 'Sì' : 'No'}. Preventivo: ${preventivoFile ? 'Sì' : 'No'}. Note: ${notes}`;
+      } else if (flow === "FIRMATO") {
+        initialEventType = "CONTRATTO_FIRMATO";
+        log1Desc = `Contratto Firmato inserito da TL. Note: ${notes}`;
+      } else if (flow === "KO") {
+        initialEventType = "KO_DEFINITIVO";
+        log1Desc = `Contatto KO inserito da TL. Note: ${notes}`;
       }
-      
+
       await tx.trattativaEvent.create({
         data: {
           trattativaId: trattativa.id,
           eventType: initialEventType,
-          description: `Trattativa generata da TL (${tl?.name}). ${initialDesc}`,
+          description: log1Desc,
           userId: tlId,
           userRole: tlRole,
         }
       });
 
-      if (preventivo) {
+      // LOG 2: Richiamo (Solo per IN_CORSO)
+      if (flow === "IN_CORSO") {
         await tx.trattativaEvent.create({
           data: {
             trattativaId: trattativa.id,
-            eventType: "NOTA_AGGIUNTA", // Fallback valid enum for Preventivo Inviato
-            description: `[PREVENTIVO] Il giorno ${new Date(preventivo.date).toLocaleDateString('it-IT')} da ${preventivo.by} è stato inviato un preventivo al cliente. Note: ${preventivo.notes || 'nessuna'}`,
+            eventType: "RICHIAMO_IMPOSTATO",
+            description: `Richiamo fissato per il ${new Date(nextActionDate).toLocaleDateString('it-IT')} alle ${nextActionTime} (Assegnato a: ${nextActionTo === 'COMMERCIALE' ? 'Commerciale' : 'Operatore'}).`,
             userId: tlId,
             userRole: tlRole,
           }
         });
       }
 
-      // ENUM BUG FIXES: "CONTRATTO_FIRMATA" -> "CONTRATTO_FIRMATO", "KO_PERSO" -> "KO_DEFINITIVO"
-      if (isPast && outcome) {
-        if (outcome === "CONTRATTO_FIRMATO") {
-          await tx.trattativaEvent.create({
-            data: {
-              trattativaId: trattativa.id,
-              eventType: "CONTRATTO_FIRMATO",
-              description: `Contratto Firmato. Note: ${outcomeNotes}`,
-              userId: tlId,
-              userRole: tlRole,
-            }
-          });
-          await tx.trattativaSheet.update({
-            where: { id: trattativa.id },
-            data: { closedAt: new Date() }
-          });
-        } else if (outcome === "KO_DEFINITIVO") {
-          await tx.trattativaEvent.create({
-            data: {
-              trattativaId: trattativa.id,
-              eventType: "KO_DEFINITIVO",
-              description: `KO Definitivo. Motivazione: ${outcomeNotes}`,
-              userId: tlId,
-              userRole: tlRole,
-            }
-          });
-          await tx.trattativaSheet.update({
-            where: { id: trattativa.id },
-            data: { closedAt: new Date() }
-          });
-        } else if (outcome === "RICHIAMO_OPERATORE" || outcome === "RICHIAMO_COMMERCIALE") {
-          await tx.trattativaEvent.create({
-            data: {
-              trattativaId: trattativa.id,
-              eventType: "RICHIAMO_IMPOSTATO",
-              description: `Prossimo tentativo fissato per il ${new Date(nextDate).toLocaleDateString('it-IT')} alle ${nextTime} (Assegnato a: ${outcome === 'RICHIAMO_COMMERCIALE' ? 'Commerciale' : 'Operatore'}). Note: ${outcomeNotes}`,
-              userId: tlId,
-              userRole: tlRole,
-            }
-          });
-        }
+      // ---- ALLEGATI ----
+      if (preventivoFile) {
+        await tx.trattativaAttachment.create({
+          data: {
+            trattativaId: trattativa.id,
+            filename: preventivoFile.name,
+            url: preventivoFile.data, // Base64 data URI
+            type: "PREVENTIVO",
+            mimeType: preventivoFile.type,
+            uploadedById: tlId
+          }
+        });
+      }
+
+      if (contrattoFile) {
+        await tx.trattativaAttachment.create({
+          data: {
+            trattativaId: trattativa.id,
+            filename: contrattoFile.name,
+            url: contrattoFile.data, // Base64 data URI
+            type: "CONTRATTO",
+            mimeType: contrattoFile.type,
+            uploadedById: tlId
+          }
+        });
       }
 
       return trattativa;
