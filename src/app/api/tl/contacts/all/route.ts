@@ -98,6 +98,11 @@ export async function GET(req: Request) {
         },
         trattativa: {
           select: { id: true, status: true }
+        },
+        callLogs: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { outcome: true }
         }
       }
     });
