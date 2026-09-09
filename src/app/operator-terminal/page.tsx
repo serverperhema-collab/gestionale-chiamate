@@ -424,12 +424,10 @@ export default function OperatorTerminal() {
             Richieste TL
           </Link>
           <Link href="/operator-dashboard/negotiations" className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-sm text-gray-200 rounded transition font-medium">
-            Trattative In Sospeso
+            Trattative
           </Link>
-          <Link href="/operator-dashboard/appointments" className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-sm text-gray-200 rounded transition font-medium">
-            I Miei Appuntamenti
-          </Link>
-          <button onClick={() => signOut()} className="p-2 text-gray-400 hover:text-white transition rounded-full hover:bg-gray-700">
+          
+          <button onClick={() => signOut({ callbackUrl: '/login' })} className="p-2 text-gray-400 hover:text-white transition rounded-full hover:bg-gray-700">
             <LogOut className="w-5 h-5" />
           </button>
         </div>

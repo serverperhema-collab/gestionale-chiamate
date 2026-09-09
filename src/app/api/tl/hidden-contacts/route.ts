@@ -13,7 +13,12 @@ export async function GET() {
     const now = new Date();
 
     const hiddenContacts = await prisma.contact.findMany({
-      where: { hiddenUntil: { gt: now }, isKo: false },
+      where: {
+        OR: [
+          { hiddenUntil: { gt: now }, isKo: false },
+          { isKo: true, koRecords: { none: { isResolved: false } } }
+        ]
+      },
       select: {
         id: true,
         name: true,
@@ -21,6 +26,7 @@ export async function GET() {
         address: true,
         originalPhone: true,
         hiddenUntil: true,
+        isKo: true,
         noAnswerCount: true,
           notAvailableCount: true,
         assignedTo: {
@@ -54,7 +60,7 @@ export async function GET() {
     });
 
     const contactsWithReason = hiddenContacts.map(c => {
-      let reason = "Motivo Sconosciuto";
+      let reason = c.isKo ? "KO Definitivo (Archiviato)" : "Motivo Sconosciuto";
       let blockedBy = c.assignedTo?.name || "Sistema";
 
       if (c.callLogs.length > 0) {

@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     await prisma.trattativaAttachment.deleteMany();
     await prisma.trattativaSheet.deleteMany();
     await prisma.koRecord.deleteMany();
-    await prisma.deletionRequest.deleteMany();
+    // await prisma.deletionRequest.deleteMany(); // Manteniamo le richieste cestino
 
     // Ripristina lo stato di ogni contatto (mantiene anagrafiche e numeri)
     await prisma.contact.updateMany({
@@ -40,8 +40,8 @@ export async function POST(req: Request) {
         assignedToId: null,
         isKo: false,
         isPersonalCallback: false,
-        blacklisted: false,
-        blacklistReason: null,
+        // blacklisted: false, // I cestinati non si toccano altrimenti tornano in vita
+        // blacklistReason: null,
         delegatedToId: null,
         delegatedUntil: null,
                 

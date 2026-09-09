@@ -74,7 +74,7 @@ export default function OperatorTlRequestsPage() {
           <Link href="/operator-terminal" className="px-3 py-1.5 bg-blue-900/40 border border-blue-800/50 hover:bg-blue-800/60 text-sm text-blue-200 rounded transition font-medium">
             Torna alle chiamate
           </Link>
-          <button onClick={() => signOut()} className="p-2 text-gray-400 hover:text-white transition rounded-full hover:bg-gray-700">
+          <button onClick={() => signOut({ callbackUrl: '/login' })} className="p-2 text-gray-400 hover:text-white transition rounded-full hover:bg-gray-700">
             <LogOut className="w-5 h-5" />
           </button>
         </div>

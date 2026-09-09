@@ -1,14 +1,43 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { X, Clock, FileText, User, RefreshCw, CheckCircle, AlertTriangle, PhoneCall, Edit2, Check, XCircle, Printer } from "lucide-react";
+import { X, Clock, FileText, User, RefreshCw, CheckCircle, AlertTriangle, PhoneCall, Edit2, Check, XCircle, Printer, Calendar, CalendarClock, CalendarX, FileSignature, MessageSquare, PlusCircle } from "lucide-react";
 import toast from "react-hot-toast";
-import AppointmentModal from "./AppointmentModal";
+import AppointmentModal from "@/components/AppointmentModal";
 
 interface TrattativaTimelineProps {
   trattativaId: string;
   onClose: () => void;
 }
+
+
+const getNextActionBadge = (t: any) => {
+  if (!t) return { text: '', color: '' };
+  if (t.status === 'CHIUSA_VINTA') return { text: '✅ CONTRATTO FIRMATO', color: 'bg-green-600/20 text-green-400 border-green-500/30' };
+  if (t.status === 'CHIUSA_PERSA') return { text: '❌ KO', color: 'bg-red-600/20 text-red-400 border-red-500/30' };
+  if (t.status === 'SOSPESA') return { text: '🛑 KO IN ATTESA DI REVISIONE', color: 'bg-red-600/20 text-red-400 border-red-500/30' };
+
+  if (t.nextActionType === 'APPUNTAMENTO') {
+    const isPast = t.nextActionDate ? new Date(t.nextActionDate) < new Date() : false;
+    if (isPast) {
+      return { text: '⏳ IN ATTESA DI ESITO COMMERCIALE', color: 'bg-orange-600/20 text-orange-400 border-orange-500/30' };
+    } else {
+      const dateStr = t.nextActionDate ? new Date(t.nextActionDate).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' }) : 'Data non impostata';
+      return { text: `📅 APPUNTAMENTO IL ${dateStr}`, color: 'bg-blue-600/20 text-blue-400 border-blue-500/30' };
+    }
+  }
+
+  if (t.nextActionType === 'RICHIAMO' || t.status === 'RICHIAMO_PERSONALE') {
+    const dateStr = t.nextActionDate ? new Date(t.nextActionDate).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' }) : 'Da definire';
+    if (t.currentCommercialeId) {
+      return { text: `📞 RICHIAMO COMMERCIALE IL ${dateStr}`, color: 'bg-yellow-600/20 text-yellow-400 border-yellow-500/30' };
+    } else {
+      return { text: `📞 RICHIAMO OPERATORE IL ${dateStr}`, color: 'bg-yellow-600/20 text-yellow-400 border-yellow-500/30' };
+    }
+  }
+
+  return { text: '⚠️ NESSUNA AZIONE PROGRAMMATA', color: 'bg-gray-600/20 text-gray-400 border-gray-500/30' };
+};
 
 export default function TrattativaTimeline({ trattativaId, onClose }: TrattativaTimelineProps) {
   const [trattativa, setTrattativa] = useState<any>(null);
@@ -380,12 +409,45 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
     );
   };
 
+  
+  const getEventIcon = (actionTitle: string) => {
+    const t = actionTitle.toUpperCase();
+    if (t.includes('CREATA')) return { icon: <PlusCircle className="w-5 h-5 text-emerald-400" />, border: 'border-emerald-500' };
+    if (t.includes('APPUNTAMENTO FISSATO') || t.includes('APPUNTAMENTO CONFERMATO')) return { icon: <Calendar className="w-5 h-5 text-blue-400" />, border: 'border-blue-500' };
+    if (t.includes('APPUNTAMENTO RIFISSATO')) return { icon: <CalendarClock className="w-5 h-5 text-orange-400" />, border: 'border-orange-500' };
+    if (t.includes('APPUNTAMENTO ANNULLATO') || t.includes('APPUNTAMENTO SALTATO')) return { icon: <CalendarX className="w-5 h-5 text-red-400" />, border: 'border-red-500' };
+    if (t.includes('PREVENTIVO')) return { icon: <FileText className="w-5 h-5 text-purple-400" />, border: 'border-purple-500' };
+    if (t.includes('RICHIAMO')) return { icon: <Clock className="w-5 h-5 text-yellow-400" />, border: 'border-yellow-500' };
+    if (t.includes('ESITO')) return { icon: <MessageSquare className="w-5 h-5 text-indigo-400" />, border: 'border-indigo-500' };
+    if (t.includes('CONTRATTO')) return { icon: <FileSignature className="w-5 h-5 text-green-500" />, border: 'border-green-500' };
+    if (t.includes('KO')) return { icon: <XCircle className="w-5 h-5 text-red-500" />, border: 'border-red-500' };
+    return { icon: <CheckCircle className="w-5 h-5 text-gray-400" />, border: 'border-gray-600' };
+  };
+
   return (
     <>
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+    <style>{`
+      @media print {
+        body { visibility: hidden; height: auto !important; overflow: visible !important; }
+        html, main { height: auto !important; overflow: visible !important; }
+        #print-timeline-modal, #print-timeline-modal * { visibility: visible; }
+        #print-timeline-modal {
+          position: absolute !important;
+          left: 0 !important;
+          top: 0 !important;
+          width: 100% !important;
+          background: white !important;
+          color: black !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        .print-modal-inner { display: block !important; overflow: visible !important; height: auto !important; box-shadow: none !important; border: none !important; }
+      }
+    `}</style>
+    <div id="print-timeline-modal" className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8">
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm print:hidden" onClick={onClose} />
       
-      <div className="relative w-full h-full max-w-6xl bg-gray-900 border border-gray-700 shadow-2xl rounded-2xl flex flex-col overflow-hidden print:shadow-none print:border-none print:rounded-none print:bg-white print:text-black print:overflow-visible print:h-auto print:block">
+      <div className="relative w-full h-full max-w-6xl bg-gray-900 border border-gray-700 shadow-2xl rounded-2xl flex flex-col overflow-hidden print-modal-inner">
         
         {/* HEADER TOP */}
         <div className="flex items-center justify-between p-4 bg-gray-950 border-b border-gray-800 shrink-0 print:hidden">
@@ -398,8 +460,16 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
             )}
           </div>
           
-          <div className="flex-1 flex justify-center">
-             <h2 className="text-sm font-black text-gray-500 tracking-widest print:text-gray-600 uppercase">Scheda Trattativa</h2>
+          <div className="flex-1 flex flex-col items-center justify-center">
+             <h2 className="text-[10px] font-black text-gray-600 tracking-widest print:text-black uppercase mb-1 hidden sm:block">Scheda Trattativa</h2>
+             {(() => {
+                const badge = getNextActionBadge(trattativa);
+                return (
+                  <div className={`px-3 py-1 border rounded-lg text-[11px] sm:text-xs font-bold whitespace-nowrap shadow-inner print:shadow-none print:border-black print:text-black print:bg-white ${badge.color}`}>
+                    {badge.text}
+                  </div>
+                );
+             })()}
           </div>
 
           <div className="flex-1 flex justify-end items-center gap-4">
@@ -555,3 +625,5 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
 
 
 
+
+// FORCE_REBUILD
