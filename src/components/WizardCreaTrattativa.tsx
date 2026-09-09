@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { X, Calendar, Clock, Handshake, FileText, Upload, User, Briefcase, ThumbsDown } from "lucide-react";
+import { X, Calendar, Clock, Handshake, FileText, Upload, User, Briefcase, ThumbsDown, Save } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface WizardCreaTrattativaProps {
