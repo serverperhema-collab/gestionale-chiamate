@@ -56,7 +56,7 @@ export default function WizardCreaTrattativa({ contactId, contactName, onClose, 
 
   const isEventPast = () => {
     if (!eventDate || !eventTime) return false;
-    const dt = new Date(\`\${eventDate}T\${eventTime}\`);
+    const dt = new Date(`${eventDate}T${eventTime}`);
     return dt < new Date();
   };
 
@@ -142,7 +142,7 @@ export default function WizardCreaTrattativa({ contactId, contactName, onClose, 
           <div className="flex items-center justify-between mb-8 px-4">
             {[1, 2, 3, 4].map(num => (
               <div key={num} className="flex flex-col items-center">
-                <div className={\`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm \${step >= num ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-500'}\`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${step >= num ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-500'}`}>
                   {num}
                 </div>
               </div>
@@ -173,10 +173,10 @@ export default function WizardCreaTrattativa({ contactId, contactName, onClose, 
             <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
               <h3 className="text-lg font-bold text-white mb-4">Step 2: Evento Scatenante</h3>
               <div className="flex space-x-4 mb-4">
-                <button onClick={() => setEventType("TELEFONO")} className={\`flex-1 p-4 rounded-xl border-2 transition font-bold flex flex-col items-center \${eventType === "TELEFONO" ? "border-blue-500 bg-blue-600/20 text-blue-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}\`}>
+                <button onClick={() => setEventType("TELEFONO")} className={`flex-1 p-4 rounded-xl border-2 transition font-bold flex flex-col items-center ${eventType === "TELEFONO" ? "border-blue-500 bg-blue-600/20 text-blue-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}`}>
                   <PhoneCall className="w-6 h-6 mb-2" /> Trattativa Telefonica
                 </button>
-                <button onClick={() => setEventType("APPUNTAMENTO")} className={\`flex-1 p-4 rounded-xl border-2 transition font-bold flex flex-col items-center \${eventType === "APPUNTAMENTO" ? "border-purple-500 bg-purple-600/20 text-purple-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}\`}>
+                <button onClick={() => setEventType("APPUNTAMENTO")} className={`flex-1 p-4 rounded-xl border-2 transition font-bold flex flex-col items-center ${eventType === "APPUNTAMENTO" ? "border-purple-500 bg-purple-600/20 text-purple-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}`}>
                   <Calendar className="w-6 h-6 mb-2" /> Con Appuntamento
                 </button>
               </div>
@@ -204,10 +204,10 @@ export default function WizardCreaTrattativa({ contactId, contactName, onClose, 
             <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
               <h3 className="text-lg font-bold text-white mb-4">Step 3: Preventivo</h3>
               <div className="flex space-x-4 mb-6">
-                <button onClick={() => setHasPreventivo("SI")} className={\`flex-1 py-3 rounded-lg border-2 font-bold transition \${hasPreventivo === "SI" ? "border-green-500 bg-green-500/20 text-green-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}\`}>
+                <button onClick={() => setHasPreventivo("SI")} className={`flex-1 py-3 rounded-lg border-2 font-bold transition ${hasPreventivo === "SI" ? "border-green-500 bg-green-500/20 text-green-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}`}>
                   Sì, allegato
                 </button>
-                <button onClick={() => setHasPreventivo("NO")} className={\`flex-1 py-3 rounded-lg border-2 font-bold transition \${hasPreventivo === "NO" ? "border-gray-500 bg-gray-700 text-white" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}\`}>
+                <button onClick={() => setHasPreventivo("NO")} className={`flex-1 py-3 rounded-lg border-2 font-bold transition ${hasPreventivo === "NO" ? "border-gray-500 bg-gray-700 text-white" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}`}>
                   No preventivo
                 </button>
               </div>
@@ -240,16 +240,16 @@ export default function WizardCreaTrattativa({ contactId, contactName, onClose, 
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-6">
-                <button onClick={() => setOutcome("RICHIAMO_OPERATORE")} className={\`p-3 rounded-lg border-2 font-bold text-sm \${outcome === "RICHIAMO_OPERATORE" ? "border-blue-500 bg-blue-600/20 text-blue-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}\`}>
+                <button onClick={() => setOutcome("RICHIAMO_OPERATORE")} className={`p-3 rounded-lg border-2 font-bold text-sm ${outcome === "RICHIAMO_OPERATORE" ? "border-blue-500 bg-blue-600/20 text-blue-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}`}>
                   Richiamo Operatore
                 </button>
-                <button onClick={() => setOutcome("RICHIAMO_COMMERCIALE")} className={\`p-3 rounded-lg border-2 font-bold text-sm \${outcome === "RICHIAMO_COMMERCIALE" ? "border-yellow-500 bg-yellow-600/20 text-yellow-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}\`}>
+                <button onClick={() => setOutcome("RICHIAMO_COMMERCIALE")} className={`p-3 rounded-lg border-2 font-bold text-sm ${outcome === "RICHIAMO_COMMERCIALE" ? "border-yellow-500 bg-yellow-600/20 text-yellow-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}`}>
                   Richiamo Commerciale
                 </button>
-                <button onClick={() => setOutcome("CONTRATTO_FIRMATO")} className={\`p-3 rounded-lg border-2 font-bold text-sm \${outcome === "CONTRATTO_FIRMATO" ? "border-green-500 bg-green-600/20 text-green-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}\`}>
+                <button onClick={() => setOutcome("CONTRATTO_FIRMATO")} className={`p-3 rounded-lg border-2 font-bold text-sm ${outcome === "CONTRATTO_FIRMATO" ? "border-green-500 bg-green-600/20 text-green-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}`}>
                   Contratto Firmato
                 </button>
-                <button onClick={() => setOutcome("KO_DEFINITIVO")} className={\`p-3 rounded-lg border-2 font-bold text-sm \${outcome === "KO_DEFINITIVO" ? "border-red-500 bg-red-600/20 text-red-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}\`}>
+                <button onClick={() => setOutcome("KO_DEFINITIVO")} className={`p-3 rounded-lg border-2 font-bold text-sm ${outcome === "KO_DEFINITIVO" ? "border-red-500 bg-red-600/20 text-red-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}`}>
                   KO Definitivo
                 </button>
               </div>

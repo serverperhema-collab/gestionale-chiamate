@@ -47,7 +47,7 @@ export default function TrattativeTable({ type, stateGroup, title }: TrattativeT
         operatorId,
         commercialeId
       });
-      const res = await fetch(\`/api/tl/advanced-negotiations?\${params.toString()}\`);
+      const res = await fetch(`/api/tl/advanced-negotiations?${params.toString()}`);
       const json = await res.json();
       if (json.success) {
         setData(json.trattative);

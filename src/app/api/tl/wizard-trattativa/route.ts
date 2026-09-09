@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     }
 
     const service = new TrattativaService();
-    const eventDateTime = new Date(\`\${eventDate}T\${eventTime}\`);
+    const eventDateTime = new Date(`${eventDate}T${eventTime}`);
 
     // 1. Create the base Trattativa
     let trattativaStatus = "TRATTATIVA_IN_CORSO" as any;
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
         currentOperatorId: operatorId,
         currentCommercialeId: commercialeId || null,
         nextActionType: (!isPast || outcome === "RICHIAMO_OPERATORE" || outcome === "RICHIAMO_COMMERCIALE") ? "RICHIAMO" : "NONE",
-        nextActionDate: isPast ? (nextDate && nextTime ? new Date(\`\${nextDate}T\${nextTime}\`) : null) : eventDateTime
+        nextActionDate: isPast ? (nextDate && nextTime ? new Date(`${nextDate}T${nextTime}`) : null) : eventDateTime
       }
     });
 
@@ -59,16 +59,16 @@ export async function POST(req: Request) {
     
     let initialDesc = "";
     if (eventType === "TELEFONO") {
-      initialDesc = \`Il \${new Date(eventDate).toLocaleDateString('it-IT')} alle ore \${eventTime} è avvenuto un contatto telefonico.\nNote: \${eventNotes}\`;
+      initialDesc = `Il ${new Date(eventDate).toLocaleDateString('it-IT')} alle ore ${eventTime} è avvenuto un contatto telefonico.\nNote: ${eventNotes}`;
     } else {
-      initialDesc = \`Il \${new Date(eventDate).toLocaleDateString('it-IT')} alle ore \${eventTime} è stato fissato un appuntamento.\nNote: \${eventNotes}\`;
+      initialDesc = `Il ${new Date(eventDate).toLocaleDateString('it-IT')} alle ore ${eventTime} è stato fissato un appuntamento.\nNote: ${eventNotes}`;
     }
     
     await prisma.trattativaEvent.create({
       data: {
         trattativaId: trattativa.id,
         eventType: "NOTA_AGGIUNTA",
-        description: \`Trattativa generata da TL (\${tl?.name}). \${initialDesc}\`,
+        description: `Trattativa generata da TL (${tl?.name}). ${initialDesc}`,
         userId: tlId,
         userRole: tlRole,
       }
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
         data: {
           trattativaId: trattativa.id,
           eventType: "PREVENTIVO_INVIATO",
-          description: \`Il giorno \${new Date(preventivo.date).toLocaleDateString('it-IT')} da \${preventivo.by} è stato inviato un preventivo al cliente. Note: \${preventivo.notes || 'nessuna'}\`,
+          description: `Il giorno ${new Date(preventivo.date).toLocaleDateString('it-IT')} da ${preventivo.by} è stato inviato un preventivo al cliente. Note: ${preventivo.notes || 'nessuna'}`,
           userId: tlId,
           userRole: tlRole,
         }
@@ -94,7 +94,7 @@ export async function POST(req: Request) {
           data: {
             trattativaId: trattativa.id,
             eventType: "CONTRATTO_FIRMATA",
-            description: \`Contratto Firmato. Note: \${outcomeNotes}\`,
+            description: `Contratto Firmato. Note: ${outcomeNotes}`,
             userId: tlId,
             userRole: tlRole,
           }
@@ -108,7 +108,7 @@ export async function POST(req: Request) {
           data: {
             trattativaId: trattativa.id,
             eventType: "KO_PERSO",
-            description: \`KO Definitivo. Motivazione: \${outcomeNotes}\`,
+            description: `KO Definitivo. Motivazione: ${outcomeNotes}`,
             userId: tlId,
             userRole: tlRole,
           }
@@ -122,7 +122,7 @@ export async function POST(req: Request) {
           data: {
             trattativaId: trattativa.id,
             eventType: "NOTA_AGGIUNTA",
-            description: \`Prossimo tentativo fissato per il \${new Date(nextDate).toLocaleDateString('it-IT')} alle \${nextTime} (Assegnato a: \${outcome === 'RICHIAMO_COMMERCIALE' ? 'Commerciale' : 'Operatore'}). Note: \${outcomeNotes}\`,
+            description: `Prossimo tentativo fissato per il ${new Date(nextDate).toLocaleDateString('it-IT')} alle ${nextTime} (Assegnato a: ${outcome === 'RICHIAMO_COMMERCIALE' ? 'Commerciale' : 'Operatore'}). Note: ${outcomeNotes}`,
             userId: tlId,
             userRole: tlRole,
           }
