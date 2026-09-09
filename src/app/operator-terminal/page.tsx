@@ -259,7 +259,7 @@ export default function OperatorTerminal() {
     }
   };
 
-  const handleOutcome = async (outcome: string, notes: string = "", recallDateStr?: string) => {
+  const handleOutcome = async (outcome: string, notes: string = "", recallDateStr?: string, localDateStr?: string, localTimeStr?: string) => {
     if (!contact) return;
     
     setLoading(true);
@@ -321,6 +321,8 @@ export default function OperatorTerminal() {
           
           const actionPayload: any = {
               recallDate: recallDateStr,
+              localDate: localDateStr,
+              localTime: localTimeStr,
               notes: notes
             };
             if (negoAssignTo === "COMMERCIALE" && negoCommercialeId) {
@@ -1001,7 +1003,9 @@ export default function OperatorTerminal() {
                       }
 
                       const isoDate = new Date(`${negoDate}T${negoTime}`).toISOString();
-                      handleOutcome("RICHIAMO_PERSONALE", negoNotes, isoDate);
+                        const [y,m,d] = negoDate.split('-');
+                        const formattedDate = `${d}/${m}/${y}`;
+                        handleOutcome("RICHIAMO_PERSONALE", negoNotes, isoDate, formattedDate, negoTime);
                     }
                   }} 
                   disabled={loading || !negoDate || !negoTime || !negoNotes.trim() || (negoAssignTo === "COMMERCIALE" && !negoCommercialeId)}

@@ -487,8 +487,8 @@ export class TrattativaService {
       const dateStr = now.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
       const timeStr = now.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
       const targetDate = new Date(params.recallDate);
-      const targetDateStr = targetDate.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
-      const targetTimeStr = targetDate.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
+      const targetDateStr = params.localDate || targetDate.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
+        const targetTimeStr = params.localTime || targetDate.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
 
       const eventDesc = `Il giorno ${dateStr} alle ore ${timeStr} l'operatore ${userName} ha tentato di contattare il cliente senza successo. Prossimo tentativo fissato per il ${targetDateStr} alle ${targetTimeStr}. Nota operatore: ${params.notes}. Tentativi totali senza risposta: ${newCount}`;
 
@@ -522,8 +522,8 @@ export class TrattativaService {
       const dateStr = now.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
       const timeStr = now.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
       const targetDate = new Date(params.recallDate);
-      const targetDateStr = targetDate.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
-      const targetTimeStr = targetDate.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
+      const targetDateStr = params.localDate || targetDate.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
+        const targetTimeStr = params.localTime || targetDate.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
 
       const eventDesc = `Il giorno ${dateStr} alle ore ${timeStr} l'operatore ${userName} ha contattato il cliente. Il cliente ha chiesto di essere ricontattato il ${targetDateStr} alle ${targetTimeStr}. Nota operatore: ${params.notes}`;
 
@@ -533,7 +533,7 @@ export class TrattativaService {
     });
   }
 
-  async setRichiamo(trattativaId: string, params: { recallDate: string; notes?: string; commercialeId?: string }, userId: string, userRole: Role) {
+  async setRichiamo(trattativaId: string, params: { recallDate: string; localDate?: string; localTime?: string; notes?: string; commercialeId?: string }, userId: string, userRole: Role) {
     this.validateRole(userRole, 'createOrReopen'); // Or any other suitable permission
     return prisma.$transaction(async (tx) => {
       const st = await tx.trattativaSheet.findUnique({ where: { id: trattativaId } });
@@ -555,8 +555,8 @@ export class TrattativaService {
       const dateStr = now.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
       const timeStr = now.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
       const targetDate = new Date(params.recallDate);
-      const targetDateStr = targetDate.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
-      const targetTimeStr = targetDate.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
+      const targetDateStr = params.localDate || targetDate.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
+        const targetTimeStr = params.localTime || targetDate.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
       
       const currentUser = await tx.user.findUnique({ where: { id: userId } });
       const userName = currentUser?.name || 'Operatore';
