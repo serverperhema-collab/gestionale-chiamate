@@ -28,26 +28,27 @@ export default function ContactEditModal({ contactId, isOpen, onClose, onSaved }
     if (isOpen) {
       if (contactId) {
         setLoading(true);
-        fetch(`/api/tl/contacts/${contactId}`)
-          .then(res => res.json())
-          .then(data => {
-            if (data.contact) {
-              setFormData({
-                name: data.contact.name || "",
-                originalPhone: data.contact.originalPhone || "",
-                cap: data.contact.cap || "",
-                sector: data.contact.sector || "",
-                address: data.contact.address || "",
-                email: data.contact.email || "",
-                referentName: data.contact.referentName || "",
-                notes: data.contact.notes || ""
-              });
-            }
+        fetch(`/api/tl/contacts/${contactId}?t=${Date.now()}`)
+          .then(async res => {
+             const data = await res.json();
+             if (res.ok && data.contact) {
+                setFormData({
+                  name: data.contact.name || "",
+                  originalPhone: data.contact.originalPhone || "",
+                  cap: data.contact.cap || "",
+                  sector: data.contact.sector || "",
+                  address: data.contact.address || "",
+                  email: data.contact.email || "",
+                  referentName: data.contact.referentName || "",
+                  notes: data.contact.notes || ""
+                });
+             } else {
+                toast.error(data.error || "Errore nel caricamento dati");
+             }
           })
-          .catch(() => toast.error("Errore caricamento dati"))
+          .catch((err) => toast.error("Errore Rete: " + err.message))
           .finally(() => setLoading(false));
       } else {
-        // Reset form for new contact
         setFormData({
           name: "",
           originalPhone: "",
