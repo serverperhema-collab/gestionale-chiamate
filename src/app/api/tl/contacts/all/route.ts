@@ -46,6 +46,7 @@ export async function GET(req: Request) {
       } else if (status === "FREE") {
         where.assignedToId = null;
         where.isKo = false;
+        where.blacklisted = false;
         where.OR = [
           { hiddenUntil: null },
           { hiddenUntil: { lt: new Date() } }
@@ -54,7 +55,11 @@ export async function GET(req: Request) {
         where.isKo = true;
       } else if (status === "HIDDEN") {
         where.hiddenUntil = { gt: new Date() };
+      } else if (status === "CESTINO") {
+        where.blacklisted = true;
       }
+    } else {
+      where.blacklisted = false;
     }
 
     // 1. Fetch all IDs and their counts matching the filter

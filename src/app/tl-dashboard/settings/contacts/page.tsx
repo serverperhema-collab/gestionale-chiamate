@@ -177,6 +177,7 @@ export default function GlobalContactsPage() {
 
   // Helper per lo stato visivo
   const getStatusBadge = (c: any) => {
+    if (c.blacklisted) return <span className="px-2 py-1 bg-red-900/50 text-red-400 rounded text-xs font-semibold">Cestino</span>;
     if (c.isKo) return <span className="px-2 py-1 bg-red-900/50 text-red-400 rounded text-xs font-semibold">KO</span>;
     if (c.hiddenUntil && new Date(c.hiddenUntil) > new Date()) return <span className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs font-semibold">Nascosto (In Trattativa)</span>;
     if (c.assignedToId) return <span className="px-2 py-1 bg-purple-900/50 text-purple-400 rounded text-xs font-semibold">Assegnato ({c.assignedTo?.name})</span>;
@@ -253,6 +254,7 @@ export default function GlobalContactsPage() {
             <option value="ASSIGNED">Assegnati</option>
             <option value="HIDDEN">Nascosti (Trattative)</option>
             <option value="KO">KO Definitivi</option>
+            <option value="CESTINO">Cestino (Blacklist)</option>
           </select>
         </div>
       </div>
