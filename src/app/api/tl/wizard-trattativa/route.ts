@@ -48,6 +48,7 @@ export async function POST(req: Request) {
         contactId,
         status: trattativaStatus,
         currentOperatorId: operatorId,
+        createdByOperatorId: operatorId,
         currentCommercialeId: commercialeId || null,
         nextActionType: (!isPast || outcome === "RICHIAMO_OPERATORE" || outcome === "RICHIAMO_COMMERCIALE") ? "RICHIAMO" : "NONE",
         nextActionDate: isPast ? (nextDate && nextTime ? new Date(`${nextDate}T${nextTime}`) : null) : eventDateTime
