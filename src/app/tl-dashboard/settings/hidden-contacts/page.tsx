@@ -488,6 +488,14 @@ export default function HiddenContactsPage() {
         </div>
       )}
 
+      {/* Trattativa Modal */}
+      {timelineTrattativaId && (
+        <TrattativaTimeline 
+          trattativaId={timelineTrattativaId}
+          onClose={() => setTimelineTrattativaId(null)}
+        />
+      )}
+
       {/* Finestrella Custom Conferma Sblocco */}
       {contactToUnblock && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">

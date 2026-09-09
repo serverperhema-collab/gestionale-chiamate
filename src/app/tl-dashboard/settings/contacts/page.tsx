@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import WizardCreaTrattativa from "@/components/WizardCreaTrattativa";
 import TrattativaTimeline from "@/components/TrattativaTimeline";
 
-import { Database, Search, Filter, History, X, ChevronLeft, ChevronRight, User, Phone, PhoneOff, Calendar, AlertCircle, ArrowRightCircle } from "lucide-react";
+import { Handshake, Database, Search, Filter, History, X, ChevronLeft, ChevronRight, User, Phone, PhoneOff, Calendar, AlertCircle, ArrowRightCircle } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function GlobalContactsPage() {
@@ -310,13 +310,22 @@ export default function GlobalContactsPage() {
                         Delega
                       </button>
                       {c.trattativa ? (
-                          <button
-                            onClick={() => viewTimeline(c)}
-                            className="inline-flex items-center px-3 py-1.5 bg-emerald-900/20 hover:bg-emerald-900/40 text-emerald-400 rounded border border-emerald-800/50 transition whitespace-nowrap"
-                          >
-                            <History className="w-4 h-4 mr-1.5" />
-                            Visualizza Trattativa
-                          </button>
+                          <>
+                            <button
+                              onClick={() => viewTimeline(c)}
+                              className="inline-flex items-center px-2 py-1.5 bg-emerald-900/20 hover:bg-emerald-900/40 text-emerald-400 rounded border border-emerald-800/50 transition whitespace-nowrap"
+                              title="Visualizza Storico Log"
+                            >
+                              <History className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => setTimelineTrattativaId(c.trattativa.id)}
+                              className="inline-flex items-center px-3 py-1.5 bg-purple-900/20 hover:bg-purple-900/40 text-purple-400 rounded border border-purple-800/50 transition whitespace-nowrap"
+                            >
+                              <Handshake className="w-4 h-4 mr-1.5" />
+                              Scheda Trattativa
+                            </button>
+                          </>
                         ) : (
                           <button
                             onClick={() => { setHistContact(c); setShowWizardModal(true); }}
