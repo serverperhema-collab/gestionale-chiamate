@@ -57,7 +57,7 @@ export async function POST(req: Request) {
           contactId,
           status: trattativaStatus,
           currentOperatorId: operatorId,
-          createdByOperatorId: operatorId,
+          
           currentCommercialeId: commercialeId || null,
           nextActionType: nextActionType,
           nextActionDate: nextDateObj,

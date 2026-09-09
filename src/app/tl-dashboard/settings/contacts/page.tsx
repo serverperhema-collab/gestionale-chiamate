@@ -5,7 +5,7 @@ import WizardCreaTrattativa from "@/components/WizardCreaTrattativa";
 import TrattativaTimeline from "@/components/TrattativaTimeline";
 
 import ContactEditModal from "@/components/ContactEditModal";
-import { Handshake, Database, Search, Filter, Plus, History, X, ChevronLeft, ChevronRight, User, Phone, PhoneOff, Calendar, AlertCircle, ArrowRightCircle } from "lucide-react";
+import { Handshake, Database, Search, Filter, Plus, History, X, ChevronLeft, ChevronRight, User, Phone, PhoneOff, Calendar, AlertCircle, ArrowRightCircle, Trash2, RefreshCw } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function GlobalContactsPage() {
@@ -23,6 +23,29 @@ export default function GlobalContactsPage() {
     const [search, setSearch] = useState("");
   const [showEditModal, setShowEditModal] = useState(false);
   const [editContactId, setEditContactId] = useState<string | null>(null);
+
+  // Trash Logic
+  const [showTrashModal, setShowTrashModal] = useState(false);
+  const [trashContact, setTrashContact] = useState<any>(null);
+  const [trashReason, setTrashReason] = useState("");
+
+  const handleRestore = async (id: string) => {
+    try {
+      const res = await fetch(`/api/tl/contacts/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ blacklisted: false, blacklistReason: null })
+      });
+      if (res.ok) {
+        toast.success("Contatto ripristinato!");
+        fetchContacts();
+      } else {
+        toast.error("Errore durante il ripristino");
+      }
+    } catch (e) {
+      toast.error("Errore di rete");
+    }
+  };
   const [cap, setCap] = useState("");
   const [sector, setSector] = useState("");
   const [statusFilter, setStatusFilter] = useState("");

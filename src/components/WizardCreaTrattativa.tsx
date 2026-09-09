@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { X, Calendar, Clock, Handshake, FileText, Upload, User, Briefcase, FileSignature, ThumbsDown } from "lucide-react";
+import { X, Calendar, Clock, Handshake, FileText, Upload, User, Briefcase, ThumbsDown } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface WizardCreaTrattativaProps {
@@ -147,7 +147,7 @@ export default function WizardCreaTrattativa({ contactId, contactName, onClose, 
               
               <button onClick={() => { setFlow("FIRMATO"); setStep(1); }} className="w-full flex items-center p-4 bg-gray-800 border border-gray-700 rounded-xl hover:bg-gray-700 hover:border-emerald-500 transition-all text-left group">
                 <div className="w-12 h-12 rounded-full bg-emerald-900/30 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                  <FileSignature className="w-6 h-6 text-emerald-400" />
+                  <FileText className="w-6 h-6 text-emerald-400" />
                 </div>
                 <div>
                   <h4 className="font-bold text-white text-lg">Contratto Firmato (Storico)</h4>
@@ -172,7 +172,7 @@ export default function WizardCreaTrattativa({ contactId, contactName, onClose, 
             <div className="space-y-5 animate-in slide-in-from-right-4">
               <div className="flex items-center space-x-2 text-blue-400 mb-2">
                 {flow === "IN_CORSO" && <Handshake className="w-5 h-5" />}
-                {flow === "FIRMATO" && <FileSignature className="w-5 h-5 text-emerald-400" />}
+                {flow === "FIRMATO" && <FileText className="w-5 h-5 text-emerald-400" />}
                 {flow === "KO" && <ThumbsDown className="w-5 h-5 text-red-400" />}
                 <h3 className="font-bold text-white">
                   {flow === "IN_CORSO" ? "Dati Trattativa in Corso" : flow === "FIRMATO" ? "Inserimento Contratto Firmato" : "Inserimento Esito KO"}
@@ -233,7 +233,7 @@ export default function WizardCreaTrattativa({ contactId, contactName, onClose, 
                 {flow === "FIRMATO" && (
                   <div className="flex items-center justify-between bg-emerald-900/10 p-3 rounded-lg border border-emerald-900/30">
                     <div className="flex items-center">
-                      <FileSignature className="w-5 h-5 text-emerald-500 mr-3" />
+                      <FileText className="w-5 h-5 text-emerald-500 mr-3" />
                       <div>
                         <p className="text-sm font-medium text-white">Contratto Firmato *</p>
                         <p className="text-xs text-emerald-500/70">{contrattoFile ? contrattoFile.name : 'Richiesto'}</p>

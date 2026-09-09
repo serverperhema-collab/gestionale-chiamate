@@ -11,7 +11,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     }
 
     const body = await req.json();
-    const { name, originalPhone, cap, sector, address, email, referentName, notes } = body;
+    const { name, originalPhone, cap, sector, address, email, referentName, notes, blacklisted, blacklistReason } = body;
 
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
@@ -21,7 +21,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     if (address !== undefined) updateData.address = address;
     if (email !== undefined) updateData.email = email;
     if (referentName !== undefined) updateData.referentName = referentName;
-    if (notes !== undefined) updateData.notes = notes;
+    if (notes !== undefined) updateData.notes = notes;\n    if (blacklisted !== undefined) updateData.blacklisted = blacklisted;\n    if (blacklistReason !== undefined) updateData.blacklistReason = blacklistReason;
 
     const contact = await prisma.contact.update({
       where: { id: params.id },
