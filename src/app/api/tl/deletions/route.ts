@@ -11,19 +11,30 @@ export async function GET(req: Request) {
     }
 
     const blacklistedContacts = await prisma.contact.findMany({
-      where: { blacklisted: true },
+      where: { 
+        OR: [
+          { blacklisted: true },
+          { isKo: true, koRecords: { none: { isResolved: false } } }
+        ]
+      },
       select: {
         id: true,
         name: true,
         cap: true,
         address: true,
         originalPhone: true,
-        blacklistReason: true
+        blacklistReason: true,
+        isKo: true
       },
       orderBy: { updatedAt: "desc" }
     });
 
-    return NextResponse.json({ deletions: blacklistedContacts });
+    const mappedDeletions = blacklistedContacts.map(c => ({
+      ...c,
+      blacklistReason: c.blacklistReason || (c.isKo ? "KO Definitivo (Archiviato)" : "Cestinato da TL")
+    }));
+
+    return NextResponse.json({ deletions: mappedDeletions });
   } catch (error) {
     console.error("GET deletions error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

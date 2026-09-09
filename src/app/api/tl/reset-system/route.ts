@@ -24,19 +24,24 @@ export async function POST(req: Request) {
     await prisma.dailyAssignment.deleteMany();
     await prisma.tlTask.deleteMany();
     await prisma.zoneAgenda.deleteMany();
-    // await prisma.koRecord.deleteMany(); // Cestino conservato
-    // await prisma.deletionRequest.deleteMany(); // Cestino conservato
+    await prisma.trattativaEvent.deleteMany();
+    await prisma.trattativaAppointment.deleteMany();
+    await prisma.trattativaAttachment.deleteMany();
+    await prisma.trattativaSheet.deleteMany();
+    await prisma.koRecord.deleteMany();
+    await prisma.deletionRequest.deleteMany();
 
     // Ripristina lo stato di ogni contatto (mantiene anagrafiche e numeri)
     await prisma.contact.updateMany({
       data: {
         noAnswerCount: 0,
+        notAvailableCount: 0,
         hiddenUntil: null,
         assignedToId: null,
-        // isKo: false, // Non tocchiamo il cestino
+        isKo: false,
         isPersonalCallback: false,
-        // blacklisted: false, // Non tocchiamo i bloccati permanenti
-        // blacklistReason: null,
+        blacklisted: false,
+        blacklistReason: null,
         delegatedToId: null,
         delegatedUntil: null,
                 

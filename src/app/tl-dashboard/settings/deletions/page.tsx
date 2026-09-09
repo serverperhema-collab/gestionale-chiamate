@@ -13,6 +13,7 @@ export default function DeletionsPage() {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchDeletions = async () => {
     try {
@@ -74,6 +75,21 @@ export default function DeletionsPage() {
     }
   };
 
+  
+  const filteredDeletions = deletions.filter(del => 
+    del.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    del.cap?.includes(searchQuery) ||
+    del.blacklistReason?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    del.address?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredAppointments = appointments.filter(app => 
+    app.contact?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    app.contact?.cap?.includes(searchQuery) ||
+    app.contact?.originalPhone?.includes(searchQuery) ||
+    app.contact?.address?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="flex flex-1 gap-8">
       {/* SIDE MENU */}
@@ -102,8 +118,20 @@ export default function DeletionsPage() {
           </div>
         </div>
 
-        {/* MAIN CONTENT */}
+                {/* MAIN CONTENT */}
         <div className="flex-1 min-w-0">
+          <div className="mb-6 relative max-w-4xl">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+            <input 
+              type="text" 
+              placeholder="Cerca per nome, CAP, indirizzo, motivo o telefono..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-red-500 shadow-sm"
+            />
+          </div>
           {loading ? (
             <div className="flex justify-center p-12">
               <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
@@ -115,14 +143,14 @@ export default function DeletionsPage() {
                 <p className="text-gray-400 text-sm">Questi contatti sono stati scartati definitivamente e non sono più visibili agli operatori.</p>
               </div>
 
-              {deletions.length === 0 ? (
+              {filteredDeletions.length === 0 ? (
                 <div className="text-center py-12 bg-gray-800/50 rounded-xl border border-gray-700">
                   <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
                   <h3 className="text-xl font-bold text-white mb-2">Nessun contatto cestinato</h3>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {deletions.map((del) => (
+                  {filteredDeletions.map((del) => (
                     <div key={del.id} className="bg-gray-900 rounded-xl border border-gray-700 p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:border-gray-600 transition">
                       <div className="flex-1">
                         <h4 className="font-bold text-white text-lg">{del.name}</h4>
@@ -149,7 +177,7 @@ export default function DeletionsPage() {
             </div>
           ) : (
             /* TAB APPUNTAMENTI */
-            appointments.length === 0 ? (
+            filteredAppointments.length === 0 ? (
               <div className="bg-gray-800 rounded-xl border border-gray-700 p-12 text-center shadow-lg">
                 <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-white mb-2">Nessun Appuntamento Annullato</h3>
@@ -157,7 +185,7 @@ export default function DeletionsPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                {appointments.map((app) => (
+                {filteredAppointments.map((app) => (
                   <div key={app.id} className="bg-gray-800 rounded-xl border border-red-900/50 p-6 shadow-lg relative flex flex-col">
                     <div className="absolute top-4 right-4 bg-red-900/30 text-red-400 text-xs px-2 py-1 rounded font-bold border border-red-500/20">
                       ANNULLATO

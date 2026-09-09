@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { X, Clock, FileText, User, RefreshCw, CheckCircle, AlertTriangle, PhoneCall, Edit2, Check, XCircle } from "lucide-react";
+import { X, Clock, FileText, User, RefreshCw, CheckCircle, AlertTriangle, PhoneCall, Edit2, Check, XCircle, Printer } from "lucide-react";
 import toast from "react-hot-toast";
 import AppointmentModal from "./AppointmentModal";
 
@@ -96,8 +96,8 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8">
-        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8 print:static print:p-0 print:block print:bg-white">
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm print:hidden" onClick={onClose} />
         <RefreshCw className="w-12 h-12 text-blue-500 animate-spin relative z-10" />
       </div>
     );
@@ -370,7 +370,7 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
           </div>
         ) : (
           <div className="flex items-start justify-between group cursor-pointer flex-1" onClick={() => setEditingField(field)}>
-            <span className="text-sm font-semibold text-gray-200 whitespace-pre-wrap break-words pr-2">
+            <span className="text-sm font-semibold text-gray-200 print:text-black whitespace-pre-wrap break-words pr-2">
               {value || <span className="text-gray-600 italic">Clicca per aggiungere...</span>}
             </span>
             <Edit2 className="w-3 h-3 text-gray-500 opacity-0 group-hover:opacity-100 transition shrink-0 mt-1" />
@@ -385,10 +385,10 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
       
-      <div className="relative w-full h-full max-w-6xl bg-gray-900 border border-gray-700 shadow-2xl rounded-2xl flex flex-col overflow-hidden">
+      <div className="relative w-full h-full max-w-6xl bg-gray-900 border border-gray-700 shadow-2xl rounded-2xl flex flex-col overflow-hidden print:shadow-none print:border-none print:rounded-none print:bg-white print:text-black print:overflow-visible print:h-auto print:block">
         
         {/* HEADER TOP */}
-        <div className="flex items-center justify-between p-4 bg-gray-950 border-b border-gray-800 shrink-0">
+        <div className="flex items-center justify-between p-4 bg-gray-950 border-b border-gray-800 shrink-0 print:hidden">
           <div className="flex-1 flex justify-start">
             {trattativa.currentCommerciale && (
               <div className="bg-orange-600/20 border border-orange-500/30 px-3 py-1.5 rounded-lg flex items-center">
@@ -399,7 +399,7 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
           </div>
           
           <div className="flex-1 flex justify-center">
-             <h2 className="text-sm font-black text-gray-500 tracking-widest uppercase">Scheda Trattativa</h2>
+             <h2 className="text-sm font-black text-gray-500 tracking-widest print:text-gray-600 uppercase">Scheda Trattativa</h2>
           </div>
 
           <div className="flex-1 flex justify-end items-center gap-4">
@@ -409,33 +409,38 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
                 <span className="text-xs font-bold text-purple-300">Operatore: {trattativa.currentOperator.name}</span>
               </div>
              )}
-             <button onClick={onClose} className="p-2 bg-gray-800 hover:bg-red-600 rounded-full text-gray-400 hover:text-white transition">
+             <button onClick={() => window.print()} className="p-2 bg-gray-800 hover:bg-blue-600 rounded-full text-gray-400 hover:text-white transition print:hidden mr-2">
+                <Printer className="w-5 h-5" />
+               </button>
+               <button onClick={onClose} className="p-2 bg-gray-800 hover:bg-red-600 rounded-full text-gray-400 hover:text-white transition print:hidden">
                 <X className="w-5 h-5" />
              </button>
           </div>
         </div>
 
+        {/* WRAPPER SCORREVOLE UNICO */}
+        <div className="flex-1 overflow-y-auto print:overflow-visible print:bg-white print:text-black bg-gray-900/50">
         {/* NOME ATTIVITA E CAMPI MODIFICABILI */}
-        <div className="bg-gray-800 p-6 border-b border-gray-700 shrink-0 overflow-y-auto max-h-[50vh]">
-          <h1 className="text-3xl md:text-4xl font-black text-white text-center uppercase tracking-tight mb-8">
+        <div className="bg-gray-800 p-4 md:p-6 border-b border-gray-700 shrink-0 print:bg-white print:border-b-2 print:border-black">
+          <h1 className="text-2xl md:text-3xl font-black text-white print:text-black text-center uppercase tracking-tight mb-4">
             {contact.name}
           </h1>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-w-5xl mx-auto print:gap-4">
             <EditableField label="Referente" field="referentName" value={trattativa.contact?.referentName} />
             <EditableField label="Telefono" field="originalPhone" value={trattativa.contact?.originalPhone} />
             <EditableField label="Indirizzo" field="address" value={trattativa.contact?.address} isTextarea={true} />
             <EditableField label="Settore" field="sector" value={trattativa.contact?.sector} isTextarea={true} />
-            <div className="col-span-1 md:col-span-2 mt-2">
+            <div className="col-span-1 md:col-span-2 mt-1">
                <EditableField label="Informazioni Aggiuntive" field="notes" value={trattativa.contact?.notes} isTextarea={true} />
             </div>
           </div>
         </div>
 
         {/* TIMELINE EVENTI */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-10 bg-gray-900/50">
+        <div className="p-4 md:p-8 bg-gray-900/50 flex-1 print:bg-white print:text-black">
           <div className="max-w-4xl mx-auto">
-            <h3 className="text-xs font-black text-gray-500 tracking-widest uppercase mb-8 border-b border-gray-800 pb-2">
+            <h3 className="text-xs font-black text-gray-500 tracking-widest print:text-gray-600 uppercase mb-8 border-b border-gray-800 pb-2">
               Eventi e Attività
             </h3>
             
@@ -474,12 +479,12 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
                       
                       <div className="ml-6 flex-1 bg-gray-800/80 border border-gray-700 rounded-xl p-5 shadow-sm">
                         <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-bold text-white text-lg uppercase">{actionTitle}</h4>
+                          <h4 className="font-bold text-white text-lg print:text-black uppercase">{actionTitle}</h4>
                           <span className="text-xs font-mono text-gray-400 bg-gray-900 px-2 py-1 rounded">
                             {new Date(h.createdAt).toLocaleString("it-IT", { dateStyle: 'short', timeStyle: 'short' })}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-300 italic whitespace-pre-wrap leading-relaxed">
+                        <p className="text-sm text-gray-300 italic print:text-gray-800 whitespace-pre-wrap leading-relaxed">
                           {actionDescription}
                         </p>
                         <div className="mt-3 pt-3 border-t border-gray-700/50 flex justify-end">
@@ -500,8 +505,9 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
           </div>
         </div>
 
+        </div>
         {/* TASTO CHIAMA IN BASSO */}
-        <div className="p-6 bg-gray-950 border-t border-gray-800 shrink-0 flex justify-center">
+        <div className="p-6 bg-gray-950 border-t border-gray-800 shrink-0 flex justify-center print:hidden">
           {trattativa.status === 'SOSPESA' ? (
             <div className="w-full max-w-md py-4 bg-gray-800 text-gray-500 rounded-2xl shadow-inner border border-gray-700 font-bold text-center flex items-center justify-center">
               BLOCCATA IN ATTESA DI REVISIONE
