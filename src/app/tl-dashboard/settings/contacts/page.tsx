@@ -166,7 +166,7 @@ export default function GlobalContactsPage() {
         // L'API restituisce già un array timeline formattato e ordinato
         setTimeline(data.timeline || []);
       } else {
-        toast.error("Errore nel caricamento della cronologia");
+        toast.error("Errore nel caricamento della Visualizza Trattativa");
       }
     } catch (e) {
       toast.error("Errore di rete");
@@ -307,19 +307,22 @@ export default function GlobalContactsPage() {
                         <ArrowRightCircle className="w-4 h-4 mr-1.5" />
                         Delega
                       </button>
-                      <button
-                        onClick={() => viewTimeline(c)}
-                        className="inline-flex items-center px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded border border-gray-700 transition"
-                      >
-                        <History className="w-4 h-4 mr-1.5" />
-                        Cronologia
-                        </button>
-                        <button
-                          onClick={() => { setHistContact(c); setShowHistModal(true); }}
-                          className="inline-flex items-center px-3 py-1.5 bg-blue-900/40 hover:bg-blue-900/60 text-blue-400 rounded border border-blue-800 transition"
-                        >
-                          App. Storico
-                      </button>
+                      {c.trattativa ? (
+                          <button
+                            onClick={() => viewTimeline(c)}
+                            className="inline-flex items-center px-3 py-1.5 bg-emerald-900/20 hover:bg-emerald-900/40 text-emerald-400 rounded border border-emerald-800/50 transition whitespace-nowrap"
+                          >
+                            <History className="w-4 h-4 mr-1.5" />
+                            Visualizza Trattativa
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => { setHistContact(c); setShowWizardModal(true); }}
+                            className="inline-flex items-center px-3 py-1.5 bg-blue-900/40 hover:bg-blue-900/60 text-blue-400 rounded border border-blue-800 transition whitespace-nowrap"
+                          >
+                            Crea Trattativa
+                          </button>
+                        )}
                     </div>
                   </td>
                 </tr>
@@ -360,7 +363,7 @@ export default function GlobalContactsPage() {
               <div>
                 <h3 className="text-xl font-bold text-white flex items-center">
                   <History className="w-5 h-5 mr-2 text-amber-500" />
-                  Cronologia Completa
+                  Visualizza Trattativa Completa
                 </h3>
                 <p className="text-gray-400 text-sm mt-1">
                   Storia di <span className="font-semibold text-gray-200">{selectedContact.name}</span>
@@ -515,11 +518,11 @@ export default function GlobalContactsPage() {
       )}
       
       {showWizardModal && histContact && (
-        <HistoricalApptModal
+        <WizardCreaTrattativa
           contactId={histContact.id}
           contactName={histContact.name}
-          onClose={() => { setShowHistModal(false); setHistContact(null); }}
-          onSuccess={() => { setShowHistModal(false); setHistContact(null); fetchContacts(); }}
+          onClose={() => { setShowWizardModal(false); setHistContact(null); }}
+          onSuccess={() => { setShowWizardModal(false); setHistContact(null); fetchContacts(); }}
         />
       )}
     </div>
