@@ -226,7 +226,16 @@ export default function GlobalContactsPage() {
             </p>
           </div>
           <div className="text-right">
-            <span className="text-2xl font-bold text-white">{totalContacts}</span>
+            <div className="flex flex-col items-end gap-2 mb-2">
+              <button 
+                onClick={() => { setEditContactId(null); setShowEditModal(true); }}
+                className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg shadow-lg shadow-blue-900/20 transition-colors"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Inserisci Contatto Manualmente
+              </button>
+              <span className="text-2xl font-bold text-white">{totalContacts}</span>
+            </div>
             <span className="text-sm text-gray-400 block">Contatti Trovati</span>
           </div>
         </div>
@@ -310,8 +319,8 @@ export default function GlobalContactsPage() {
                     <div className="font-semibold text-gray-200">{c.name}</div>
                     <div className="text-gray-500 text-xs font-mono">{c.originalPhone || "Nessun tel."}</div>
                   </td>
-                  <td className="py-4 text-gray-400">{c.cap || "-"}</td>
-                  <td className="py-4 text-gray-400">{c.sector || "-"}</td>
+                  <td className="py-4 text-gray-400 cursor-pointer hover:bg-gray-800/80" onClick={() => { setEditContactId(c.id); setShowEditModal(true); }}>{c.cap || "-"}</td>
+                  <td className="py-4 text-gray-400 cursor-pointer hover:bg-gray-800/80" onClick={() => { setEditContactId(c.id); setShowEditModal(true); }}>{c.sector || "-"}</td>
                   <td className="py-4">{getStatusBadge(c)}</td>
                   <td className="py-4 text-center">
                     <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${totalLogs > 10 ? 'bg-red-900/30 text-red-400 border border-red-800' : totalLogs > 0 ? 'bg-amber-900/30 text-amber-400 border border-amber-800' : 'bg-gray-800 text-gray-500'}`} title={`Esiti Telefonici: ${c._count?.callLogs || 0} | Azioni Sistema: ${c._count?.activityLogs || 0} | Appuntamenti: ${c._count?.appointments || 0}`}>
@@ -546,6 +555,12 @@ export default function GlobalContactsPage() {
         />
       )}
       
+            <ContactEditModal
+        isOpen={showEditModal}
+        contactId={editContactId}
+        onClose={() => setShowEditModal(false)}
+        onSaved={fetchContacts}
+      />
       {showWizardModal && histContact && (
         <WizardCreaTrattativa
           contactId={histContact.id}
