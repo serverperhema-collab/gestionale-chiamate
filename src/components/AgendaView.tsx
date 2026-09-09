@@ -18,7 +18,7 @@ export default function AgendaView({ trattative, onOpenTimeline }: AgendaViewPro
   const groupedRecalls: Record<string, any[]> = {};
   recalls.forEach(st => {
     const d = new Date(st.nextActionDate);
-    const dateKey = d.toISOString().split('T')[0];
+    const dateKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(d);
     if (!groupedRecalls[dateKey]) groupedRecalls[dateKey] = [];
     groupedRecalls[dateKey].push(st);
   });
@@ -36,7 +36,7 @@ export default function AgendaView({ trattative, onOpenTimeline }: AgendaViewPro
 
   const setToday = () => setCurrentDate(new Date());
 
-  const dateKey = currentDate.toISOString().split('T')[0];
+  const dateKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(currentDate);
   const todaysRecalls = groupedRecalls[dateKey] || [];
 
   const dateFormatter = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });

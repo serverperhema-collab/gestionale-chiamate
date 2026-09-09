@@ -221,7 +221,7 @@ export default function AppointmentModal({
                         <input
                           type="date"
                           value={derogaDate}
-                          min={new Date().toISOString().split("T")[0]}
+                          min={new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date())}
                           onChange={(e) => setDerogaDate(e.target.value)}
                           className="w-full bg-gray-900 border border-amber-600/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-amber-500"
                           required={(isDeroga || isPhoneAppt)}
