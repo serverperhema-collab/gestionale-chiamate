@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import WizardCreaTrattativa from "@/components/WizardCreaTrattativa";
 import TrattativaTimeline from "@/components/TrattativaTimeline";
 
-import { Handshake, Database, Search, Filter, History, X, ChevronLeft, ChevronRight, User, Phone, PhoneOff, Calendar, AlertCircle, ArrowRightCircle } from "lucide-react";
+import ContactEditModal from "@/components/ContactEditModal";
+import { Handshake, Database, Search, Filter, Plus, History, X, ChevronLeft, ChevronRight, User, Phone, PhoneOff, Calendar, AlertCircle, ArrowRightCircle } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function GlobalContactsPage() {
@@ -19,7 +20,9 @@ export default function GlobalContactsPage() {
   const [totalContacts, setTotalContacts] = useState(0);
 
   // Filters
-  const [search, setSearch] = useState("");
+    const [search, setSearch] = useState("");
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editContactId, setEditContactId] = useState<string | null>(null);
   const [cap, setCap] = useState("");
   const [sector, setSector] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
