@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import HistoricalApptModal from "@/components/HistoricalApptModal";
+import WizardCreaTrattativa from "@/components/WizardCreaTrattativa";
 import TrattativaTimeline from "@/components/TrattativaTimeline";
 
 import { Database, Search, Filter, History, X, ChevronLeft, ChevronRight, User, Phone, PhoneOff, Calendar, AlertCircle, ArrowRightCircle } from "lucide-react";
@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 
 export default function GlobalContactsPage() {
   const [contacts, setContacts] = useState<any[]>([]);
-  const [showHistModal, setShowHistModal] = useState(false);
+  const [showWizardModal, setShowWizardModal] = useState(false);
   const [histContact, setHistContact] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   
@@ -514,7 +514,7 @@ export default function GlobalContactsPage() {
         />
       )}
       
-      {showHistModal && histContact && (
+      {showWizardModal && histContact && (
         <HistoricalApptModal
           contactId={histContact.id}
           contactName={histContact.name}

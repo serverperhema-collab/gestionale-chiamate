@@ -176,19 +176,19 @@ export default async function TLDashboardPage() {
             </div>
           </Link>
 
-          <Link href="/tl-dashboard/negotiations" className="group">
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-purple-500 transition h-full">
-              <Handshake className="w-8 h-8 text-purple-400 mb-4" />
-              <h2 className="text-lg font-semibold text-white">Richiami Personali</h2>
-              <p className="text-sm text-gray-400 mt-2">Visualizza e gestisci tutti i richiami personali e le trattative in corso degli operatori.</p>
+          <Link href="/tl-dashboard/telefoniche" className="group">
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-yellow-500 transition h-full">
+              <PhoneCall className="w-8 h-8 text-yellow-400 mb-4" />
+              <h2 className="text-lg font-semibold text-white">Trattative Telefoniche</h2>
+              <p className="text-sm text-gray-400 mt-2">Gestisci i ricontatti e le trattative puramente telefoniche senza appuntamento.</p>
             </div>
           </Link>
 
-          <Link href="/tl-dashboard/outcomes" className="group">
+          <Link href="/tl-dashboard/appuntamenti" className="group">
             <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 group-hover:border-blue-500 transition h-full">
-              <CheckCircle className="w-8 h-8 text-blue-400 mb-4" />
-              <h2 className="text-lg font-semibold text-white">TRATTATIVE</h2>
-              <p className="text-sm text-gray-400 mt-2">STORICO DI TUTTE LE TRATTATIVE INTRAPRESE</p>
+              <Calendar className="w-8 h-8 text-blue-400 mb-4" />
+              <h2 className="text-lg font-semibold text-white">Trattative Appuntamenti</h2>
+              <p className="text-sm text-gray-400 mt-2">Gestisci le trattative con appuntamento (In Gestione, Contratti, KO).</p>
             </div>
           </Link>
 
