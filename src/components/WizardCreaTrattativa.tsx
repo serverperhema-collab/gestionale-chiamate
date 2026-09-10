@@ -91,8 +91,10 @@ export default function WizardCreaTrattativa({ contactId, contactName, onClose, 
         return toast.error("Devi allegare il file del Contratto Firmato.");
     }
     if (flow === "IN_CORSO") {
-      if (!nextActionDate || !nextActionTime) return toast.error("Inserisci Data e Ora di richiamo.");
-      if (nextActionTo === "COMMERCIALE" && !commercialeId) return toast.error("Seleziona un Commerciale per assegnargli il richiamo.");
+      if (inCorsoAction === "RICHIAMO") {
+        if (!nextActionDate || !nextActionTime) return toast.error("Inserisci Data e Ora di richiamo.");
+        if (nextActionTo === "COMMERCIALE" && !commercialeId) return toast.error("Seleziona un Commerciale per assegnargli il richiamo.");
+      }
     }
 
     try {
