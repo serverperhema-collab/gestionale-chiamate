@@ -172,9 +172,7 @@ export class TrattativaService {
       await tx.contact.update({
         where: { id: st.contactId },
         data: {
-          status: "APPUNTAMENTO FISSATO",
           hiddenUntil: lockDate, // Nasconde dalle estrazioni
-          lockedUntil: lockDate, // Blocca la lavorazione
         }
       });
 
