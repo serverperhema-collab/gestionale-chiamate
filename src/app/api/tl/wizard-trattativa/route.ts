@@ -93,13 +93,19 @@ export async function POST(req: Request) {
 
       // ---- LOG E EVENTI ----
       const tl = await tx.user.findUnique({ where: { id: tlId } });
+      const op = await tx.user.findUnique({ where: { id: operatorId } });
+      const comm = commercialeId ? await tx.user.findUnique({ where: { id: commercialeId } }) : null;
       
       // LOG 1: Creazione
       let log1Desc = "";
       let initialEventType = "CREATA" as any;
 
+      const dateStr = new Date().toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
+      const nAppuntamenti = appuntamentoSvolto ? 1 : 0;
+      const nPreventivi = preventivoFile ? 1 : 0;
+
       if (flow === "IN_CORSO") {
-        log1Desc = `Creazione TL. Appuntamento: ${appuntamentoSvolto ? 'Sì' : 'No'}. Preventivo: ${preventivoFile ? 'Sì' : 'No'}. Note: ${notes}`;
+        log1Desc = `IN DATA ${dateStr} LA TL HA CREATO LA TRATTATIVA, CON OPERATORE ${op?.name || 'Sconosciuto'} E COMMERCIALE ${comm ? comm.name : 'NESSUNO'}. LA TRATTATIVA IN PASSATO HA AVUTO ${nAppuntamenti} APPUNTAMENTI E SONO STATI FATTI ${nPreventivi} PREVENTIVI NOTE TL: ${notes || 'Nessuna'}.`;
       } else if (flow === "FIRMATO") {
         initialEventType = "CONTRATTO_FIRMATO";
         log1Desc = `Contratto Firmato inserito da TL. Note: ${notes}`;

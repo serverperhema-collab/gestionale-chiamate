@@ -166,7 +166,19 @@ export class TrattativaService {
 
       if (updated.count === 0) throw new ConflictError("Conflitto di versione");
 
-      const evtDesc = `Fissato appuntamento ${params.isPhoneAppt ? "telefonico" : "fisico"} per il ${new Date(params.date).toLocaleString("it-IT", { timeZone: "Europe/Rome", dateStyle: "short", timeStyle: "short" })}` + (params.clientNeeds ? `\nNote: ${params.clientNeeds}` : "");
+      // Aggiorna anche il Contatto base nel DB
+      const lockDate = new Date();
+      lockDate.setFullYear(lockDate.getFullYear() + 1); // Blocca per 1 anno
+      await tx.contact.update({
+        where: { id: st.contactId },
+        data: {
+          status: "APPUNTAMENTO FISSATO",
+          hiddenUntil: lockDate, // Nasconde dalle estrazioni
+          lockedUntil: lockDate, // Blocca la lavorazione
+        }
+      });
+
+      const evtDesc = `E' STATO FISSATO UN APPUNTAMENTO PER IL GIORNO ${new Date(params.date).toLocaleDateString("it-IT", { timeZone: "Europe/Rome" })} ALLE ORE ${new Date(params.date).toLocaleTimeString("it-IT", { timeZone: "Europe/Rome", hour: '2-digit', minute: '2-digit' })}` + (params.clientNeeds ? `\nNote: ${params.clientNeeds}` : "");
       await this.appendEvent(tx, trattativaId, "APPUNTAMENTO_FISSATO", evtDesc, {
         date: params.date,
         isPhoneAppt: params.isPhoneAppt,

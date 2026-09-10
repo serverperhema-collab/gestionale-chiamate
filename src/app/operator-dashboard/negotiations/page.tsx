@@ -47,8 +47,9 @@ export default function OperatorNegotiations() {
       if (activeTab === 'telefonica-commerciale') return !!st.currentCommercialeId && st.status === 'RICHIAMO_PERSONALE' && st.nextActionType !== 'RICHIAMO';
       if (activeTab === 'telefonica-ko') return !!st.currentCommercialeId && !st.hadAppointment && (st.status === 'SOSPESA' || st.status === 'CHIUSA_PERSA');
 
+      if (activeTab === 'appointment-da-assegnare') return !st.currentCommercialeId && st.status === 'APPUNTAMENTO';
       if (activeTab === 'appointment-recall') return !!st.currentCommercialeId && st.status === 'APPUNTAMENTO' && st.nextActionType === 'RICHIAMO';
-        if (activeTab === 'appointment-commerciale') return !!st.currentCommercialeId && st.status === 'APPUNTAMENTO' && st.nextActionType !== 'RICHIAMO';
+      if (activeTab === 'appointment-commerciale') return !!st.currentCommercialeId && st.status === 'APPUNTAMENTO' && st.nextActionType !== 'RICHIAMO';
       if (activeTab === 'appointment-ko') return st.hadAppointment && (st.status === 'SOSPESA' || st.status === 'CHIUSA_PERSA');
       
       return false;
@@ -150,6 +151,13 @@ export default function OperatorNegotiations() {
                 TRATTATIVE CON APPUNTAMENTO
               </h2>
               <div className="space-y-1 bg-gray-900/50 p-2 rounded-xl border border-gray-800 shadow-inner">
+                <button 
+                  onClick={() => setActiveTab('appointment-da-assegnare')}
+                  className={`w-full text-left px-3 py-2.5 rounded-lg transition-all duration-300 text-sm flex items-center justify-between ${activeTab === 'appointment-da-assegnare' ? 'bg-gradient-to-r from-purple-600/30 to-purple-500/10 text-purple-300 font-bold border border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.1)]' : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'}`}
+                >
+                  Da Assegnare
+                  {activeTab === 'appointment-da-assegnare' && <ChevronRight className="w-4 h-4 text-purple-400" />}
+                </button>
                 <button 
                   onClick={() => setActiveTab('appointment-recall')}
                   className={`w-full text-left px-3 py-2.5 rounded-lg transition-all duration-300 text-sm flex items-center justify-between ${activeTab === 'appointment-recall' ? 'bg-gradient-to-r from-blue-600/30 to-blue-500/10 text-blue-300 font-bold border border-blue-500/40 shadow-[0_0_10px_rgba(59,130,246,0.1)]' : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'}`}

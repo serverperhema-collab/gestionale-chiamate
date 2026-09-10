@@ -393,16 +393,6 @@ export default function UnifiedCalendarPage() {
             </button>
           </div>
           
-          <button
-            onClick={() => {
-              setCreateModalAgendaPrefill(null);
-              setCreateModalOpen(true);
-            }}
-            className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-sm rounded-lg font-medium transition shadow flex items-center"
-          >
-            <Plus className="w-4 h-4 mr-1.5" /> Inserisci App. Senza Agenda
-          </button>
-          
           <div className="w-px h-6 bg-gray-700 mx-2"></div>
           
           <Link href="/tl-dashboard" className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white text-sm rounded-lg font-medium transition border border-gray-700">

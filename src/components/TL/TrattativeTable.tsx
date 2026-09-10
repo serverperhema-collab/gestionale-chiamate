@@ -70,7 +70,7 @@ export default function TrattativeTable({ type, stateGroup, title }: TrattativeT
   const getStatusBadge = (status: string) => {
     if (status === "CHIUSA_VINTA") return <span className="px-2 py-1 text-xs font-bold rounded-md bg-green-500/20 text-green-400">Firmato</span>;
     if (status === "CHIUSA_PERSA") return <span className="px-2 py-1 text-xs font-bold rounded-md bg-red-500/20 text-red-400">KO</span>;
-    if (status === "APPUNTAMENTO") return <span className="px-2 py-1 text-xs font-bold rounded-md bg-blue-500/20 text-blue-400">Appuntamento</span>;
+    if (status === "APPUNTAMENTO") return <span className="px-2 py-1 text-xs font-bold rounded-md bg-blue-500/20 text-blue-400">Appuntamento Fissato</span>;
     if (status === "RICHIAMO_PERSONALE") return <span className="px-2 py-1 text-xs font-bold rounded-md bg-yellow-500/20 text-yellow-400">Richiamo</span>;
     return <span className="px-2 py-1 text-xs font-bold rounded-md bg-gray-500/20 text-gray-400">{status}</span>;
   };
