@@ -165,7 +165,7 @@ export default function UsersManagementPage() {
                       {u.isActive ? 'Attivo' : 'Sospeso'}
                     </span>
                   </td>
-                  <td className="p-4 text-gray-400 text-sm">{new Date(u.createdAt).toLocaleDateString()}</td>
+                  <td className="p-4 text-gray-400 text-sm">{new Date(u.createdAt).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })}</td>
                   <td className="p-4 text-center">
                     <button
                       onClick={() => {

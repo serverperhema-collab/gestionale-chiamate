@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { 
       contactId, flow, operatorId, commercialeId, 
-      notes, appuntamentoSvolto, nextActionTo, nextActionDate, nextActionTime,
+      notes, appuntamentoSvolto, nextActionTo, nextActionDate, nextActionTime, nextActionIso,
       preventivoFile, contrattoFile
     } = body;
 
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
         if (!nextActionDate || !nextActionTime || !nextActionTo) {
           throw new Error("Dati di pianificazione mancanti per la trattativa in corso");
         }
-        nextDateObj = new Date(`${nextActionDate}T${nextActionTime}`);
+        nextDateObj = nextActionIso ? new Date(nextActionIso) : null;
         
         // Se la prossima azione è del commerciale, in corso.
         // Se è dell'operatore e ha l'appuntamento, APPUNTAMENTO, se no RICHIAMO_PERSONALE
@@ -122,7 +122,7 @@ export async function POST(req: Request) {
           data: {
             trattativaId: trattativa.id,
             eventType: "RICHIAMO_IMPOSTATO",
-            description: `Richiamo fissato per il ${new Date(nextActionDate).toLocaleDateString('it-IT')} alle ${nextActionTime} (Assegnato a: ${nextActionTo === 'COMMERCIALE' ? 'Commerciale' : 'Operatore'}).`,
+            description: `Richiamo fissato per il ${new Date(nextActionIso).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })} alle ${nextActionTime} (Assegnato a: ${nextActionTo === 'COMMERCIALE' ? 'Commerciale' : 'Operatore'}).`,
             userId: tlId,
             userRole: tlRole,
           }

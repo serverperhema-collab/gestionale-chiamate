@@ -82,7 +82,7 @@ export default async function TLDashboardPage() {
                 <h3 className="text-sm font-medium text-gray-400">Contatti DB Totali</h3>
                 <Database className="w-5 h-5 text-gray-500" />
               </div>
-              <p className="text-3xl font-bold text-white">{totalContacts.toLocaleString('it-IT')}</p>
+              <p className="text-3xl font-bold text-white">{totalContacts.toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}</p>
             </div>
 
             <div className="bg-gray-800 rounded-xl p-5 border border-gray-700 relative overflow-hidden group">

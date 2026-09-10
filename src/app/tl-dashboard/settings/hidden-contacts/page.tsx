@@ -350,7 +350,7 @@ export default function HiddenContactsPage() {
                         <p className="text-xs text-gray-500 uppercase tracking-wider mb-0.5 font-bold">Scadenza Blocco</p>
                         <div className="flex justify-between items-center">
                           <p className="text-sm text-white font-medium">
-                            {contact.hiddenUntil ? new Date(contact.hiddenUntil).toLocaleString() : 'N/A'}
+                            {contact.hiddenUntil ? new Date(contact.hiddenUntil).toLocaleString('it-IT', { timeZone: 'Europe/Rome' }) : 'N/A'}
                           </p>
                           {contact.hiddenUntil && (
                             <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-900/30 px-2 py-0.5 rounded border border-emerald-500/20">
@@ -456,7 +456,7 @@ export default function HiddenContactsPage() {
                         <div className="flex justify-between items-start mb-2">
                           <h4 className="text-white font-medium text-base">{log.title}</h4>
                           <span className="text-xs text-gray-500 bg-gray-900 px-2 py-1 rounded">
-                            {new Date(log.date).toLocaleString()}
+                            {new Date(log.date).toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}
                           </span>
                         </div>
                         

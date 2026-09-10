@@ -284,7 +284,7 @@ export default function AppointmentModal({
               {selectedAgenda && !isDeroga && !isPhoneAppt && (
                 <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-700 animate-in fade-in zoom-in-95">
                   <h3 className="text-sm font-semibold text-gray-300 mb-3 flex items-center">
-                    <Clock className="w-4 h-4 mr-1.5" /> Orari per {new Date(selectedAgenda.date).toLocaleDateString('it-IT')}
+                    <Clock className="w-4 h-4 mr-1.5" /> Orari per {new Date(selectedAgenda.date).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })}
                   </h3>
                   
                   {loadingSlots ? (

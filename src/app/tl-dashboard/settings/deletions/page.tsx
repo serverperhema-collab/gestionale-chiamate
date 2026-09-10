@@ -214,7 +214,7 @@ export default function DeletionsPage() {
                     </div>
 
                     <div className="text-xs text-gray-500 mt-auto text-right pt-4 border-t border-gray-700">
-                      Annullato il: {new Date(app.updatedAt).toLocaleString()}
+                      Annullato il: {new Date(app.updatedAt).toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}
                     </div>
                   </div>
                 ))}

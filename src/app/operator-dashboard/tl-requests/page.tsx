@@ -149,13 +149,13 @@ export default function OperatorTlRequestsPage() {
 
                   <div className="flex items-center text-sm font-semibold mb-2 text-gray-300">
                     <Clock className="w-4 h-4 mr-1.5 text-blue-400" />
-                    Assegnato per: <span className="ml-2 font-normal text-white">{new Date(neg.recallDate).toLocaleString()}</span>
+                    Assegnato per: <span className="ml-2 font-normal text-white">{new Date(neg.recallDate).toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}</span>
                   </div>
 
                   {neg.expiresAt && (
                     <div className={`flex items-center text-sm font-semibold mb-2 ${isExpired ? 'text-red-400' : 'text-gray-400'}`}>
                       <Clock className="w-4 h-4 mr-1.5" />
-                      Scadenza: <span className="ml-2 font-normal">{new Date(neg.expiresAt).toLocaleDateString()}</span>
+                      Scadenza: <span className="ml-2 font-normal">{new Date(neg.expiresAt).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })}</span>
                     </div>
                   )}
                 </div>

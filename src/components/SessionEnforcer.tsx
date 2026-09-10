@@ -24,7 +24,7 @@ export default function SessionEnforcer() {
       const is1705 = hours === 17 && minutes >= 5 && minutes <= 7;
 
       if (is1305 || is1705) {
-        const today = now.toLocaleDateString('it-IT');
+        const today = now.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
         const timeKey = is1305 ? '1305' : '1705';
         const lastLogout = localStorage.getItem('lastAutoLogout');
         

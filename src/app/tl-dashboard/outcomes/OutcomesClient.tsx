@@ -248,7 +248,7 @@ export default function OutcomesClient() {
                         <div className="flex items-center space-x-3">
                            <span className={`text-sm font-medium ${new Date(appt.date) < today && activeTab === "DA_SVOLGERE" ? 'text-red-400' : 'text-gray-400'}`}>
                              <Calendar className="w-4 h-4 inline mr-1" />
-                             {new Date(appt.date).toLocaleDateString()}
+                             {new Date(appt.date).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })}
                            </span>
                            <span className="text-gray-600 text-sm">?</span>
                            <span className="text-gray-300 text-sm font-medium flex items-center">
@@ -331,7 +331,7 @@ export default function OutcomesClient() {
                            {outcome.nextActionType && (
                              <span className="bg-gray-800 text-gray-300 text-xs px-2 py-1 rounded border border-gray-700 flex items-center">
                                {outcome.nextActionType === "RICHIAMO" 
-                                 ? `Richiamo ${outcome.nextActionTarget === "OPERATORE" ? "Operatore" : "Commerciale"} il ${new Date(outcome.nextActionDate).toLocaleDateString()}` 
+                                 ? `Richiamo ${outcome.nextActionTarget === "OPERATORE" ? "Operatore" : "Commerciale"} il ${new Date(outcome.nextActionDate).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })}` 
                                  : "Vuole fissare 2 App."}
                              </span>
                            )}

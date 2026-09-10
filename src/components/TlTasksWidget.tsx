@@ -76,7 +76,7 @@ export default function TlTasksWidget() {
                 {task.recallDate && (
                   <p className="text-xs text-purple-400 mt-2 flex items-center">
                     <Clock className="w-3 h-3 mr-1" />
-                    Richiamo: {new Date(task.recallDate).toLocaleString()}
+                    Richiamo: {new Date(task.recallDate).toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}
                   </p>
                 )}
               </div>

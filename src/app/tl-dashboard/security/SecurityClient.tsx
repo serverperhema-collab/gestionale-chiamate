@@ -143,7 +143,7 @@ export default function SecurityClient({ initialLockedUsers, allOperators }: { i
                         <div className="flex items-center text-orange-400 font-semibold mb-2">
                           <AlertTriangle className="w-4 h-4 mr-2" /> "Non Risponde"
                         </div>
-                        <p className="text-xs text-gray-400 mb-3">Scade: {new Date(user.noAnswerLockedUntil).toLocaleTimeString()}</p>
+                        <p className="text-xs text-gray-400 mb-3">Scade: {new Date(user.noAnswerLockedUntil).toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome' })}</p>
                         <button
                           onClick={() => handleOpenModal(user, "NO_ANSWER", user.noAnswerLockedUntil)}
                           className="w-full flex items-center justify-center px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white rounded font-medium transition"
@@ -158,7 +158,7 @@ export default function SecurityClient({ initialLockedUsers, allOperators }: { i
                         <div className="flex items-center text-orange-400 font-semibold mb-2">
                           <AlertTriangle className="w-4 h-4 mr-2" /> "Non Reperibile"
                         </div>
-                        <p className="text-xs text-gray-400 mb-3">Scade: {new Date(user.notAvailableLockedUntil).toLocaleTimeString()}</p>
+                        <p className="text-xs text-gray-400 mb-3">Scade: {new Date(user.notAvailableLockedUntil).toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome' })}</p>
                         <button
                           onClick={() => handleOpenModal(user, "NOT_AVAILABLE", user.notAvailableLockedUntil)}
                           className="w-full flex items-center justify-center px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white rounded font-medium transition"
@@ -173,7 +173,7 @@ export default function SecurityClient({ initialLockedUsers, allOperators }: { i
                         <div className="flex items-center text-orange-400 font-semibold mb-2">
                           <AlertTriangle className="w-4 h-4 mr-2" /> "Skip"
                         </div>
-                        <p className="text-xs text-gray-400 mb-3">Scade: {new Date(user.skipLockedUntil).toLocaleTimeString()}</p>
+                        <p className="text-xs text-gray-400 mb-3">Scade: {new Date(user.skipLockedUntil).toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome' })}</p>
                         <button
                           onClick={() => handleOpenModal(user, "SKIP", user.skipLockedUntil)}
                           className="w-full flex items-center justify-center px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white rounded font-medium transition"
@@ -188,7 +188,7 @@ export default function SecurityClient({ initialLockedUsers, allOperators }: { i
                         <div className="flex items-center text-orange-400 font-semibold mb-2">
                           <AlertTriangle className="w-4 h-4 mr-2" /> "Modifiche Distruttive"
                         </div>
-                        <p className="text-xs text-gray-400 mb-3">Scade: {new Date(user.modLockedUntil).toLocaleTimeString()}</p>
+                        <p className="text-xs text-gray-400 mb-3">Scade: {new Date(user.modLockedUntil).toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome' })}</p>
                         <button
                           onClick={() => handleOpenModal(user, "MOD_LOCK", user.modLockedUntil)}
                           className="w-full flex items-center justify-center px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white rounded font-medium transition"

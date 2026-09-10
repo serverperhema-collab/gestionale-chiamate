@@ -146,7 +146,7 @@ export default function DashboardClient() {
                     <h1 className="text-3xl font-bold text-white mb-2">Estrazione {job.cap}</h1>
                     <div className="flex gap-4 text-sm">
                         <span className={`px-2 py-1 rounded font-bold ${isRunning ? 'bg-green-900 text-green-300' : isPaused ? 'bg-yellow-900 text-yellow-300' : isCompleted ? 'bg-blue-900 text-blue-300' : 'bg-gray-700 text-gray-300'}`}>{job.status}</span>
-                        <span className="text-gray-400">Avvio: {new Date(job.createdAt).toLocaleTimeString()}</span>
+                        <span className="text-gray-400">Avvio: {new Date(job.createdAt).toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome' })}</span>
                         <span className="text-gray-400">Tempo: {tempoTrascorso}</span>
                     </div>
                 </div>
@@ -288,7 +288,7 @@ export default function DashboardClient() {
                                 return (
                                     <React.Fragment key={q.id}>
                                         <tr className="hover:bg-gray-750 cursor-pointer" onClick={() => setExpandedQId(isExpanded ? null : q.id)}>
-                                            <td className="p-3 text-gray-500 font-mono text-xs">{new Date(q.createdAt).toLocaleTimeString()}</td>
+                                            <td className="p-3 text-gray-500 font-mono text-xs">{new Date(q.createdAt).toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome' })}</td>
                                             <td className="p-3">
                                                 <div className="font-bold text-gray-200">{q.queryText}</div>
                                                 <div className="text-xs text-gray-500 flex gap-2">
@@ -351,7 +351,7 @@ export default function DashboardClient() {
                     ) : (
                         events.map(ev => (
                             <div key={ev.id} className="flex gap-4 p-2 hover:bg-gray-700/50 rounded">
-                                <div className="text-gray-500 whitespace-nowrap">{new Date(ev.timestamp).toLocaleTimeString()}</div>
+                                <div className="text-gray-500 whitespace-nowrap">{new Date(ev.timestamp).toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome' })}</div>
                                 <div className={`font-bold ${ev.type === 'ERROR' ? 'text-red-400' : ev.type === 'PLANNER' ? 'text-purple-400' : ev.type === 'SUCCESS' ? 'text-green-400' : 'text-blue-400'}`}>
                                     [{ev.type}]
                                 </div>

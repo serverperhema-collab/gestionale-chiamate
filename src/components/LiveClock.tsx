@@ -19,7 +19,7 @@ export default function LiveClock() {
   return (
     <div className="flex items-center text-emerald-400 font-mono text-lg tracking-wider mr-4 bg-gray-900 px-3 py-1 rounded-lg border border-gray-700 shadow-inner">
       <Clock className="w-4 h-4 mr-2 opacity-70" />
-      {time.toLocaleTimeString('it-IT')}
+      {time.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome' })}
     </div>
   );
 }

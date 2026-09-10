@@ -97,7 +97,7 @@ export default function WizardCreaTrattativa({ contactId, contactName, onClose, 
         body: JSON.stringify({
           contactId, flow, operatorId, commercialeId, notes, appuntamentoSvolto,
           preventivoFile, contrattoFile,
-          nextActionTo, nextActionDate, nextActionTime
+          nextActionTo, nextActionDate, nextActionTime, nextActionIso: (nextActionDate && nextActionTime) ? new Date(nextActionDate + 'T' + nextActionTime + ':00').toISOString() : null
         })
       });
       const data = await res.json();

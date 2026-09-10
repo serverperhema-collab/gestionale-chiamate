@@ -153,7 +153,7 @@ export default function LogsPage() {
           onClick={() => {
             if (filterType === "ALL" && logs.length > 0) {
               const exportData = logs.map(l => ({
-                Data: new Date(l.createdAt).toLocaleString(),
+                Data: new Date(l.createdAt).toLocaleString('it-IT', { timeZone: 'Europe/Rome' }),
                 Operatore: l.user?.name || "Sistema",
                 Azione: formatAction(l.action),
                 ContattoID: l.contact?.id || "",
@@ -163,7 +163,7 @@ export default function LogsPage() {
               exportToExcel(exportData, "Log_Globali");
             } else if (filterType === "USER" && operatorLogs && operatorLogs.length > 0) {
               const exportData = operatorLogs.map(l => ({
-                Ora: new Date(l.createdAt).toLocaleTimeString(),
+                Ora: new Date(l.createdAt).toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome' }),
                 Azione: formatAction(l.action),
                 Azienda: l.contact?.name || "",
                 Dettagli: l.details || ""
@@ -273,7 +273,7 @@ export default function LogsPage() {
                   {logs.map(log => (
                     <tr key={log.id} className="border-b border-gray-700/50 hover:bg-gray-750 transition text-sm">
                       <td className="p-4 text-gray-300 whitespace-nowrap">
-                        {new Date(log.createdAt).toLocaleString()}
+                        {new Date(log.createdAt).toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}
                       </td>
                       <td className="p-4 font-medium text-white flex items-center">
                         <User className="w-4 h-4 mr-2 text-gray-400" />
@@ -296,7 +296,7 @@ export default function LogsPage() {
                         <div className="flex items-center justify-between">
                             <span className="truncate mr-2">{log.details || "-"}</span>
                             {log.details && (
-                                <button onClick={() => setDetailModalContent({ action: log.action, details: log.details, contactInfo: log.contact?.originalPhone || log.contact?.name, date: new Date(log.createdAt).toLocaleString() })} className="text-gray-400 hover:text-white px-2 py-1 bg-gray-700/50 hover:bg-gray-700 rounded text-xs transition whitespace-nowrap">
+                                <button onClick={() => setDetailModalContent({ action: log.action, details: log.details, contactInfo: log.contact?.originalPhone || log.contact?.name, date: new Date(log.createdAt).toLocaleString('it-IT', { timeZone: 'Europe/Rome' }) })} className="text-gray-400 hover:text-white px-2 py-1 bg-gray-700/50 hover:bg-gray-700 rounded text-xs transition whitespace-nowrap">
                                     Vedi Info
                                 </button>
                             )}
@@ -337,7 +337,7 @@ export default function LogsPage() {
                       <div key={log.id} className="bg-gray-900 rounded p-3 border border-gray-700 text-sm">
                         <div className="flex justify-between items-start mb-1">
                           <span className="font-medium text-blue-400">{log.user?.name || "Sistema"}</span>
-                          <span className="text-xs text-gray-500">{new Date(log.createdAt).toLocaleString()}</span>
+                          <span className="text-xs text-gray-500">{new Date(log.createdAt).toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}</span>
                         </div>
                         <div className="text-white font-mono text-xs mb-1">{formatAction(log.action)}</div>
                         {log.details && <div className="text-gray-400 text-xs">{log.details}</div>}
@@ -355,7 +355,7 @@ export default function LogsPage() {
                     {contactData.appointments?.map((app: any) => (
                       <div key={app.id} className="bg-purple-900/20 rounded p-3 border border-purple-500/30 text-sm mb-3">
                         <div className="flex justify-between items-start mb-1">
-                          <span className="font-medium text-purple-400">App. {new Date(app.date).toLocaleDateString()}</span>
+                          <span className="font-medium text-purple-400">App. {new Date(app.date).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })}</span>
                           <span className="text-xs text-gray-400">{app.status}</span>
                         </div>
                         <div className="text-gray-300 text-xs mt-1">Op: {app.operator?.name} &rarr; Comm: {app.commerciale?.name}</div>
@@ -370,7 +370,7 @@ export default function LogsPage() {
                       <div key={ko.id} className="bg-red-900/20 rounded p-3 border border-red-500/30 text-sm mb-3">
                         <div className="flex justify-between items-start mb-1">
                           <span className="font-medium text-red-400 flex items-center"><Snowflake className="w-3 h-3 mr-1"/> Sezione KO</span>
-                          <span className="text-xs text-gray-400">{new Date(ko.createdAt).toLocaleDateString()}</span>
+                          <span className="text-xs text-gray-400">{new Date(ko.createdAt).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })}</span>
                         </div>
                         <div className="text-gray-300 text-xs mt-1">Risolto (Sbloccato): {ko.isResolved ? "SI" : "NO"}</div>
                       </div>
@@ -406,7 +406,7 @@ export default function LogsPage() {
                   {operatorLogs.map(log => (
                     <tr key={log.id} className="border-b border-gray-700/50 hover:bg-gray-750 transition text-sm">
                       <td className="p-4 text-gray-300 whitespace-nowrap">
-                        {new Date(log.createdAt).toLocaleTimeString()}
+                        {new Date(log.createdAt).toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome' })}
                       </td>
                       <td className="p-4">
                         <span className="px-2 py-1 bg-gray-700 text-emerald-300 rounded font-mono text-xs">
@@ -420,7 +420,7 @@ export default function LogsPage() {
                         <div className="flex items-center justify-between">
                             <span className="truncate mr-2">{log.details || "-"}</span>
                             {log.details && (
-                                <button onClick={() => setDetailModalContent({ action: log.action, details: log.details, contactInfo: log.contact?.originalPhone || log.contact?.name, date: new Date(log.createdAt).toLocaleString() })} className="text-gray-400 hover:text-white px-2 py-1 bg-gray-700/50 hover:bg-gray-700 rounded text-xs transition whitespace-nowrap">
+                                <button onClick={() => setDetailModalContent({ action: log.action, details: log.details, contactInfo: log.contact?.originalPhone || log.contact?.name, date: new Date(log.createdAt).toLocaleString('it-IT', { timeZone: 'Europe/Rome' }) })} className="text-gray-400 hover:text-white px-2 py-1 bg-gray-700/50 hover:bg-gray-700 rounded text-xs transition whitespace-nowrap">
                                     Vedi Info
                                 </button>
                             )}

@@ -224,7 +224,7 @@ export default function QuotesClient({ externalTab }: { externalTab?: "REQUESTS"
                      <div className="px-5 py-3 border-b border-gray-800 flex justify-between items-center bg-gray-900/50">
                         <div className="flex items-center space-x-3">
                            <span className="text-gray-400 text-sm font-medium">
-                             {new Date(appt.date).toLocaleDateString()}
+                             {new Date(appt.date).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })}
                            </span>
                            <span className="text-gray-600 text-sm">•</span>
                            <span className="text-gray-300 text-sm font-medium flex items-center">

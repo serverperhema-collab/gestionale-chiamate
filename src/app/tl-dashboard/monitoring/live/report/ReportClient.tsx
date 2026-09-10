@@ -168,7 +168,7 @@ export default function ReportClient({ operators }: { operators: { id: string, n
             <div>
               <h2 className="text-3xl font-black text-gray-900 tracking-tight print:text-2xl">REPORT ATTIVITÀ</h2>
               <p className="text-gray-500 font-medium mt-1">
-                Periodo: {new Date(dateStart).toLocaleDateString('it-IT')} - {new Date(dateEnd).toLocaleDateString('it-IT')}
+                Periodo: {new Date(dateStart).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })} - {new Date(dateEnd).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })}
               </p>
             </div>
             <div className="print:hidden">
@@ -272,7 +272,7 @@ export default function ReportClient({ operators }: { operators: { id: string, n
           </div>
 
           <div className="text-center text-gray-400 text-xs mt-12 print:block border-t pt-4 min-w-max print:min-w-0">
-            Generato dal Gestionale Estrazioni - {new Date().toLocaleString('it-IT')}
+            Generato dal Gestionale Estrazioni - {new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}
           </div>
         </div>
       )}

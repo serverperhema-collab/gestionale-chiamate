@@ -57,7 +57,7 @@ function AddAgendaModal({ date, onClose, onSuccess }: { date: Date, onClose: () 
           </button>
         </div>
         <p className="text-sm text-gray-400 mb-4">
-          Inserisci i CAP abilitati per il {date.toLocaleDateString('it-IT')}. Il nome della zona verrà calcolato in automatico.
+          Inserisci i CAP abilitati per il {date.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })}. Il nome della zona verrà calcolato in automatico.
         </p>
         <form onSubmit={handleAdd} className="space-y-4">
           <div>

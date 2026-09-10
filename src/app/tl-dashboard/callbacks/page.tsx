@@ -91,7 +91,7 @@ export default function TLCallbacksPage() {
                 {st.nextActionDate && (
                   <div className="mt-3 flex items-center text-sm font-semibold text-gray-400">
                     <Clock className="w-4 h-4 mr-2 text-blue-400" />
-                    Data: <span className="ml-2 text-white">{new Date(st.nextActionDate).toLocaleString()}</span>
+                    Data: <span className="ml-2 text-white">{new Date(st.nextActionDate).toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}</span>
                   </div>
                 )}
               </div>

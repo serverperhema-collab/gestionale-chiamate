@@ -343,7 +343,7 @@ export default function AppointmentActionModal({ appointment, commerciali, onClo
                                   onClick={() => handleSelectSuggestedAgenda(a)}
                                   className="text-xs bg-blue-600/30 hover:bg-blue-600/60 border border-blue-500/50 text-blue-200 px-2 py-1 rounded transition text-left"
                                 >
-                                  {new Date(a.date).toLocaleDateString()} - {a.name}
+                                  {new Date(a.date).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })} - {a.name}
                                 </button>
                               ))}
                             </div>
@@ -862,7 +862,7 @@ export default function AppointmentActionModal({ appointment, commerciali, onClo
                             onClick={() => handleSelectSuggestedAgenda(a)}
                             className="block w-full text-left text-xs bg-blue-900/40 hover:bg-blue-600/50 text-blue-200 px-2 py-1 rounded transition"
                           >
-                            {new Date(a.date).toLocaleDateString()} - {a.name}
+                            {new Date(a.date).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })} - {a.name}
                           </button>
                         ))}
                       </div>

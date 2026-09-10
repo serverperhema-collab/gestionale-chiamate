@@ -470,7 +470,7 @@ export default function GlobalContactsPage() {
                             {event.title}
                           </span>
                           <span className="text-xs font-mono text-gray-500">
-                            {new Date(event.date).toLocaleString()}
+                            {new Date(event.date).toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}
                           </span>
                         </div>
                         <div className="text-gray-300 text-sm mb-3">
@@ -532,7 +532,7 @@ export default function GlobalContactsPage() {
                 <label className="text-sm text-gray-300 font-medium block mb-2">Durata Blocco (Ore)</label>
                 {assignContact.hiddenUntil && new Date(assignContact.hiddenUntil) > new Date() ? (
                   <div className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-400 text-sm italic">
-                    Il contatto è già bloccato fino al {new Date(assignContact.hiddenUntil).toLocaleString()}. 
+                    Il contatto è già bloccato fino al {new Date(assignContact.hiddenUntil).toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}. 
                     Questo tempo di blocco non verrà modificato.
                   </div>
                 ) : (

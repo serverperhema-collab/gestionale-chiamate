@@ -103,7 +103,7 @@ const translateAction = (action: string) => {
                     ) : data.appointments?.map((appt: any) => (
                       <div key={appt.id} className="bg-gray-900 border border-gray-700 p-4 rounded-lg">
                         <div className="flex justify-between items-start mb-2">
-                          <span className="font-bold text-blue-400">{new Date(appt.date).toLocaleDateString()}</span>
+                          <span className="font-bold text-blue-400">{new Date(appt.date).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })}</span>
                           <span className={`text-xs px-2 py-1 rounded font-bold ${appt.status === "DONE" ? "bg-emerald-600/20 text-emerald-400" : "bg-orange-600/20 text-orange-400"}`}>
                             {appt.status}
                           </span>
@@ -148,7 +148,7 @@ const translateAction = (action: string) => {
                     ) : data.activityLogs?.map((log: any) => (
                       <div key={log.id} className="p-3 bg-gray-900 border border-gray-700 rounded-lg text-sm">
                         <div className="flex justify-between text-xs text-gray-500 mb-1">
-                          <span>{new Date(log.createdAt).toLocaleString()}</span>
+                          <span>{new Date(log.createdAt).toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}</span>
                           <span className="font-medium text-gray-400">{log.user?.name}</span>
                         </div>
                         <p className="font-bold text-white mb-1">{translateAction(log.action)}</p>
@@ -217,7 +217,7 @@ const translateAction = (action: string) => {
               <Calendar className="w-5 h-5 mr-2 text-slate-400" />
               <div>
                 <div className="text-[10px] font-bold tracking-wider uppercase">Data Stampa</div>
-                <div className="font-medium text-slate-800 text-sm">{new Date().toLocaleString()}</div>
+                <div className="font-medium text-slate-800 text-sm">{new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}</div>
               </div>
             </div>
             <div className="flex items-center">
@@ -269,7 +269,7 @@ const translateAction = (action: string) => {
               <div className="space-y-3 relative z-10 text-sm">
                 <div className="flex items-start border-b border-slate-100 pb-2">
                   <div className="w-1/4 text-slate-500 font-semibold text-xs uppercase">Data Appuntamento</div>
-                  <div className="w-3/4 font-bold text-slate-800">{data.appointments?.[0] ? new Date(data.appointments[0].date).toLocaleString() : "N/D"}</div>
+                  <div className="w-3/4 font-bold text-slate-800">{data.appointments?.[0] ? new Date(data.appointments[0].date).toLocaleString('it-IT', { timeZone: 'Europe/Rome' }) : "N/D"}</div>
                 </div>
                 <div className="flex items-start border-b border-slate-100 pb-2">
                   <div className="w-1/4 text-slate-500 font-semibold text-xs uppercase">Stato</div>

@@ -280,7 +280,7 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
                     <button onClick={() => {
                         setSubOption('commerciale');
                         const now = new Date();
-                        const ds = now.toLocaleDateString('it-IT');
+                        const ds = now.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
                         const ts = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
                         setCallForm({ ...callForm, note: '', commercialeId: trattativa?.currentCommercialeId || '' });
                       }} 

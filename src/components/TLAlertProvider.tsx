@@ -216,7 +216,7 @@ export default function TLAlertProvider() {
               </p>
               <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 text-sm space-y-2 mb-6">
                 <div><span className="text-gray-500">Azienda:</span> <span className="text-white font-medium">{activeModalAlert.contactName}</span></div>
-                <div><span className="text-gray-500">Data e Ora:</span> <span className="text-white">{new Date(activeModalAlert.date).toLocaleString('it-IT')}</span></div>
+                <div><span className="text-gray-500">Data e Ora:</span> <span className="text-white">{new Date(activeModalAlert.date).toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}</span></div>
                 <div><span className="text-gray-500">Località:</span> <span className="text-white">{activeModalAlert.address ? `${activeModalAlert.address} ` : ""}{activeModalAlert.cap}</span></div>
                 <div><span className="text-gray-500">Referente:</span> <span className="text-white">
                   {(() => {
@@ -321,7 +321,7 @@ export default function TLAlertProvider() {
                   <div key={log.id} className="bg-gray-800 rounded-lg p-4 border border-gray-700 flex flex-col gap-2">
                     <div className="flex justify-between items-start">
                       <span className="font-bold text-gray-200">{log.contactName}</span>
-                      <span className="text-xs text-gray-500">{new Date(log.date).toLocaleTimeString()}</span>
+                      <span className="text-xs text-gray-500">{new Date(log.date).toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome' })}</span>
                     </div>
                     <p className="text-sm text-gray-400 italic bg-gray-900/50 p-2 rounded">
                       "{log.notes}"
