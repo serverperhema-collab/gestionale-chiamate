@@ -1,65 +1,68 @@
-﻿# -*- coding: utf-8 -*-
-import sys
+import re
 
-path = 'src/app/api/commerciale/appointments/route.ts'
-with open(path, 'r', encoding='utf-8') as f:
-    code = f.read()
+with open('src/app/api/tl/wizard-trattativa/route.ts', 'r', encoding='utf-8') as f:
+    content = f.read()
 
-target = """    let dateFilter: any = {};
-    if (dateStr) {
-      const start = new Date(dateStr);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(dateStr); // istanza separata per evitare mutazione
-      end.setHours(23, 59, 59, 999);
-      dateFilter = { gte: start, lt: end };
-    } else {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      dateFilter = { gte: today };
-    }
+# Replace body destruct
+content = content.replace(
+    'preventivoFile, contrattoFile\n    } = body;',
+    'preventivoFile, contrattoFile, actionMode\n    } = body;'
+)
 
-    const appointments = await prisma.appointment.findMany({
-      where: {
-        commercialeId: commercialeId,
-        date: dateFilter,
-        // Solo quelli non cancellati nǸ gi lavorati
-        status: {
-          in: ["PENDING", "CONFIRMED", "NOT_CONFIRMED", "DA_GESTIRE_COMMERCIALE"] 
+# Replace IN_CORSO logic
+old_logic = '''      // ---- SET STATUS E NEXT ACTION ----
+      if (flow === "IN_CORSO") {
+        if (!nextActionDate || !nextActionTime || !nextActionTo) {
+          throw new Error("Dati di pianificazione mancanti per la trattativa in corso");
         }
-      },
-      include: {
-        contact: {
-          select: { id: true, name: true, cap: true, address: true, originalPhone: true }
-        },
-        operator: { select: { id: true, name: true } },
-        commerciale: { select: { id: true, name: true } }
-      },"""
-
-replacement = """    const whereClause: any = {
-      commercialeId: commercialeId,
-      status: { notIn: ["CANCELLED"] }
-    };
-
-    if (dateStr) {
-      const start = new Date(dateStr);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(dateStr); 
-      end.setHours(23, 59, 59, 999);
-      whereClause.date = { gte: start, lt: end };
-    }
-
-    const appointments = await prisma.appointment.findMany({
-      where: whereClause,
-      include: {
-        contact: {
-          select: { id: true, name: true, cap: true, address: true, originalPhone: true }
-        },
-        operator: { select: { id: true, name: true } },
-        commerciale: { select: { id: true, name: true } },
-        outcomes: {
-          orderBy: { createdAt: 'desc' },
-          take: 1
+        nextDateObj = nextActionIso ? new Date(nextActionIso) : null;
+        
+        // Se la prossima azione è del commerciale, in corso.
+        // Se è dell'operatore e ha l'appuntamento, APPUNTAMENTO, se no RICHIAMO_PERSONALE
+        if (nextActionTo === "COMMERCIALE") {
+            trattativaStatus = "TRATTATIVA_IN_CORSO";
+            if (!commercialeId) throw new Error("Seleziona un Commerciale dal menu a tendina.");
+        } else {
+            trattativaStatus = appuntamentoSvolto ? "APPUNTAMENTO" : "RICHIAMO_PERSONALE";
         }
-      },"""
+        nextActionType = "RICHIAMO";
 
-# Notice the encoding replacement (nǸ gi) which might fail, so let's use regex or just replace the specific part
+      }'''
+
+new_logic = '''      // ---- SET STATUS E NEXT ACTION ----
+      if (flow === "IN_CORSO") {
+        if (actionMode === "APPUNTAMENTO_PENDING") {
+          trattativaStatus = "TRATTATIVA_IN_CORSO";
+          nextActionType = "APPUNTAMENTO";
+        } else {
+          if (!nextActionDate || !nextActionTime || !nextActionTo) {
+            throw new Error("Dati di pianificazione mancanti per la trattativa in corso");
+          }
+          nextDateObj = nextActionIso ? new Date(nextActionIso) : null;
+          
+          if (nextActionTo === "COMMERCIALE") {
+              trattativaStatus = "TRATTATIVA_IN_CORSO";
+              if (!commercialeId) throw new Error("Seleziona un Commerciale dal menu a tendina.");
+          } else {
+              trattativaStatus = appuntamentoSvolto ? "APPUNTAMENTO" : "RICHIAMO_PERSONALE";
+          }
+          nextActionType = "RICHIAMO";
+        }
+      }'''
+
+# Handle the encoding issue in old_logic by using regex
+content = re.sub(
+    r'// ---- SET STATUS E NEXT ACTION ----\s*if \(flow === "IN_CORSO"\) \{.*?\n\s*\} else if',
+    new_logic + ' else if',
+    content,
+    flags=re.DOTALL
+)
+
+# Fix Log 2
+content = content.replace(
+    'if (flow === "IN_CORSO") {\n        await tx.trattativaEvent.create({',
+    'if (flow === "IN_CORSO" && actionMode !== "APPUNTAMENTO_PENDING") {\n        await tx.trattativaEvent.create({'
+)
+
+with open('src/app/api/tl/wizard-trattativa/route.ts', 'w', encoding='utf-8') as f:
+    f.write(content)

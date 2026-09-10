@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     const { 
       contactId, flow, operatorId, commercialeId, 
       notes, appuntamentoSvolto, nextActionTo, nextActionDate, nextActionTime, nextActionIso,
-      preventivoFile, contrattoFile
+      preventivoFile, contrattoFile, actionMode
     } = body;
 
     if (!contactId || !operatorId || !flow) {
@@ -28,23 +28,25 @@ export async function POST(req: Request) {
       let nextActionType = "NONE" as any;
       let nextDateObj = null;
 
-      // ---- SET STATUS E NEXT ACTION ----
+            // ---- SET STATUS E NEXT ACTION ----
       if (flow === "IN_CORSO") {
-        if (!nextActionDate || !nextActionTime || !nextActionTo) {
-          throw new Error("Dati di pianificazione mancanti per la trattativa in corso");
-        }
-        nextDateObj = nextActionIso ? new Date(nextActionIso) : null;
-        
-        // Se la prossima azione è del commerciale, in corso.
-        // Se è dell'operatore e ha l'appuntamento, APPUNTAMENTO, se no RICHIAMO_PERSONALE
-        if (nextActionTo === "COMMERCIALE") {
-            trattativaStatus = "TRATTATIVA_IN_CORSO";
-            if (!commercialeId) throw new Error("Seleziona un Commerciale dal menu a tendina.");
+        if (actionMode === "APPUNTAMENTO_PENDING") {
+          trattativaStatus = "TRATTATIVA_IN_CORSO";
+          nextActionType = "APPUNTAMENTO";
         } else {
-            trattativaStatus = appuntamentoSvolto ? "APPUNTAMENTO" : "RICHIAMO_PERSONALE";
+          if (!nextActionDate || !nextActionTime || !nextActionTo) {
+            throw new Error("Dati di pianificazione mancanti per la trattativa in corso");
+          }
+          nextDateObj = nextActionIso ? new Date(nextActionIso) : null;
+          
+          if (nextActionTo === "COMMERCIALE") {
+              trattativaStatus = "TRATTATIVA_IN_CORSO";
+              if (!commercialeId) throw new Error("Seleziona un Commerciale dal menu a tendina.");
+          } else {
+              trattativaStatus = appuntamentoSvolto ? "APPUNTAMENTO" : "RICHIAMO_PERSONALE";
+          }
+          nextActionType = "RICHIAMO";
         }
-        nextActionType = "RICHIAMO";
-
       } else if (flow === "FIRMATO") {
         trattativaStatus = "CHIUSA_VINTA";
       } else if (flow === "KO") {
@@ -117,7 +119,7 @@ export async function POST(req: Request) {
       });
 
       // LOG 2: Richiamo (Solo per IN_CORSO)
-      if (flow === "IN_CORSO") {
+      if (flow === "IN_CORSO" && actionMode !== "APPUNTAMENTO_PENDING") {
         await tx.trattativaEvent.create({
           data: {
             trattativaId: trattativa.id,
