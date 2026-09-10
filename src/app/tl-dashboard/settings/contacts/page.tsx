@@ -5,7 +5,7 @@ import WizardCreaTrattativa from "@/components/WizardCreaTrattativa";
 import TrattativaTimeline from "@/components/TrattativaTimeline";
 
 import ContactEditModal from "@/components/ContactEditModal";
-import { Handshake, Database, Search, Filter, Plus, History, X, ChevronLeft, ChevronRight, User, Phone, PhoneOff, Calendar, AlertCircle, ArrowRightCircle, Trash2, RefreshCw } from "lucide-react";
+import { Handshake, Database, Search, Filter, Plus, History, X, ChevronLeft, ChevronRight, User, Phone, PhoneOff, Calendar, AlertCircle, ArrowRightCircle, Trash2, RefreshCw, Download } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function GlobalContactsPage() {
@@ -253,14 +253,24 @@ export default function GlobalContactsPage() {
           </div>
           <div className="text-right">
             <div className="flex flex-col items-end gap-2 mb-2">
-              <button 
-                onClick={() => { setEditContactId(null); setShowEditModal(true); }}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg shadow-lg shadow-blue-900/20 transition-colors"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Inserisci Contatto Manualmente
-              </button>
-              <span className="text-2xl font-bold text-white">{totalContacts}</span>
+              <div className="flex items-center gap-2">
+                <a 
+                  href="/api/tl/contacts/export"
+                  download="database_contatti.csv"
+                  className="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg shadow-lg shadow-emerald-900/20 transition-colors"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Scarica Tutti (CSV)
+                </a>
+                <button 
+                  onClick={() => { setEditContactId(null); setShowEditModal(true); }}
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg shadow-lg shadow-blue-900/20 transition-colors"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Inserisci Contatto
+                </button>
+              </div>
+              <span className="text-2xl font-bold text-white mt-1">{totalContacts}</span>
             </div>
             <span className="text-sm text-gray-400 block">Contatti Trovati</span>
           </div>

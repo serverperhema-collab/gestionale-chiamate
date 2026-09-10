@@ -66,7 +66,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       await tx.trattativaAppointment.updateMany({
         where: {
           trattativaId: id,
-          status: { notIn: ["DONE", "ANNULLATO", "SVOLTO_ESITATO"] }
+          status: { notIn: ["SVOLTO_ESITATO", "ANNULLATO"] }
         },
         data: {
           status: "ANNULLATO"
