@@ -13,7 +13,7 @@ interface WizardCreaTrattativaProps {
   onSuccess: () => void;
 }
 
-export default function WizardCreaTrattativa({ contactId, contactName, onClose, onSuccess }: WizardCreaTrattativaProps) {
+export default function WizardCreaTrattativa({ contact, contactId, contactName, onClose, onSuccess }: WizardCreaTrattativaProps) {
   const [step, setStep] = useState(0); // 0 = Scelta Flusso, 1 = Dati Base, 2 = Pianificazione (se In Corso)
   const [saving, setSaving] = useState(false);
   
