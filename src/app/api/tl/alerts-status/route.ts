@@ -74,30 +74,6 @@ export async function GET() {
       });
     });
 
-    const pendingDeroghe = await prisma.trattativaSheet.findMany({
-      where: { derogaStatus: "PENDING" },
-      include: {
-        contact: { select: { name: true, address: true, cap: true } },
-        events: { where: { eventType: "DEROGA_RICHIESTA" }, orderBy: { createdAt: "desc" }, take: 1 },
-        currentOperator: { select: { name: true } }
-      }
-    });
-
-    pendingDeroghe.forEach(d => {
-      activeAlerts.push({
-        type: 'DEROGA_APP_REQUEST',
-        appId: d.id, // using trattativaId as appId identifier for the alert modal
-        contactId: d.contactId,
-        contactName: d.contact?.name || "Sconosciuto",
-        operatorName: d.currentOperator?.name || "Operatore",
-        date: d.nextActionDate || new Date(),
-        address: d.contact?.address || "",
-        cap: d.contact?.cap || "",
-        referentName: d.referentName || "",
-        clientNeeds: d.events[0]?.metadata?.notes || ""
-      });
-    });
-
     const hiddenContacts = await prisma.contact.findMany({
       where: { assignedToId: null, hiddenUntil: { gt: now } },
       include: {

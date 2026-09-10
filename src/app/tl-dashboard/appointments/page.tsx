@@ -105,6 +105,8 @@ export default function UnifiedCalendarPage() {
   const [editingNotesAgenda, setEditingNotesAgenda] = useState<any>(null);
   const [agendaNotes, setAgendaNotes] = useState("");
 
+  const [confirmAssign, setConfirmAssign] = useState<{agendaId: string, commercialeId: string, alertMessage: string} | null>(null);
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -290,7 +292,7 @@ export default function UnifiedCalendarPage() {
     }
   };
 
-  const handleAssignCommercialeToAgenda = async (agendaId: string, commercialeId: string) => {
+  const executeAssignAgenda = async (agendaId: string, commercialeId: string) => {
     try {
       const res = await fetch(`/api/tl/calendar/${agendaId}/assign`, {
         method: "POST",
@@ -306,6 +308,23 @@ export default function UnifiedCalendarPage() {
     } catch (e) {
       toast.error("Errore di rete");
     }
+  };
+
+  const handleAssignCommercialeToAgenda = async (agendaId: string, commercialeId: string) => {
+    if (commercialeId) {
+      // Check for conflicts
+      const agendaAppts = appointments.filter(a => a.zoneAgendaId === agendaId);
+      const conflicts = agendaAppts.filter(a => a.commercialeId && a.commercialeId !== commercialeId);
+      if (conflicts.length > 0) {
+        setConfirmAssign({
+          agendaId,
+          commercialeId,
+          alertMessage: `In questa agenda ci sono ${conflicts.length} appuntamenti assegnati a un altro Commerciale. Se procedi, verranno TUTTI riassegnati al nuovo Commerciale.`
+        });
+        return;
+      }
+    }
+    await executeAssignAgenda(agendaId, commercialeId);
   };
 
   const getStatusBadge = (appt: any) => {
@@ -888,6 +907,39 @@ export default function UnifiedCalendarPage() {
           }}
         />
       )}
+
+      {/* MODAL CONFERMA ASSEGNAZIONE AGENDA */}
+      {confirmAssign && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+            <div className="flex items-center text-amber-400 mb-4">
+              <AlertTriangle className="w-8 h-8 mr-3" />
+              <h2 className="text-xl font-bold text-white">Attenzione</h2>
+            </div>
+            <p className="text-gray-300 text-sm mb-6 leading-relaxed">
+              {confirmAssign.alertMessage}
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setConfirmAssign(null)}
+                className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={() => {
+                  executeAssignAgenda(confirmAssign.agendaId, confirmAssign.commercialeId);
+                  setConfirmAssign(null);
+                }}
+                className="px-4 py-2 rounded-lg text-sm font-semibold bg-amber-600 hover:bg-amber-500 text-white transition-colors"
+              >
+                Sì, Procedi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Notes Modal */}
       {editingNotesAgenda && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[70] p-4">

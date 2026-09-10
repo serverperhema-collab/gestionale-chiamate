@@ -20,14 +20,22 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       data: { commercialeId }
     });
 
-    // Assegna il commerciale anche a tutti gli appuntamenti (trattative) legati a questa agenda
+    // Assegna il commerciale anche a tutti gli appuntamenti legati a questa agenda
     if (commercialeId) {
       const appointments = await prisma.trattativaAppointment.findMany({
-        where: { agendaId: id }
+        where: { zoneAgendaId: id }
       });
       
       if (appointments.length > 0) {
+        // Aggiorna sia il commercialeId sull'appuntamento, sia il currentCommercialeId sulla TrattativaSheet
+        const apptIds = appointments.map(a => a.id);
         const sheetIds = appointments.map(a => a.trattativaId);
+        
+        await prisma.trattativaAppointment.updateMany({
+          where: { id: { in: apptIds } },
+          data: { commercialeId }
+        });
+        
         await prisma.trattativaSheet.updateMany({
           where: { id: { in: sheetIds } },
           data: { currentCommercialeId: commercialeId }
@@ -36,10 +44,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     } else {
       // Se viene rimosso (commercialeId è null)
       const appointments = await prisma.trattativaAppointment.findMany({
-        where: { agendaId: id }
+        where: { zoneAgendaId: id }
       });
       if (appointments.length > 0) {
+        const apptIds = appointments.map(a => a.id);
         const sheetIds = appointments.map(a => a.trattativaId);
+        
+        await prisma.trattativaAppointment.updateMany({
+          where: { id: { in: apptIds } },
+          data: { commercialeId: null }
+        });
+        
         await prisma.trattativaSheet.updateMany({
           where: { id: { in: sheetIds } },
           data: { currentCommercialeId: null }

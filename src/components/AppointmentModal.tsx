@@ -140,19 +140,17 @@ export default function AppointmentModal({
 
       // 2. Azione appuntamento
       // Use standard appuntamento endpoint
-      const action = isDeroga ? "deroga" : "appuntamento";
-      const payload = isDeroga 
-        ? { requestedDate: finalDate, notes: formData.clientNeeds }
-        : {
-            date: finalDate,
-            isPhoneAppt,
-            zoneAgendaId: isPhoneAppt ? undefined : selectedAgenda?.id,
-            referentName: formData.referentName,
-            referentRole: formData.referentRole || "Referente",
-            phone: formData.phone,
-            email: formData.email,
-            clientNeeds: formData.clientNeeds
-          };
+      const action = "appuntamento";
+      const payload = {
+        date: finalDate,
+        isPhoneAppt,
+        zoneAgendaId: (isDeroga || isPhoneAppt) ? undefined : selectedAgenda?.id,
+        referentName: formData.referentName,
+        referentRole: formData.referentRole || "Referente",
+        phone: formData.phone,
+        email: formData.email,
+        clientNeeds: formData.clientNeeds
+      };
 
       const actionRes = await fetch(`/api/trattative/${trattativa.id}/actions`, {
         method: "POST",
@@ -165,7 +163,7 @@ export default function AppointmentModal({
         throw new Error(errorData.error || "Errore salvataggio azione");
       }
 
-      toast.success(isDeroga ? "Deroga richiesta con successo!" : "Appuntamento fissato con successo!");
+      toast.success(isDeroga ? "Appuntamento in deroga fissato con successo!" : "Appuntamento fissato con successo!");
       onSuccess();
     } catch (e: any) {
       toast.error(e.message || "Si è verificato un errore");
@@ -194,7 +192,7 @@ export default function AppointmentModal({
           <div className="flex items-center gap-4 mb-4">
             <label className="flex items-center text-sm font-semibold text-gray-300">
               <input type="checkbox" checked={isDeroga} onChange={(e) => setIsDeroga(e.target.checked)} disabled={isSecondAppt} className="mr-2 rounded border-gray-600 bg-gray-800 text-amber-500 focus:ring-amber-500/20" />
-              Richiedi Deroga (Forza fuori Agenda)
+              Fissa in Deroga (Forza fuori Agenda)
             </label>
             <label className="flex items-center text-sm font-semibold text-gray-300">
               <input type="checkbox" checked={isPhoneAppt} onChange={(e) => setIsPhoneAppt(e.target.checked)} className="mr-2 rounded border-gray-600 bg-gray-800 text-purple-500 focus:ring-purple-500/20" />
@@ -238,7 +236,7 @@ export default function AppointmentModal({
                         />
                       </div>
                     </div>
-                    
+
                     {!isPhoneAppt && (
                       <button
                         type="button"
@@ -396,7 +394,7 @@ export default function AppointmentModal({
               disabled={submitting || (!selectedSlot && !isDeroga && !isPhoneAppt)}
               className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition font-medium flex items-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20"
             >
-              {submitting ? 'Salvataggio...' : (isDeroga ? 'Invia in Approvazione (Deroga)' : 'Conferma Appuntamento')}
+              {submitting ? 'Salvataggio...' : (isDeroga ? 'Fissa Appuntamento (Deroga)' : 'Conferma Appuntamento')}
             </button>
           </div>
         </form>
