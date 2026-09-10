@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Phone, AlertCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Phone, AlertCircle, Clock } from "lucide-react";
 
 interface AgendaViewProps {
   trattative: any[];
@@ -28,18 +28,37 @@ export default function AgendaView({ trattative, onOpenTimeline }: AgendaViewPro
     groupedRecalls[key].sort((a, b) => new Date(a.nextActionDate).getTime() - new Date(b.nextActionDate).getTime());
   });
 
-  const changeDay = (days: number) => {
+  // Calculate start of week (Monday)
+  const getStartOfWeek = (d: Date) => {
+    const date = new Date(d);
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+    date.setDate(diff);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  };
+
+  const startOfWeek = getStartOfWeek(currentDate);
+  
+  // Generate the 7 days of the week
+  const weekDays = Array.from({ length: 7 }).map((_, i) => {
+    const d = new Date(startOfWeek);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+
+  const endOfWeek = weekDays[6];
+
+  const changeWeek = (weeks: number) => {
     const d = new Date(currentDate);
-    d.setDate(d.getDate() + days);
+    d.setDate(d.getDate() + weeks * 7);
     setCurrentDate(d);
   };
 
   const setToday = () => setCurrentDate(new Date());
 
-  const dateKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(currentDate);
-  const todaysRecalls = groupedRecalls[dateKey] || [];
-
-  const dateFormatter = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const monthFormatter = new Intl.DateTimeFormat('it-IT', { month: 'long', year: 'numeric' });
+  const dayNameFormatter = new Intl.DateTimeFormat('it-IT', { weekday: 'short' });
 
   return (
     <div className="bg-gray-800 rounded-2xl border border-gray-700 shadow-xl overflow-hidden flex flex-col h-full min-h-[600px] w-full">
@@ -49,7 +68,9 @@ export default function AgendaView({ trattative, onOpenTimeline }: AgendaViewPro
           <div className="bg-indigo-600/20 p-2 rounded-lg border border-indigo-500/30">
             <CalendarIcon className="w-6 h-6 text-indigo-400" />
           </div>
-          <h2 className="text-xl font-bold text-white capitalize">{dateFormatter.format(currentDate)}</h2>
+          <h2 className="text-xl font-bold text-white capitalize">
+            {startOfWeek.getDate()} - {endOfWeek.getDate()} {monthFormatter.format(startOfWeek)}
+          </h2>
         </div>
         
         <div className="flex items-center space-x-2">
@@ -61,14 +82,14 @@ export default function AgendaView({ trattative, onOpenTimeline }: AgendaViewPro
           </button>
           <div className="flex bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
             <button 
-              onClick={() => changeDay(-1)}
+              onClick={() => changeWeek(-1)}
               className="p-2 hover:bg-gray-700 text-gray-400 hover:text-white transition"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div className="w-px bg-gray-700"></div>
             <button 
-              onClick={() => changeDay(1)}
+              onClick={() => changeWeek(1)}
               className="p-2 hover:bg-gray-700 text-gray-400 hover:text-white transition"
             >
               <ChevronRight className="w-5 h-5" />
@@ -77,70 +98,80 @@ export default function AgendaView({ trattative, onOpenTimeline }: AgendaViewPro
         </div>
       </div>
 
-      {/* Agenda Content */}
-      <div className="flex-1 overflow-y-auto p-6 bg-black relative">
-        {/* Timeline Line */}
-        <div className="absolute left-14 top-0 bottom-0 w-px bg-gray-800"></div>
+      {/* Agenda Content (Weekly Grid) */}
+      <div className="flex-1 overflow-x-auto overflow-y-hidden bg-black p-4">
+        <div className="flex h-full gap-4 min-w-[1200px]">
+          {weekDays.map((day, idx) => {
+            const dateKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(day);
+            const isToday = dateKey === new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date());
+            const dayRecalls = groupedRecalls[dateKey] || [];
 
-        {todaysRecalls.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full opacity-60 pt-20">
-            <CalendarIcon className="w-16 h-16 text-gray-600 mb-4" />
-            <h3 className="text-xl font-bold text-gray-400">Nessun evento in agenda</h3>
-            <p className="text-gray-500 text-sm mt-2">Nessun appuntamento o ricontatto programmato.</p>
-          </div>
-        ) : (
-          <div className="space-y-6 relative">
-            {todaysRecalls.map((st, idx) => {
-              const d = new Date(st.nextActionDate);
-              const timeStr = d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-              const isPast = d < new Date();
-
-              return (
-                <div 
-                  key={st.id} 
-                  className="flex items-start group cursor-pointer"
-                  onClick={() => onOpenTimeline(st.id)}
-                >
-                  {/* Time Axis */}
-                  <div className="w-20 shrink-0 text-right pr-6 relative py-3">
-                    <span className={`text-lg font-bold ${isPast ? 'text-red-400' : 'text-gray-300'}`}>{timeStr}</span>
-                    {/* Timeline Dot */}
-                    <div className={`absolute right-[-5px] top-4 w-3 h-3 rounded-full border-2 border-black ${isPast ? 'bg-red-500' : 'bg-indigo-500 group-hover:scale-125 transition-transform'}`}></div>
+            return (
+              <div key={dateKey} className="flex-1 flex flex-col h-full bg-gray-900/50 rounded-xl border border-gray-800 overflow-hidden">
+                {/* Day Header */}
+                <div className={`p-3 text-center border-b ${isToday ? 'bg-indigo-900/40 border-indigo-500/30' : 'bg-gray-900 border-gray-800'}`}>
+                  <div className={`text-xs font-bold uppercase tracking-wider ${isToday ? 'text-indigo-400' : 'text-gray-500'}`}>
+                    {dayNameFormatter.format(day)}
                   </div>
-
-                  {/* Card */}
-                  <div className="flex-1 ml-6 bg-gray-900 border border-gray-800 hover:border-indigo-500/50 rounded-xl p-4 shadow-sm group-hover:shadow-indigo-500/10 transition-all">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-bold text-lg text-white group-hover:text-indigo-300 transition-colors">
-                        {st.contact?.name || "Contatto Sconosciuto"}
-                      </h4>
-                      {isPast && (
-                        <span className="flex items-center text-xs font-bold text-red-400 bg-red-400/10 px-2 py-1 rounded">
-                          <AlertCircle className="w-3 h-3 mr-1" />
-                          IN RITARDO
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center text-gray-400 text-sm mb-3">
-                      <Phone className="w-4 h-4 mr-2 text-gray-500" />
-                      {st.contact?.originalPhone || "Nessun numero"}
-                      <span className="mx-3 text-gray-700">•</span>
-                      <span>{st.contact?.cap || "No CAP"}</span>
-                    </div>
-
-                    <div className="text-sm text-gray-300 bg-gray-800 rounded p-3 border border-gray-700 flex flex-col gap-1">
-                      <div className="flex justify-between items-center text-xs font-bold text-gray-500 mb-1">
-                        <span>{st.status.replace(/_/g, " ")}</span>
-                      </div>
-                      {st.outcomeNotes ? <span className="italic">"{st.outcomeNotes}"</span> : <span className="text-gray-600 italic">Nessuna nota aggiuntiva.</span>}
-                    </div>
+                  <div className={`text-2xl font-black ${isToday ? 'text-indigo-300' : 'text-gray-300'}`}>
+                    {day.getDate()}
+                  </div>
+                  <div className="mt-1 flex justify-center">
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${dayRecalls.length > 0 ? 'bg-indigo-500/20 text-indigo-300' : 'bg-gray-800 text-gray-500'}`}>
+                      {dayRecalls.length} event{dayRecalls.length === 1 ? 'o' : 'i'}
+                    </span>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
+
+                {/* Day Content */}
+                <div className="flex-1 overflow-y-auto p-2 space-y-2">
+                  {dayRecalls.map((st) => {
+                    const d = new Date(st.nextActionDate);
+                    const timeStr = d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                    const isPast = d < new Date();
+                    
+                    let statusColor = "border-gray-700 bg-gray-800 text-gray-300";
+                    if (st.status === 'APPUNTAMENTO') statusColor = "border-blue-500/50 bg-blue-900/20 text-blue-300";
+                    if (st.status === 'RICHIAMO_PERSONALE') statusColor = "border-purple-500/50 bg-purple-900/20 text-purple-300";
+
+                    return (
+                      <div 
+                        key={st.id} 
+                        onClick={() => onOpenTimeline(st.id)}
+                        className={`p-2.5 rounded-lg border cursor-pointer transition-all hover:bg-gray-700 group ${statusColor}`}
+                      >
+                        <div className="flex justify-between items-start mb-1.5">
+                          <div className="flex items-center text-xs font-black">
+                            <Clock className="w-3 h-3 mr-1 opacity-70" />
+                            <span className={isPast ? 'text-red-400' : ''}>{timeStr}</span>
+                          </div>
+                          {isPast && (
+                            <AlertCircle className="w-3.5 h-3.5 text-red-400" />
+                          )}
+                        </div>
+                        
+                        <div className="font-bold text-sm text-white truncate mb-1" title={st.contact?.name}>
+                          {st.contact?.name || "Sconosciuto"}
+                        </div>
+                        
+                        <div className="flex items-center text-xs opacity-70 truncate">
+                          <Phone className="w-3 h-3 mr-1" />
+                          {st.contact?.originalPhone || "No numero"}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
+                  {dayRecalls.length === 0 && (
+                    <div className="h-full flex flex-col items-center justify-center opacity-30 p-4 text-center">
+                      <p className="text-xs font-bold mt-2">Nessun impegno</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
