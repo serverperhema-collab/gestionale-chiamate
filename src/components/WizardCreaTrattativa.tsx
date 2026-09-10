@@ -37,7 +37,6 @@ export default function WizardCreaTrattativa({ contactId, contactName, onClose, 
   const [nextActionDate, setNextActionDate] = useState("");
   const [nextActionTime, setNextActionTime] = useState("");
   
-  const [saving, setSaving] = useState(false);
   const [inCorsoAction, setInCorsoAction] = useState<"RICHIAMO" | "APPUNTAMENTO">("RICHIAMO");
   const [createdTrattativaId, setCreatedTrattativaId] = useState<string | null>(null);
   const [showApptModal, setShowApptModal] = useState(false);
