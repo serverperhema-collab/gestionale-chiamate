@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { X, Clock, FileText, User, RefreshCw, CheckCircle, AlertTriangle, PhoneCall, Edit2, Check, XCircle, Printer, Calendar, CalendarClock, CalendarX, FileSignature, MessageSquare, PlusCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import AppointmentModal from "@/components/AppointmentModal";
+import { useSession } from "next-auth/react";
 
 interface TrattativaTimelineProps {
   trattativaId: string;
@@ -40,6 +41,8 @@ const getNextActionBadge = (t: any) => {
 };
 
 export default function TrattativaTimeline({ trattativaId, onClose }: TrattativaTimelineProps) {
+  const { data: session } = useSession();
+  const isTL = (session?.user as any)?.role === "TEAM_LEADER";
   const [trattativa, setTrattativa] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   
@@ -120,6 +123,33 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
       toast.error("Errore di rete");
     } finally {
       setSavingEdit(false);
+    }
+  };
+
+  const handleDirectKO = async () => {
+    if (!koNotes.trim()) {
+      toast.error("Inserisci una motivazione per il KO");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/tl/trattative/${trattativaId}/ko`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: koNotes }),
+      });
+      if (res.ok) {
+        toast.success("Trattativa messa KO correttamente");
+        setKoModalOpen(false);
+        fetchST();
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Errore durante il KO");
+      }
+    } catch (e) {
+      toast.error("Errore di rete");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -576,8 +606,8 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
         </div>
 
         </div>
-        {/* TASTO CHIAMA IN BASSO */}
-        <div className="p-6 bg-gray-950 border-t border-gray-800 shrink-0 flex justify-center print:hidden">
+        {/* PULSANTI IN BASSO */}
+        <div className="p-6 bg-gray-950 border-t border-gray-800 shrink-0 flex flex-col items-center gap-4 print:hidden">
           {trattativa.status === 'SOSPESA' ? (
             <div className="w-full max-w-md py-4 bg-gray-800 text-gray-500 rounded-2xl shadow-inner border border-gray-700 font-bold text-center flex items-center justify-center">
               BLOCCATA IN ATTESA DI REVISIONE
@@ -592,6 +622,15 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
               className="w-full max-w-md py-4 bg-green-600 hover:bg-green-500 active:bg-green-700 text-white rounded-2xl shadow-lg shadow-green-900/50 transition font-black text-xl tracking-widest flex items-center justify-center"
             >
               <PhoneCall className="w-6 h-6 mr-3" /> CHIAMA
+            </button>
+          )}
+
+          {isTL && trattativa.status !== 'CHIUSA_PERSA' && (
+            <button 
+              onClick={() => { setKoNotes(""); setKoModalOpen(true); }}
+              className="w-full max-w-md py-3 bg-red-600/20 hover:bg-red-600/40 text-red-500 border border-red-500/30 rounded-2xl transition font-black text-lg tracking-wider flex items-center justify-center"
+            >
+              <XCircle className="w-5 h-5 mr-2" /> METTI KO
             </button>
           )}
         </div>
@@ -612,6 +651,41 @@ export default function TrattativaTimeline({ trattativaId, onClose }: Trattativa
             fetchST();
           }}
         />
+      )}
+
+      {koModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setKoModalOpen(false)} />
+          <div className="relative bg-gray-900 border border-red-500/50 rounded-2xl w-full max-w-lg p-6 shadow-2xl flex flex-col">
+            <h3 className="text-2xl font-black text-red-400 uppercase mb-4 flex items-center border-b border-gray-800 pb-4">
+              <AlertTriangle className="w-6 h-6 mr-3 text-red-500" /> Conferma KO Definitivo
+            </h3>
+            <p className="text-sm text-gray-300 mb-6">
+              Stai per mettere questa trattativa in KO definitivo. Il contatto verrà bloccato per 5 anni.
+            </p>
+            <textarea
+              className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-4 min-h-[120px] outline-none focus:border-red-500 transition resize-none mb-6"
+              placeholder="Inserisci le motivazioni per il KO (obbligatorio)..."
+              value={koNotes}
+              onChange={(e) => setKoNotes(e.target.value)}
+            />
+            <div className="flex gap-4">
+              <button 
+                onClick={() => setKoModalOpen(false)}
+                className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl font-bold transition"
+              >
+                Annulla
+              </button>
+              <button 
+                onClick={handleDirectKO}
+                disabled={loading}
+                className="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl font-bold transition flex items-center justify-center disabled:opacity-50"
+              >
+                {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : 'Conferma KO'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

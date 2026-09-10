@@ -133,28 +133,33 @@ export default function AgendaView({ trattative, onOpenTimeline }: AgendaViewPro
                     let statusColor = "border-gray-700 bg-gray-800 text-gray-300";
                     if (st.status === 'APPUNTAMENTO') statusColor = "border-blue-500/50 bg-blue-900/20 text-blue-300";
                     if (st.status === 'RICHIAMO_PERSONALE') statusColor = "border-purple-500/50 bg-purple-900/20 text-purple-300";
+                    if (st.status === 'CHIUSA_PERSA') statusColor = "border-red-500/50 bg-red-900/20 text-red-400 opacity-60";
 
                     return (
                       <div 
                         key={st.id} 
                         onClick={() => onOpenTimeline(st.id)}
-                        className={`p-2.5 rounded-lg border cursor-pointer transition-all hover:bg-gray-700 group ${statusColor}`}
+                        className={`p-2.5 rounded-lg border cursor-pointer transition-all hover:bg-gray-700 group relative overflow-hidden ${statusColor}`}
                       >
-                        <div className="flex justify-between items-start mb-1.5">
+                        {st.status === 'CHIUSA_PERSA' && (
+                          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9InRyYW5zcGFyZW50Ii8+PHBhdGggZD0iTTAgNEw0IDBaIiBzdHJva2U9InJnYmEoMjU1LCAwLCAwLCAwLjE1KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9zdmc+')] pointer-events-none" />
+                        )}
+                        <div className="flex justify-between items-start mb-1.5 relative z-10">
                           <div className="flex items-center text-xs font-black">
                             <Clock className="w-3 h-3 mr-1 opacity-70" />
-                            <span className={isPast ? 'text-red-400' : ''}>{timeStr}</span>
+                            <span className={isPast && st.status !== 'CHIUSA_PERSA' ? 'text-red-400' : ''}>{timeStr}</span>
+                            {st.status === 'CHIUSA_PERSA' && <span className="ml-2 px-1 text-[9px] bg-red-500/30 rounded text-red-200">ANNULLATO</span>}
                           </div>
-                          {isPast && (
+                          {isPast && st.status !== 'CHIUSA_PERSA' && (
                             <AlertCircle className="w-3.5 h-3.5 text-red-400" />
                           )}
                         </div>
                         
-                        <div className="font-bold text-sm text-white truncate mb-1" title={st.contact?.name}>
+                        <div className={`font-bold text-sm text-white truncate mb-1 relative z-10 ${st.status === 'CHIUSA_PERSA' ? 'line-through opacity-70' : ''}`} title={st.contact?.name}>
                           {st.contact?.name || "Sconosciuto"}
                         </div>
                         
-                        <div className="flex items-center text-xs opacity-70 truncate">
+                        <div className="flex items-center text-xs opacity-70 truncate relative z-10">
                           <Phone className="w-3 h-3 mr-1" />
                           {st.contact?.originalPhone || "No numero"}
                         </div>
