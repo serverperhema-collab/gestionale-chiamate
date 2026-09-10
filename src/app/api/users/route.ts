@@ -11,8 +11,15 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
+    
+    const url = new URL(req.url);
+    const roleParam = url.searchParams.get('role');
+    const whereClause = roleParam ? { role: roleParam as any, isActive: true } : {};
+
     const users = await prisma.user.findMany({
+      where: whereClause,
       orderBy: { createdAt: "desc" },
+
       select: {
         id: true,
         name: true,

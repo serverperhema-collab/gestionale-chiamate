@@ -674,6 +674,7 @@ model TrattativaSheet {
   referentName    String?
   referentRole    String?
   clientNeeds     String?
+  hadAppointment  Boolean @default(false)
 
   outcomeFinal OutcomeFinal?
   outcomeNotes String?

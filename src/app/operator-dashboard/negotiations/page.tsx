@@ -41,14 +41,14 @@ export default function OperatorNegotiations() {
 
   const filteredTrattative = trattative.filter(st => {
       if (activeTab === 'personal-recall') return !st.currentCommercialeId && st.status === 'RICHIAMO_PERSONALE';
-      if (activeTab === 'personal-ko') return !st.currentCommercialeId && st.status === 'SOSPESA';
+      if (activeTab === 'personal-ko') return !st.currentCommercialeId && (st.status === 'SOSPESA' || st.status === 'CHIUSA_PERSA') && !st.hadAppointment;
       
       if (activeTab === 'telefonica-operator') return !!st.currentCommercialeId && st.status === 'RICHIAMO_PERSONALE' && st.nextActionType === 'RICHIAMO';
       if (activeTab === 'telefonica-commerciale') return !!st.currentCommercialeId && st.status === 'RICHIAMO_PERSONALE' && st.nextActionType !== 'RICHIAMO';
 
       if (activeTab === 'appointment-recall') return !!st.currentCommercialeId && st.status === 'APPUNTAMENTO' && st.nextActionType === 'RICHIAMO';
         if (activeTab === 'appointment-commerciale') return !!st.currentCommercialeId && st.status === 'APPUNTAMENTO' && st.nextActionType !== 'RICHIAMO';
-      if (activeTab === 'appointment-ko') return !!st.currentCommercialeId && st.status === 'SOSPESA';
+      if (activeTab === 'appointment-ko') return (!!st.currentCommercialeId || st.hadAppointment) && (st.status === 'SOSPESA' || st.status === 'CHIUSA_PERSA');
       
       return false;
     });
@@ -144,6 +144,20 @@ export default function OperatorNegotiations() {
                   <button onClick={() => setActiveTab('appointment-ko')} className={`w-full text-left px-3 py-2 rounded-lg transition text-sm flex items-center justify-between ${activeTab === 'appointment-ko' ? 'bg-red-600/20 text-red-300 font-bold border border-red-500/30' : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'}`}>
                   Trattative KO
                   {activeTab === 'appointment-ko' && <ChevronRight className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">CONTRATTI FIRMATI</h2>
+              <div className="space-y-1">
+                <button onClick={() => setActiveTab('contratti-attivi')} className={`w-full text-left px-3 py-2 rounded-lg transition text-sm flex items-center justify-between ${activeTab === 'contratti-attivi' ? 'bg-emerald-600/20 text-emerald-300 font-bold border border-emerald-500/30' : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'}`}>
+                  Attivi
+                  {activeTab === 'contratti-attivi' && <ChevronRight className="w-4 h-4" />}
+                </button>
+                <button onClick={() => setActiveTab('contratti-non-attivi')} className={`w-full text-left px-3 py-2 rounded-lg transition text-sm flex items-center justify-between ${activeTab === 'contratti-non-attivi' ? 'bg-gray-600/20 text-gray-300 font-bold border border-gray-500/30' : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'}`}>
+                  Non Attivi
+                  {activeTab === 'contratti-non-attivi' && <ChevronRight className="w-4 h-4" />}
                 </button>
               </div>
             </div>

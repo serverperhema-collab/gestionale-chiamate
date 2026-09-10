@@ -201,7 +201,7 @@ export default function WizardCreaTrattativa({ contactId, contactName, onClose, 
                 <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Scrivi qui eventuali dettagli..." className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white outline-none focus:border-blue-500 resize-none h-20" />
               </div>
 
-              {flow === "IN_CORSO" && (
+              {(flow === "IN_CORSO" || flow === "KO") && (
                 <div className="flex items-center justify-between bg-gray-800/50 p-3 rounded-lg border border-gray-700">
                   <span className="text-sm font-semibold text-gray-300">È stato svolto un appuntamento?</span>
                   <div className="flex items-center space-x-3">
